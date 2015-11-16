@@ -3,9 +3,34 @@
 
 import ast
 import os.path
+import sys
 
 from setuptools import setup
 
+deps = [
+    "Chameleon>=2.24",
+    "ruamel.yaml>=0.10.12"
+]
+maj, min_, micro, rl, ser = sys.version_info
+if (maj, min_) < (2, 7):
+    deps += [
+        "argparse>=1.4",
+        "backport_collections>=0.1",
+        "futures>=3.0.3"
+    ]
+if (maj, min_) < (3, 3):
+    deps += [
+        "requests-futures>=0.9.5"
+    ]
+if (maj, min_) == (3, 3):
+    deps += [
+        "asyncio>=3.4.3"
+    ]
+if (maj, min_) < (3, 4):
+    deps += [
+        "singledispatch>=3.4.0.3"
+    ]
+print(deps)
 
 try:
     # For setup.py install
@@ -53,8 +78,7 @@ setup(
             "doc/html/_static/*.png",
         ],
     },
-    install_requires=[
-    ],
+    install_requires=deps,
     extras_require={
         "docbuild": [
             "babel<=1.3,>2.0",

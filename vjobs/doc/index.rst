@@ -1,20 +1,17 @@
-.. VJobs documentation master file, created by
-   sphinx-quickstart on Mon Nov 16 11:56:33 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+..  Titling
+    ##++::==~~--''``
 
-Welcome to VJobs's documentation!
-=================================
+Linkbudget manual
+:::::::::::::::::
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   install
 
-
-Indices and tables
-==================
+.. include:: ../../README.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

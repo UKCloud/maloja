@@ -48,7 +48,7 @@ def main(args):
         operations = queue.Queue()
         results = queue.Queue()
 
-    console = maloja.console.create_console(operations, results, loop=loop)
+    console = maloja.console.create_console(operations, results, args, loop=loop)
     results = [
         i.result()
         for i in concurrent.futures.as_completed(set(console.tasks.values()))

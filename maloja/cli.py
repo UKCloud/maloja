@@ -13,8 +13,11 @@ DFLT_LOCN = os.path.expanduser(os.path.join("~", ".maloja"))
 
 def add_api_options(parser):
     parser.add_argument(
-        "--connect", default="",
-        help="Connection string to API endpoint")
+        "--url", required=True,
+        help="URL to API endpoint")
+    parser.add_argument(
+        "--user", required=True,
+        help="Registered user for API access")
     return parser
 
 def add_cache_options(parser):
@@ -43,6 +46,7 @@ def parsers(description=__doc__):
         fromfile_prefix_chars="@"
     )
     parser = add_common_options(parser)
+    parser = add_api_options(parser)
     parser = add_cache_options(parser)
     subparsers = parser.add_subparsers(
         dest="command",

@@ -1,8 +1,8 @@
 ..  Titling
     ##++::==~~--''``
 
-Linkbudget manual
-:::::::::::::::::
+Moloja manual
+:::::::::::::
 
 Contents:
 

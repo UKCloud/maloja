@@ -16,9 +16,9 @@ Microsoft Windows
 
         > %HOME%\py3.5\Scripts\pip install --upgrade pip
 
-#.  Install `VJobs`::
+#.  Install `Maloja`::
 
-        > %HOME%\py3.5\Scripts\pip install vjobs-0.0.0.zip
+        > %HOME%\py3.5\Scripts\pip install maloja-0.0.0.zip
 
     This step should automatically install the following dependencies from PyPI_:
 

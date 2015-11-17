@@ -34,24 +34,24 @@ print(deps)
 
 try:
     # For setup.py install
-    from vjobs import __version__ as version
+    from maloja import __version__ as version
 except ImportError:
     # For pip installations
     version = str(ast.literal_eval(
                 open(os.path.join(os.path.dirname(__file__),
-                "vjobs", "__init__.py"),
+                "maloja", "__init__.py"),
                 'r').read().split("=")[-1].strip()))
 
 __doc__ = open(os.path.join(os.path.dirname(__file__), "README.rst"),
                'r').read()
 
 setup(
-    name="vjobs",
+    name="maloja",
     version=version,
     description="Link budget calculations for telecommunications engineers",
     author="D Haynes",
     author_email="dave@thuswise.co.uk",
-    url="https://bitbucket.org/vjobs/vjobs",
+    url="https://bitbucket.org/maloja/maloja",
     long_description=__doc__,
     classifiers=[
         "Operating System :: OS Independent",
@@ -59,11 +59,11 @@ setup(
         "License :: Other/Proprietary License",
     ],
     packages=[
-        "vjobs",
-        "vjobs.test",
+        "maloja",
+        "maloja.test",
     ],
     package_data={
-        "vjobs": [
+        "maloja": [
             "doc/*.rst",
             "doc/_templates/*.css",
             "doc/html/*.html",
@@ -90,7 +90,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "vjobs = vjobs.workflow.main:run",
+            "maloja = maloja.workflow.main:run",
         ],
     },
     zip_safe=False

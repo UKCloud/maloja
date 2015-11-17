@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# VJobs documentation build configuration file, created by
+# Maloja documentation build configuration file, created by
 # sphinx-quickstart on Mon Nov 16 11:56:33 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -20,13 +20,13 @@ import shlex
 try:
     import pkg_resources
     sys.path.append(os.path.abspath(os.path.join(
-        pkg_resources.resource_filename("vjobs", ""),
+        pkg_resources.resource_filename("maloja", ""),
         "..")
     ))
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join("..", "..")))
 
-import vjobs
+import maloja
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -62,7 +62,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'VJobs'
+project = 'Maloja'
 copyright = '2015, D Haynes'
 author = 'D Haynes'
 
@@ -71,7 +71,7 @@ author = 'D Haynes'
 # built documents.
 #
 # The short X.Y version.
-version = vjobs.__version__
+version = maloja.__version__
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -226,7 +226,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'VJobsdoc'
+htmlhelp_basename = 'Malojadoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -248,7 +248,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'VJobs.tex', 'VJobs Documentation',
+  (master_doc, 'Maloja.tex', 'Maloja Documentation',
    'D Haynes', 'manual'),
 ]
 
@@ -278,7 +278,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'vjobs', 'VJobs Documentation',
+    (master_doc, 'maloja', 'Maloja Documentation',
      [author], 1)
 ]
 
@@ -292,8 +292,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'VJobs', 'VJobs Documentation',
-   author, 'VJobs', 'One line description of project.',
+  (master_doc, 'Maloja', 'Maloja Documentation',
+   author, 'Maloja', 'One line description of project.',
    'Miscellaneous'),
 ]
 

@@ -1,8 +1,8 @@
 ..  Titling
     ##++::==~~--''``
     
-VJobs
-:::::
+Maloja
+::::::
 
 A toolkit for use with a VMware cloud.
 
@@ -16,11 +16,11 @@ Install sphinx::
 
 Build the docs from source::
 
-    $ sphinx-build vjobs/doc vjobs/doc/html
+    $ sphinx-build maloja/doc maloja/doc/html
 
 Read the documentation::
 
-    $ firefox vjobs/doc/html/index.html
+    $ firefox maloja/doc/html/index.html
 
 Requirements
 ::::::::::::

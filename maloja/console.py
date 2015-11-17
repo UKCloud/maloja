@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
-try:
-    import asyncio
-except ImportError:
-    asyncio = None
 import cmd
 import logging
 import queue
@@ -16,11 +12,6 @@ from requests_futures.sessions import FuturesSession
 
 URL = 'http://localhost'
 NUM = 3
-
-logging.basicConfig(
-    stream=sys.stderr, level=logging.INFO,
-    format='%(name)s %(relativeCreated)s %(message)s',
-    )
 
 class Broker:
     pass
@@ -56,21 +47,26 @@ class Console(cmd.Cmd):
 
     def input_task(self):
         log = logging.getLogger("maloja.console.input_task")
+        n = 0
         line = ""
         while not line.lower().startswith("quit"):
-            log.info("Eh?")
             line = self.get_command(self.prompt)
+            n += 1
             self.commands.put(line)
-            log.info("OK!")
+        else:
+            log.debug("Closing console input.")
+            return n
  
     def command_task(self):
         log = logging.getLogger("maloja.console.command_task")
+        n = 0
         line = ""
         self.preloop()
         while not line.lower().startswith("quit"):
             sys.stdout.write(self.prompt)
             sys.stdout.flush()
             line = self.commands.get()
+            n += 1
             try:
                 line = self.precmd(line)
                 msg = self.onecmd(line)
@@ -83,6 +79,15 @@ class Console(cmd.Cmd):
                     break
             except Exception as e:
                 print(e)
+        else:
+            log.debug("Closing command stream.")
+            return n
+
+    def do_quit(self, arg):
+        """
+        End the session.
+        """
+        return None
 
 class Surveyor:
     pass
@@ -130,24 +135,3 @@ def create_console(operations, results, loop=None):
 #    )
 
 #logging.info('done!')
-
-def main(args):
-
-    asyncio = None
-    try:
-        loop = asyncio.SelectorEventLoop()
-        asyncio.set_event_loop(loop)
-        operations = asyncio.Queue(loop=loop)
-        results = asyncio.Queue(loop=loop)
-    except AttributeError:
-        loop = None
-        operations = queue.Queue()
-        results = queue.Queue()
-
-    console = create_console(operations, results, loop=loop)
-    for future in concurrent.futures.as_completed(set(console.tasks.values())):
-        print(future.result())
-
-if __name__ == "__main__":
-    rv = main(None)
-    sys.exit(rv)

@@ -30,7 +30,12 @@ if (maj, min_) < (3, 4):
     deps += [
         "singledispatch>=3.4.0.3"
     ]
-print(deps)
+# TODO: Remove; dev only
+if (maj, min_) == (3, 5):
+    deps += [
+        "requests-futures>=0.9.5"
+    ]
+
 
 try:
     # For setup.py install

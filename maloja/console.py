@@ -15,6 +15,7 @@ from requests_futures.sessions import FuturesSession
 from maloja.broker import Broker
 from maloja.broker import Credentials
 from maloja.broker import Stop
+from maloja.broker import Survey
 
 URL = 'http://localhost'
 NUM = 3
@@ -107,9 +108,14 @@ class Console(cmd.Cmd):
 
             > survey 3
         """
+        log = logging.getLogger("maloja.console.do_survey")
         line = arg.strip()
         survey = []
 
+        msg = Survey()
+        packet = (uuid.uuid4(), msg)
+        self.operations.put(packet)
+        log.debug(packet)
         if not line:
             print("Your appliances:")
             print(*["{0:01}: {1}".format(i.id, i.name) for i in survey],
@@ -131,12 +137,12 @@ class Surveyor:
     pass
 
 def create_console(operations, results, options, loop=None):
-    broker = Broker(operations, results, loop=loop)
     creds = Credentials(options.url, options.user, None)
     console = Console(operations, results, creds, loop=loop)
     executor = concurrent.futures.ThreadPoolExecutor(
-        max(4, len(broker.tasks) + len(console.tasks) + 1)
+        max(4, len(Broker.tasks) + len(console.tasks) + 2)
     )
+    broker = Broker(operations, results, executor=executor, loop=loop)
     if loop is not None:
         # launch asyncio coroutines
         for coro in console.routines:

@@ -98,12 +98,11 @@ class Broker:
                         return_when=concurrent.futures.FIRST_EXCEPTION
                     )
                     response = next(iter(results.done)).result(timeout=0)
-                    # TODO: Handle failure modes and results.not_done
-                    #if response.status_code == requests.codes.ok:
-                    log.info(response.status_code)
-                    token = Token(time.time(), msg.url, "x-vcloud-authorization", None)
-                    self.token = token._replace(value=response.headers.get(token.key))
-                    reply = self.token
+                    # TODO: Handle results.not_done
+                    if response.status_code == requests.codes.ok:
+                        token = Token(time.time(), msg.url, "x-vcloud-authorization", None)
+                        self.token = token._replace(value=response.headers.get(token.key))
+                        reply = self.token
                 else:
                     log.debug(packet)
                     ops = handler(msg, self.session, self.token)

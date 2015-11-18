@@ -114,8 +114,7 @@ class Console(cmd.Cmd):
                 self.token = msg
                 self.prompt = "Type 'help' for commands > "
             if isinstance(msg, str):
-                sys.stdout.write(msg)
-                sys.stdout.write("\n")
+                sys.stdout.write("\n[{0}] {1}\n".format(id_, msg))
             else:
                 sys.stdout.write("\n[{0}] {1.__name__} received.\n".format(id_, type(msg)))
             sys.stdout.flush()

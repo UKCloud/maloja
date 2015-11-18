@@ -54,8 +54,6 @@ def main(args):
         for i in concurrent.futures.as_completed(set(console.tasks.values()))
         if i.done()
     ]
-    if max(results) != min(results):
-        warnings.warn("Some commands, operations or results were missed.")
     return 0
 
 

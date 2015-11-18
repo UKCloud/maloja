@@ -14,6 +14,7 @@ import concurrent.futures
 from requests_futures.sessions import FuturesSession
 
 from maloja.broker import Broker
+from maloja.broker import Token
 from maloja.broker import Credentials
 from maloja.broker import Stop
 from maloja.broker import Survey
@@ -32,12 +33,13 @@ class Console(cmd.Cmd):
             self.commands = queue.Queue()
         else:
             self.commands = asyncio.Queue(loop=loop)
-        self.prompt = "Type 'help' for commands > "
+        self.prompt = ""
         self.tasks = {
             "input_task": None,
             "command_task": None,
             "results_task": None,
         }
+        self.token = None
         self.stop = False
         self.seq = itertools.count(1)
 
@@ -59,7 +61,7 @@ class Console(cmd.Cmd):
         n = 0
         line = ""
         while not self.stop:
-            if self.creds.password is None:
+            if self.token is None:
                 password = getpass.getpass(prompt="Enter your API password: ")
                 self.creds = self.creds._replace(password=password.strip())
                 packet = (next(self.seq), self.creds)
@@ -108,7 +110,14 @@ class Console(cmd.Cmd):
             time.sleep(0)
             id_, msg = self.results.get(block=True, timeout=None)
             n += 1
-            sys.stdout.write("[{0}] {1.__name__} received.\n".format(id_, type(msg)))
+            if isinstance(msg, Token):
+                self.token = msg
+                self.prompt = "Type 'help' for commands > "
+            if isinstance(msg, str):
+                sys.stdout.write(msg)
+                sys.stdout.write("\n")
+            else:
+                sys.stdout.write("\n[{0}] {1.__name__} received.\n".format(id_, type(msg)))
             sys.stdout.flush()
             sys.stdout.write(self.prompt)
             sys.stdout.flush()
@@ -141,10 +150,10 @@ class Console(cmd.Cmd):
         self.operations.put(packet)
         log.debug(packet)
         if not line:
-            print("Your appliances:")
+            #print("Your appliances:")
             print(*["{0:01}: {1}".format(i.id, i.name) for i in survey],
                     sep="\n")
-            sys.stdout.write("\n")
+            #sys.stdout.write("\n")
         elif line.isdigit():
             app = survey[int(line)]
             msg = app

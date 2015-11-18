@@ -11,12 +11,13 @@ except ImportError:
 import time
 import warnings
 
+import requests
 from requests_futures.sessions import FuturesSession
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
 Stop = namedtuple("Stop", [])
 Survey = namedtuple("Survey", [])
-Token = namedtuple("Token", ["t", "key", "value"])
+Token = namedtuple("Token", ["t", "url", "key", "value"])
 
 @singledispatch
 def handler(msg, path=None, queue=None, **kwargs):
@@ -50,7 +51,18 @@ def survey_handler(msg, session, token, callback=None):
     log = logging.getLogger("maloja.broker.survey_handler")
     log.debug("Handling a survey.")
     #future = session.get(url, background_callback=bg_cb)
-    return (None, )
+    url = "{url}:{port}/{endpoint}".format(
+        url=token.url,
+        port=443,
+        endpoint="api/catalogs/query")
+
+    headers = {
+        "Accept": "application/*+xml;version=5.5",
+        token.key: token.value,
+    }
+    session.headers.update(headers)
+    future = session.get(url)
+    return (future,)
 
 class Broker:
 
@@ -87,7 +99,9 @@ class Broker:
                     )
                     response = next(iter(results.done)).result(timeout=0)
                     # TODO: Handle failure modes and results.not_done
-                    token = Token(time.time(), "x-vcloud-authorization", None)
+                    #if response.status_code == requests.codes.ok:
+                    log.info(response.status_code)
+                    token = Token(time.time(), msg.url, "x-vcloud-authorization", None)
                     self.token = token._replace(value=response.headers.get(token.key))
                     reply = self.token
                 else:
@@ -98,6 +112,7 @@ class Broker:
                         return_when=concurrent.futures.FIRST_EXCEPTION
                     )
                     response = next(iter(results.done)).result(timeout=0)
+                    reply = response.text
                     # TODO: Handle failure modes and results.not_done
             except Exception as e:
                 log.error(str(getattr(e, "args", e) or e))

@@ -6,6 +6,7 @@ import getpass
 import logging
 import queue
 import sys
+import time
 import uuid
 import warnings
 
@@ -35,7 +36,9 @@ class Console(cmd.Cmd):
         self.tasks = {
             "input_task": None,
             "command_task": None,
+            "results_task": None,
         }
+        self.stop = False
 
     @property
     def routines(self):
@@ -54,13 +57,12 @@ class Console(cmd.Cmd):
         log = logging.getLogger("maloja.console.input_task")
         n = 0
         line = ""
-        while not line.lower().startswith("quit"):
+        while not self.stop:
             if self.creds.password is None:
                 password = getpass.getpass(prompt="Enter your API password: ")
                 self.creds = self.creds._replace(password=password.strip())
                 packet = (uuid.uuid4(), self.creds)
                 self.operations.put(packet)
-                log.debug(packet)
                 sys.stdout.write(self.prompt)
                 sys.stdout.flush()
             line = self.get_command(self.prompt)
@@ -75,7 +77,7 @@ class Console(cmd.Cmd):
         n = 0
         line = ""
         self.preloop()
-        while not line.lower().startswith("quit"):
+        while not self.stop:
             if self.creds.password is not None:
                 sys.stdout.write(self.prompt)
                 sys.stdout.flush()
@@ -89,14 +91,35 @@ class Console(cmd.Cmd):
                     self.operations.put(packet)
                     log.debug(packet)
                     #reply = yield from self.replies.get()
-                stop = self.postcmd(msg, line)
-                if stop:
+                self.stop = self.postcmd(msg, line)
+                if self.stop:
                     break
             except Exception as e:
                 print(e)
         else:
             log.debug("Closing command stream.")
             return n
+
+    def results_task(self):
+        log = logging.getLogger("maloja.console.results_task")
+        n = 0
+        while not self.stop:
+            time.sleep(0)
+            id_, msg = self.results.get(block=True, timeout=None)
+            n += 1
+            sys.stdout.write("{0.__name__} received ({1}).\n".format(type(msg), id_))
+            sys.stdout.flush()
+            sys.stdout.write(self.prompt)
+            sys.stdout.flush()
+        else:
+            log.debug("Closing results stream.")
+            sys.stdout.write("Press return.")
+            sys.stdout.flush()
+            return n
+
+    def postcmd(self, msg, line):
+        """Decides stop condition."""
+        return line.lower().startswith("quit")
 
     def do_survey(self, arg):
         """
@@ -158,30 +181,3 @@ def create_console(operations, results, options, loop=None):
             console.tasks[task] = executor.submit(func)
             
     return console
-
-#session = FuturesSession()
-#futures = {}
-
-#logging.info('start')
-#for n in range(NUM):
-#    wibble = "%04d" % n
-#    payload = { 
-#        'name':'test',
-#        'genNum':wibble,
-#        'Button1':'Push+Now'
-#    }
-#    future = session.get( URL, data=payload )
-#    futures[future] = payload
-
-#logging.info('requests done, waiting for responses')
-
-#for future in concurrent.futures.as_completed(futures, timeout=5):
-#    res = future.result()
-#    logging.info(
-#        "wibble=%s, %s, %s bytes",
-#        futures[future]['genNum'],
-#        res,
-#        len(res.text),
-#    )
-
-#logging.info('done!')

@@ -3,11 +3,11 @@
 
 import cmd
 import getpass
+import itertools
 import logging
 import queue
 import sys
 import time
-import uuid
 import warnings
 
 import concurrent.futures
@@ -39,6 +39,7 @@ class Console(cmd.Cmd):
             "results_task": None,
         }
         self.stop = False
+        self.seq = itertools.count(1)
 
     @property
     def routines(self):
@@ -61,7 +62,7 @@ class Console(cmd.Cmd):
             if self.creds.password is None:
                 password = getpass.getpass(prompt="Enter your API password: ")
                 self.creds = self.creds._replace(password=password.strip())
-                packet = (uuid.uuid4(), self.creds)
+                packet = (next(self.seq), self.creds)
                 self.operations.put(packet)
                 sys.stdout.write(self.prompt)
                 sys.stdout.flush()
@@ -87,7 +88,7 @@ class Console(cmd.Cmd):
                 line = self.precmd(line)
                 msg = self.onecmd(line)
                 if msg is not None:
-                    packet = (uuid.uuid4(), msg)
+                    packet = (next(self.seq), msg)
                     self.operations.put(packet)
                     log.debug(packet)
                     #reply = yield from self.replies.get()
@@ -107,7 +108,7 @@ class Console(cmd.Cmd):
             time.sleep(0)
             id_, msg = self.results.get(block=True, timeout=None)
             n += 1
-            sys.stdout.write("{0.__name__} received ({1}).\n".format(type(msg), id_))
+            sys.stdout.write("[{0}] {1.__name__} received.\n".format(id_, type(msg)))
             sys.stdout.flush()
             sys.stdout.write(self.prompt)
             sys.stdout.flush()
@@ -136,7 +137,7 @@ class Console(cmd.Cmd):
         survey = []
 
         msg = Survey()
-        packet = (uuid.uuid4(), msg)
+        packet = (next(self.seq), msg)
         self.operations.put(packet)
         log.debug(packet)
         if not line:

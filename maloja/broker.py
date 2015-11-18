@@ -25,7 +25,7 @@ def handler(msg, path=None, queue=None, **kwargs):
 @handler.register(Credentials)
 def credentials_handler(msg, session):
     log = logging.getLogger("maloja.broker.credentials_handler")
-    log.info("Handling credentials.")
+    log.debug("Handling credentials.")
     url = "{url}:{port}/{endpoint}".format(
         url=msg.url,
         port=443,
@@ -42,13 +42,13 @@ def credentials_handler(msg, session):
 @handler.register(Stop)
 def stop_handler(msg, session, token):
     log = logging.getLogger("maloja.broker.stop_handler")
-    log.info("Handling a stop.")
+    log.debug("Handling a stop.")
     return tuple()
     
 @handler.register(Survey)
 def survey_handler(msg, session, token, callback=None):
     log = logging.getLogger("maloja.broker.survey_handler")
-    log.info("Handling a survey.")
+    log.debug("Handling a survey.")
     #future = session.get(url, background_callback=bg_cb)
     return (None, )
 

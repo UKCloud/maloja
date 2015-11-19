@@ -8,7 +8,7 @@ import operator
 import os.path
 
 
-Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node"])
+Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node", "file"])
  
 def make_path(path:Path, prefix="proj_", suffix=""):
     os.makedirs(path.root, exist_ok=True)

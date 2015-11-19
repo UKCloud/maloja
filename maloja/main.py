@@ -14,6 +14,8 @@ import warnings
 
 import maloja.cli
 import maloja.console
+from maloja.workflow.utils import Path
+from maloja.workflow.utils import make_path
 
 
 def main(args):
@@ -48,6 +50,10 @@ def main(args):
         operations = queue.Queue()
         results = queue.Queue()
 
+    path = make_path(
+        Path(args.output, None, None, None, None, None, "project.yaml")
+    )
+    log.info(path)
     console = maloja.console.create_console(operations, results, args, loop=loop)
     results = [
         i.result()

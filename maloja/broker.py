@@ -124,4 +124,3 @@ class Broker:
         # Example of a callback
         # parse the json storing the result on the response object
         response.data = response.json()
-

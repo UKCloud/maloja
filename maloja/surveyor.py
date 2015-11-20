@@ -8,6 +8,11 @@ import os
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
+import ruamel.yaml
+
+import maloja.types
+from maloja.workflow.utils import record
+
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
     elements = tree.iterfind(xpath, namespaces=namespaces)
     if not kwargs:
@@ -23,7 +28,25 @@ class Surveyor:
         log = logging.getLogger("maloja.surveyor.on_org")
         os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
         tree = ET.fromstring(response.text)
-        log.debug(tree)
+        # TODO: Inline
+        data = {}
+        namespace = "{http://www.vmware.com/vcloud/v1.5}"
+        permitted = {i.lower(): i for i in maloja.types.Org._fields}
+        for item in tree:
+            key = item.tag.replace(namespace, "").lower()
+            field = permitted.pop(key, None)
+            log.debug(field)
+            if field is not None:
+                data[field] = item.text
+        org = maloja.types.Org(**data)
+
+        log.debug(org)
+        path = path._replace(file="org.yaml")
+        with record(
+            path.file,
+            parent=os.path.join(path.root, path.project, path.org)
+        ) as output:
+            output.write(ruamel.yaml.dump(org))
 
     @staticmethod
     def on_org_list(path, session, response):

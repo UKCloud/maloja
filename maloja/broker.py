@@ -16,7 +16,7 @@ from requests_futures.sessions import FuturesSession
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
 Stop = namedtuple("Stop", [])
-Survey = namedtuple("Survey", [])
+Survey = namedtuple("Survey", ["path"])
 Token = namedtuple("Token", ["t", "url", "key", "value"])
 
 @singledispatch
@@ -49,20 +49,26 @@ def stop_handler(msg, session, token):
 @handler.register(Survey)
 def survey_handler(msg, session, token, callback=None):
     log = logging.getLogger("maloja.broker.survey_handler")
-    log.debug("Handling a survey.")
-    #future = session.get(url, background_callback=bg_cb)
-    url = "{url}:{port}/{endpoint}".format(
-        url=token.url,
-        port=443,
-        endpoint="api/catalogs/query")
+    if msg.path.project and not any(msg.path[2:-1]):
+        endpoints = ["api/org"]
+    else:
+        endpoints = ["api/catalogs/query"]
+    rv = []
+    for endpoint in endpoints:
+        #future = session.get(url, background_callback=bg_cb)
+        log.debug("Scheduling  GET to {0}".format(endpoint))
+        url = "{url}:{port}/{endpoint}".format(
+            url=token.url,
+            port=443,
+            endpoint=endpoint)
 
-    headers = {
-        "Accept": "application/*+xml;version=5.5",
-        token.key: token.value,
-    }
-    session.headers.update(headers)
-    future = session.get(url)
-    return (future,)
+        headers = {
+            "Accept": "application/*+xml;version=5.5",
+            token.key: token.value,
+        }
+        session.headers.update(headers)
+        rv.append(session.get(url))
+    return rv
 
 class Broker:
 

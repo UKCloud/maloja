@@ -29,7 +29,7 @@ class Console(cmd.Cmd):
         self.operations = operations
         self.results = results
         self.creds = creds
-        self.path = path
+        self.project = path
         if loop is None:
             self.commands = queue.Queue()
         else:
@@ -145,7 +145,7 @@ class Console(cmd.Cmd):
         line = arg.strip()
         survey = []
 
-        msg = Survey()
+        msg = Survey(self.project)
         packet = (next(self.seq), msg)
         self.operations.put(packet)
         log.debug(packet)
@@ -166,8 +166,6 @@ class Console(cmd.Cmd):
         """
         return Stop()
 
-class Surveyor:
-    pass
 
 def create_console(operations, results, options, path, loop=None):
     creds = Credentials(options.url, options.user, None)

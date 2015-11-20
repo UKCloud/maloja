@@ -52,7 +52,11 @@ def main(args):
         results = queue.Queue()
 
     path = Path(args.output, None, None, None, None, None, "project.yaml")
-    path = make_path(recent_project(make_path(path)))
+    try:
+        path = recent_project(path)
+    except:
+        path = make_path(path)
+
     console = maloja.console.create_console(operations, results, args, path, loop=loop)
     results = [
         i.result()

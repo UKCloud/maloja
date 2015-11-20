@@ -14,19 +14,20 @@ def make_path(path:Path, prefix="proj_", suffix=""):
     os.makedirs(path.root, exist_ok=True)
 
     if path.project is None and path.file is not None:
-            project = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=path.root)
-            return path._replace(project=os.path.basename(project))
+        project = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=path.root)
+        open(os.path.join(project, path.file), "w").close()
+        return path._replace(project=os.path.basename(project))
     else:
         return path
 
 def recent_project(path:Path):
     projects = [i for i in os.listdir(path.root)
-             if os.path.isdir(os.path.join(path.root, i))]
+             if os.path.isfile(os.path.join(path.root, i, "project.yaml"))]
     stats = [(os.path.getmtime(os.path.join(path.root, fP)), fP)
              for fP in projects]
     stats.sort(key=operator.itemgetter(0), reverse=True)
     return Path(
-        path.root, None, None, None, None, None, path.file)
+        path.root, next((i[1] for i in stats), None), None, None, None, None, path.file)
 
 @contextlib.contextmanager
 def record(nameOrStream, parent=None, suffix=".yaml"):

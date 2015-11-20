@@ -11,7 +11,6 @@ import time
 import warnings
 
 import concurrent.futures
-from requests_futures.sessions import FuturesSession
 
 from maloja.broker import Broker
 from maloja.broker import Token

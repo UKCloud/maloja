@@ -4,6 +4,7 @@
 from collections import namedtuple
 import concurrent.futures
 import logging
+import functools
 try:
     from functools import singledispatch
 except ImportError:
@@ -13,6 +14,8 @@ import warnings
 
 import requests
 from requests_futures.sessions import FuturesSession
+
+from maloja.surveyor import Surveyor
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
 Stop = namedtuple("Stop", [])
@@ -50,11 +53,15 @@ def stop_handler(msg, session, token):
 def survey_handler(msg, session, token, callback=None):
     log = logging.getLogger("maloja.broker.survey_handler")
     if msg.path.project and not any(msg.path[2:-1]):
-        endpoints = ["api/org"]
+        endpoints = [
+            ("api/org", functools.partial(Surveyor.on_org_list, msg.path))
+        ]
     else:
-        endpoints = ["api/catalogs/query"]
+        endpoints = [
+            ("api/catalogs/query", None)
+        ]
     rv = []
-    for endpoint in endpoints:
+    for endpoint, callback in endpoints:
         #future = session.get(url, background_callback=bg_cb)
         log.debug("Scheduling  GET to {0}".format(endpoint))
         url = "{url}:{port}/{endpoint}".format(
@@ -67,7 +74,7 @@ def survey_handler(msg, session, token, callback=None):
             token.key: token.value,
         }
         session.headers.update(headers)
-        rv.append(session.get(url))
+        rv.append(session.get(url, background_callback=callback))
     return rv
 
 class Broker:
@@ -125,8 +132,3 @@ class Broker:
                 self.results.put((id_, reply))
         else:
             return n
-
-    def on_complete(self, session, response):
-        # Example of a callback
-        # parse the json storing the result on the response object
-        response.data = response.json()

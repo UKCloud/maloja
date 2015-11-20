@@ -16,6 +16,7 @@ import maloja.cli
 import maloja.console
 from maloja.workflow.utils import Path
 from maloja.workflow.utils import make_path
+from maloja.workflow.utils import recent_project
 
 
 def main(args):
@@ -50,11 +51,9 @@ def main(args):
         operations = queue.Queue()
         results = queue.Queue()
 
-    path = make_path(
-        Path(args.output, None, None, None, None, None, "project.yaml")
-    )
-    log.info(path)
-    console = maloja.console.create_console(operations, results, args, loop=loop)
+    path = Path(args.output, None, None, None, None, None, "project.yaml")
+    path = make_path(recent_project(make_path(path)))
+    console = maloja.console.create_console(operations, results, args, path, loop=loop)
     results = [
         i.result()
         for i in concurrent.futures.as_completed(set(console.tasks.values()))

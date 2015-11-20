@@ -26,7 +26,7 @@ def recent_project(path:Path):
              for fP in projects]
     stats.sort(key=operator.itemgetter(0), reverse=True)
     return Path(
-        path.root, next((i[1] for i in stats), None), path.file)
+        path.root, None, None, None, None, None, path.file)
 
 @contextlib.contextmanager
 def record(nameOrStream, parent=None, suffix=".yaml"):

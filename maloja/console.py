@@ -24,11 +24,12 @@ NUM = 3
 
 class Console(cmd.Cmd):
 
-    def __init__(self, operations, results, creds, *args, loop=None, **kwargs):
+    def __init__(self, operations, results, creds, path, *args, loop=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.operations = operations
         self.results = results
         self.creds = creds
+        self.path = path
         if loop is None:
             self.commands = queue.Queue()
         else:
@@ -168,9 +169,9 @@ class Console(cmd.Cmd):
 class Surveyor:
     pass
 
-def create_console(operations, results, options, loop=None):
+def create_console(operations, results, options, path, loop=None):
     creds = Credentials(options.url, options.user, None)
-    console = Console(operations, results, creds, loop=loop)
+    console = Console(operations, results, creds, path, loop=loop)
     executor = concurrent.futures.ThreadPoolExecutor(
         max(4, len(Broker.tasks) + len(console.tasks) + 2)
     )

@@ -188,7 +188,7 @@ class Console(cmd.Cmd):
 
         if len(objs) > 1:
             print("Your options:")
-            print(*["{0:01}: {1}".format(n, i.name) for i in enumerate(objs)],
+            print(*["{0:01}: {1}".format(n, i.name) for n, i in enumerate(objs)],
                     sep="\n")
             sys.stdout.write("\n")
         elif objs:

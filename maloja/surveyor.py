@@ -26,6 +26,7 @@ def survey_loads(xml):
     tree = ET.fromstring(xml)
     typ = {
         namespace + "Org": maloja.types.Org,
+        namespace + "VApp": maloja.types.App,
         namespace + "Vdc": maloja.types.Vdc
     }.get(tree.tag)
     attribs = (tree.attrib.get(f, None) for f in typ._fields)

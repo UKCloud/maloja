@@ -120,7 +120,6 @@ class OrgSurveyTests(unittest.TestCase):
         tree = ET.fromstring(OrgSurveyTests.xml)
         vdcs = maloja.surveyor.find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']", tree)
-        print(list(vdcs))
 
     def test_yaml(self):
         txt = textwrap.dedent("""
@@ -138,7 +137,7 @@ class OrgSurveyTests(unittest.TestCase):
             "application/vnd.vmware.vcloud.org+xml",
             obj.type)
 
-class VdcSurveyTests(unittest.TestCase):
+class VAppSurveyTests(unittest.TestCase):
 
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><VApp
     xmlns="http://www.vmware.com/vcloud/v1.5"
@@ -659,15 +658,14 @@ class VdcSurveyTests(unittest.TestCase):
     </VApp>""")
 
     def test_xml(self):
-        obj = next(maloja.surveyor.survey_loads(VdcSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.types.Vdc)
-        self.assertEqual("Default vDC", obj.name)
-        self.assertEqual("Default vDC", obj.description)
+        obj = next(maloja.surveyor.survey_loads(VAppSurveyTests.xml), None)
+        self.assertIsInstance(obj, maloja.types.App)
+        self.assertEqual("importedVapp", obj.name)
         self.assertEqual(
-            "https://vcloud.example.com/api/vdc/afaafb99-228c-4838-ad07-5bf3aa649d42",
+            "https://vcloud.example.com/api/vApp/vapp-bba47763-0ce1-45b9-8470-ea29ba58c52f",
             obj.href)
         self.assertEqual(
-            "application/vnd.vmware.vcloud.vdc+xml",
+            "application/vnd.vmware.vcloud.vApp+xml",
             obj.type)
 
 class VdcSurveyTests(unittest.TestCase):

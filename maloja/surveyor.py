@@ -25,8 +25,9 @@ def survey_loads(xml):
     namespace = "{http://www.vmware.com/vcloud/v1.5}"
     tree = ET.fromstring(xml)
     typ = {
-        namespace + "Org": maloja.types.Org,
         namespace + "VApp": maloja.types.App,
+        namespace + "Vm": maloja.types.Node,
+        namespace + "Org": maloja.types.Org,
         namespace + "Vdc": maloja.types.Vdc
     }.get(tree.tag)
     attribs = (tree.attrib.get(f, None) for f in typ._fields)
@@ -41,6 +42,26 @@ def survey_loads(xml):
 
 class Surveyor:
 
+    @staticmethod
+    def on_vm(path, session, response):
+        log = logging.getLogger("maloja.surveyor.on_vm")
+        os.makedirs(
+            os.path.join(
+                path.root, path.project, path.org, path.dc,
+                path.app, path.node
+            ),
+            exist_ok=True
+        )
+        for obj in survey_loads(response.text):
+            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            with open(
+                os.path.join(
+                    path.root, path.project, path.org, path.dc,
+                    path.app, path.node, path.file
+                ), "w"
+            ) as output:
+                output.write(ruamel.yaml.dump(obj))
+                output.flush()
 
     @staticmethod
     def on_vapp(path, session, response):
@@ -53,6 +74,22 @@ class Surveyor:
             ) as output:
                 output.write(ruamel.yaml.dump(obj))
                 output.flush()
+
+        vms = find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
+            ET.fromstring(response.text)
+        )
+        ops = [session.get(
+            vm.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_vm,
+                path._replace(node=vm.attrib.get("name"))
+            )
+        ) for vm in vms]
+        results = concurrent.futures.wait(
+            ops, timeout=3 * len(ops),
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
 
 
     @staticmethod

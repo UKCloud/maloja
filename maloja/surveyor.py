@@ -41,6 +41,20 @@ def survey_loads(xml):
 
 class Surveyor:
 
+
+    @staticmethod
+    def on_vapp(path, session, response):
+        log = logging.getLogger("maloja.surveyor.on_vapp")
+        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
+        for obj in survey_loads(response.text):
+            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            with open(
+                os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
+            ) as output:
+                output.write(ruamel.yaml.dump(obj))
+                output.flush()
+
+
     @staticmethod
     def on_vdc(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_vdc")
@@ -54,6 +68,22 @@ class Surveyor:
                 output.write(ruamel.yaml.dump(obj))
                 output.flush()
 
+        vapps = find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",
+            ET.fromstring(response.text)
+        )
+        ops = [session.get(
+            vapp.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_vapp,
+                path._replace(app=vapp.attrib.get("name"))
+            )
+        ) for vapp in vapps]
+        results = concurrent.futures.wait(
+            ops, timeout=3 * len(ops),
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+
     @staticmethod
     def on_org(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_org")
@@ -65,6 +95,7 @@ class Surveyor:
             ) as output:
                 output.write(ruamel.yaml.dump(obj))
                 output.flush()
+
         vdcs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']",
             ET.fromstring(response.text)

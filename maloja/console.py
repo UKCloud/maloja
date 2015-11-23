@@ -2,15 +2,20 @@
 #   -*- encoding: UTF-8 -*-
 
 import cmd
+from collections import OrderedDict
 import getpass
+import glob
 import itertools
 import logging
+import os.path
 import queue
 import sys
 import time
 import warnings
 
 import concurrent.futures
+
+import ruamel.yaml
 
 from maloja.broker import Broker
 from maloja.broker import Token
@@ -42,6 +47,7 @@ class Console(cmd.Cmd):
         self.token = None
         self.stop = False
         self.seq = itertools.count(1)
+        self.selection = OrderedDict()
 
     @property
     def routines(self):
@@ -157,6 +163,38 @@ class Console(cmd.Cmd):
             app = survey[int(line)]
             msg = app
             return msg
+
+    def do_select(self, arg):
+        log = logging.getLogger("maloja.console.do_survey")
+        name, spec = arg.strip().split()
+        try:
+            locn, criteria = spec.split(":")
+        except ValueError:
+            locn = spec.strip()
+            criteria = ""
+        try:
+            key, value = criteria.split("=")
+        except ValueError:
+            key = value = None
+        hits = glob.glob(
+            os.path.join(self.project.root, self.project.project, "*", locn, "*.yaml")
+        )
+        objs = []
+        for hit in hits:
+            with open(hit, 'r') as data:
+                obj = ruamel.yaml.load(data.read())
+                if not (key or value) or value.strip() in getattr(obj, key.strip()): 
+                    objs.append(obj)
+
+        if len(objs) > 1:
+            print("Your options:")
+            print(*["{0:01}: {1}".format(n, i.name) for i in enumerate(objs)],
+                    sep="\n")
+            sys.stdout.write("\n")
+        elif objs:
+            print(objs[0])
+        else:
+            print("No matches for pattern {}".format(spec))
 
     def do_quit(self, arg):
         """

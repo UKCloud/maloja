@@ -21,12 +21,27 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
         query = set(kwargs.items())
         return (i for i in elements if query.issubset(set(i.attrib.items())))
 
+def survey_loads(xml):
+    namespace = "{http://www.vmware.com/vcloud/v1.5}"
+    tree = ET.fromstring(xml)
+    typ = {namespace + "Org": maloja.types.Org}.get(tree.tag)
+    attribs = (tree.attrib.get(f, None) for f in typ._fields)
+    body = (
+        item.text if item is not None else None
+        for item in [
+            tree.find(namespace + f[0].capitalize() + f[1:]) for f in typ._fields
+        ]
+    )
+    data = (b if b is not None else a for a, b in zip(attribs, body))
+    yield typ(*data)
+
 class Surveyor:
 
     @staticmethod
     def on_org(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_org")
         os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
+        # survey_loads(response.text)
         tree = ET.fromstring(response.text)
         # TODO: Inline
         data = {}
@@ -47,6 +62,7 @@ class Surveyor:
             parent=os.path.join(path.root, path.project, path.org)
         ) as output:
             output.write(ruamel.yaml.dump(org))
+            output.flush()
 
     @staticmethod
     def on_org_list(path, session, response):

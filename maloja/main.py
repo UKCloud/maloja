@@ -53,7 +53,7 @@ def main(args):
 
     path = Path(args.output, None, None, None, None, None, "project.yaml")
     try:
-        path = recent_project(path)
+        path = make_path(recent_project(path))
     except:
         path = make_path(path)
 

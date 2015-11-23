@@ -41,31 +41,44 @@ def survey_loads(xml):
 class Surveyor:
 
     @staticmethod
+    def on_vdc(path, session, response):
+        log = logging.getLogger("maloja.surveyor.on_vdc")
+        log.debug(path)
+        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
+        for obj in survey_loads(response.text):
+            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            with open(
+                os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
+            ) as output:
+                output.write(ruamel.yaml.dump(obj))
+                output.flush()
+
+    @staticmethod
     def on_org(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_org")
         os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
-        # survey_loads(response.text)
-        tree = ET.fromstring(response.text)
-        # TODO: Inline
-        data = {}
-        namespace = "{http://www.vmware.com/vcloud/v1.5}"
-        permitted = {i.lower(): i for i in maloja.types.Org._fields}
-        for item in tree:
-            key = item.tag.replace(namespace, "").lower()
-            field = permitted.pop(key, None)
-            log.debug(field)
-            if field is not None:
-                data[field] = item.text
-        org = maloja.types.Org(**data)
-
-        log.debug(org)
-        path = path._replace(file="org.yaml")
-        with record(
-            path.file,
-            parent=os.path.join(path.root, path.project, path.org)
-        ) as output:
-            output.write(ruamel.yaml.dump(org))
-            output.flush()
+        for obj in survey_loads(response.text):
+            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            with open(
+                os.path.join(path.root, path.project, path.org, path.file), "w"
+            ) as output:
+                output.write(ruamel.yaml.dump(obj))
+                output.flush()
+        vdcs = find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']",
+            ET.fromstring(response.text)
+        )
+        ops = [session.get(
+            vdc.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_vdc,
+                path._replace(dc=vdc.attrib.get("name"))
+            )
+        ) for vdc in vdcs]
+        results = concurrent.futures.wait(
+            ops, timeout=3 * len(ops),
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
 
     @staticmethod
     def on_org_list(path, session, response):

@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import textwrap
 import unittest
+import xml.etree.ElementTree as ET
 
 import ruamel.yaml
 
@@ -105,8 +106,28 @@ class OrgSurveyTests(unittest.TestCase):
     </Org>
     """)
 
-    def test_simple(self):
+    def test_xml(self):
         obj = next(maloja.surveyor.survey_loads(OrgSurveyTests.xml), None)
+        self.assertIsInstance(obj, maloja.types.Org)
+        self.assertEqual("Default", obj.name)
+        self.assertEqual("Default Organization", obj.fullName)
+        self.assertEqual(
+            "https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a",
+            obj.href)
+        self.assertEqual(
+            "application/vnd.vmware.vcloud.org+xml",
+            obj.type)
+        tree = ET.fromstring(OrgSurveyTests.xml)
+        vdcs = maloja.surveyor.find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']", tree)
+        print(list(vdcs))
+
+    def test_yaml(self):
+        txt = textwrap.dedent("""
+            !!python/object/new:maloja.types.Org [Default, application/vnd.vmware.vcloud.org+xml,
+            'https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a',
+            Default Organization]""").strip()
+        obj = ruamel.yaml.load(txt)
         self.assertIsInstance(obj, maloja.types.Org)
         self.assertEqual("Default", obj.name)
         self.assertEqual("Default Organization", obj.fullName)
@@ -637,7 +658,7 @@ class VdcSurveyTests(unittest.TestCase):
     </Children>
     </VApp>""")
 
-    def test_simple(self):
+    def test_xml(self):
         obj = next(maloja.surveyor.survey_loads(VdcSurveyTests.xml), None)
         self.assertIsInstance(obj, maloja.types.Vdc)
         self.assertEqual("Default vDC", obj.name)
@@ -841,7 +862,7 @@ class VdcSurveyTests(unittest.TestCase):
     </VdcStorageProfiles>
     </Vdc>""")
 
-    def test_simple(self):
+    def test_xml(self):
         obj = next(maloja.surveyor.survey_loads(VdcSurveyTests.xml), None)
         self.assertIsInstance(obj, maloja.types.Vdc)
         self.assertEqual("Default vDC", obj.name)

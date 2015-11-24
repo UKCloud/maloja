@@ -208,7 +208,7 @@ def create_console(operations, results, options, path, loop=None):
     creds = Credentials(options.url, options.user, None)
     console = Console(operations, results, creds, path, loop=loop)
     executor = concurrent.futures.ThreadPoolExecutor(
-        max(4, len(Broker.tasks) + len(console.tasks) + 2)
+        max(4, len(Broker.tasks) + len(console.tasks) + 2 * len(path))
     )
     broker = Broker(operations, results, executor=executor, loop=loop)
     if loop is not None:

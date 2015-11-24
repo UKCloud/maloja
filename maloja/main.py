@@ -54,8 +54,8 @@ def main(args):
     path = Path(args.output, None, None, None, None, None, "project.yaml")
     try:
         path = make_path(recent_project(path))
-    except:
-        path = make_path(path)
+    except Exception as e:
+        log.info(e)
 
     console = maloja.console.create_console(operations, results, args, path, loop=loop)
     results = [

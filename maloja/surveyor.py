@@ -65,6 +65,34 @@ class Surveyor:
                 output.flush()
 
     @staticmethod
+    def on_template(path, session, response):
+        log = logging.getLogger("maloja.surveyor.on_template")
+        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
+        for obj in survey_loads(response.text):
+            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            with open(
+                os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
+            ) as output:
+                output.write(ruamel.yaml.dump(obj))
+                output.flush()
+
+        vms = find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
+            ET.fromstring(response.text)
+        )
+        ops = [session.get(
+            vm.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_vm,
+                path._replace(node=vm.attrib.get("name"))
+            )
+        ) for vm in vms]
+        results = concurrent.futures.wait(
+            ops, timeout=3 * len(ops),
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+
+    @staticmethod
     def on_vapp(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_vapp")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
@@ -126,16 +154,29 @@ class Surveyor:
     def on_catalog(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_catalog")
         for obj in survey_loads(response.text):
-            path = path._replace(
-                org=obj.name,
-                file="{0}.yaml".format(type(obj).__name__.lower())
-            )
-            os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
+            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
             with open(
-                os.path.join(path.root, path.project, path.org, path.file), "w"
+                os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
             ) as output:
                 output.write(ruamel.yaml.dump(obj))
                 output.flush()
+
+        templates = find_xpath(
+            ".//*[@type='application/vnd.vmware.vcloud.catalogItem+xml']",
+            ET.fromstring(response.text)
+        )
+        ops = [session.get(
+            tmplt.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_template,
+                path._replace(app=tmplt.attrib.get("name"))
+            )
+        ) for tmplt in templates]
+        results = concurrent.futures.wait(
+            ops, timeout=3 * len(ops),
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
 
     @staticmethod
     def on_org(path, session, response):
@@ -168,7 +209,8 @@ class Surveyor:
         ] + [session.get(
             ctlg.attrib.get("href"),
             background_callback=functools.partial(
-                Surveyor.on_catalog, path
+                Surveyor.on_catalog,
+                path._replace(dc=ctlg.attrib.get("name"))
             )
         ) for ctlg in ctlgs]
 

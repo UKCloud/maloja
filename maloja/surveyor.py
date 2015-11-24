@@ -26,6 +26,7 @@ def survey_loads(xml):
     tree = ET.fromstring(xml)
     typ = {
         namespace + "VApp": maloja.types.App,
+        namespace + "Catalog": maloja.types.Catalog,
         namespace + "Vm": maloja.types.Node,
         namespace + "Org": maloja.types.Org,
         namespace + "Vdc": maloja.types.Vdc
@@ -122,6 +123,21 @@ class Surveyor:
         )
 
     @staticmethod
+    def on_catalog(path, session, response):
+        log = logging.getLogger("maloja.surveyor.on_catalog")
+        for obj in survey_loads(response.text):
+            path = path._replace(
+                org=obj.name,
+                file="{0}.yaml".format(type(obj).__name__.lower())
+            )
+            os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
+            with open(
+                os.path.join(path.root, path.project, path.org, path.file), "w"
+            ) as output:
+                output.write(ruamel.yaml.dump(obj))
+                output.flush()
+
+    @staticmethod
     def on_org(path, session, response):
         log = logging.getLogger("maloja.surveyor.on_org")
         os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
@@ -133,6 +149,11 @@ class Surveyor:
                 output.write(ruamel.yaml.dump(obj))
                 output.flush()
 
+        ctlgs = find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.catalog+xml']",
+            ET.fromstring(response.text)
+        )
+
         vdcs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']",
             ET.fromstring(response.text)
@@ -143,7 +164,14 @@ class Surveyor:
                 Surveyor.on_vdc,
                 path._replace(dc=vdc.attrib.get("name"))
             )
-        ) for vdc in vdcs]
+        ) for vdc in vdcs
+        ] + [session.get(
+            ctlg.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_catalog, path
+            )
+        ) for ctlg in ctlgs]
+
         results = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION

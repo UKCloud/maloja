@@ -13,6 +13,75 @@ import ruamel.yaml
 import maloja.surveyor
 import maloja.types
 
+class CatalogSurveyTests(unittest.TestCase):
+    xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Catalog
+    xmlns="http://www.vmware.com/vcloud/v1.5"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810"
+    id="urn:vcloud:catalog:39867ab4-04e0-4b13-b468-08abcc1de810"
+    name="Default catalog"
+    type="application/vnd.vmware.vcloud.catalog+xml"
+    xsi:schemaLocation="http://www.vmware.com/vcloud/v1.5 http://https://vcloud.example.com/api/v1.5/schema/master.xsd">
+    <Link
+        href="https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a"
+        rel="up"
+        type="application/vnd.vmware.vcloud.org+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/metadata"
+        rel="down"
+        type="application/vnd.vmware.vcloud.metadata+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/catalogItems"
+        rel="add"
+        type="application/vnd.vmware.vcloud.catalogItem+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/action/upload"
+        rel="add"
+        type="application/vnd.vmware.vcloud.media+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/action/upload"
+        rel="add"
+        type="application/vnd.vmware.vcloud.uploadVAppTemplateParams+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/action/copy"
+        rel="copy"
+        type="application/vnd.vmware.vcloud.copyOrMoveCatalogItemParams+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/action/move"
+        rel="move"
+        type="application/vnd.vmware.vcloud.copyOrMoveCatalogItemParams+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810/action/captureVApp"
+        rel="add"
+        type="application/vnd.vmware.vcloud.captureVAppParams+xml"/>
+    <Description>Default catalog</Description>
+    <CatalogItems>
+        <CatalogItem
+            href="https://vcloud.example.com/api/catalogItem/016ed9ac-c9cc-4455-bcfb-1393edcae000"
+            id="016ed9ac-c9cc-4455-bcfb-1393edcae000"
+            name="imported"
+            type="application/vnd.vmware.vcloud.catalogItem+xml"/>
+    </CatalogItems>
+    <IsPublished>false</IsPublished>
+    <DateCreated>2013-02-11T15:46:40.170+02:00</DateCreated>
+    <VersionNumber>39</VersionNumber>
+    </Catalog>""")
+
+    def test_xml(self):
+        obj = next(maloja.surveyor.survey_loads(CatalogSurveyTests.xml), None)
+        self.assertIsInstance(obj, maloja.types.Catalog)
+        self.assertEqual("Default catalog", obj.name)
+        self.assertEqual(
+            "https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810",
+            obj.href)
+        self.assertEqual(
+            "application/vnd.vmware.vcloud.catalog+xml",
+            obj.type)
+        tree = ET.fromstring(OrgSurveyTests.xml)
+        vdcs = maloja.surveyor.find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']", tree)
+
+
 class OrgSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Org
         xmlns="http://www.vmware.com/vcloud/v1.5"

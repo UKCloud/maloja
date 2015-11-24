@@ -29,6 +29,7 @@ def survey_loads(xml):
         namespace + "Catalog": maloja.types.Catalog,
         namespace + "Vm": maloja.types.Node,
         namespace + "Org": maloja.types.Org,
+        namespace + "VAppTemplate": maloja.types.Template,
         namespace + "Vdc": maloja.types.Vdc
     }.get(tree.tag)
     attribs = (tree.attrib.get(f, None) for f in typ._fields)
@@ -54,7 +55,7 @@ class Surveyor:
             exist_ok=True
         )
         for obj in survey_loads(response.text):
-            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+            path = path._replace(file="node.yaml")
             with open(
                 os.path.join(
                     path.root, path.project, path.org, path.dc,
@@ -80,6 +81,8 @@ class Surveyor:
             "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
             ET.fromstring(response.text)
         )
+        vms = list(vms)
+        log.debug(vms)
         ops = [session.get(
             vm.attrib.get("href"),
             background_callback=functools.partial(
@@ -87,6 +90,29 @@ class Surveyor:
                 path._replace(node=vm.attrib.get("name"))
             )
         ) for vm in vms]
+        results = concurrent.futures.wait(
+            ops, timeout=3 * len(ops),
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+
+    @staticmethod
+    def on_catalogitem(path, session, response):
+        log = logging.getLogger("maloja.surveyor.on_catalogitem")
+        log.debug(path)
+
+        templates = find_xpath(
+            ".//*[@type='application/vnd.vmware.vcloud.vAppTemplate+xml']",
+            ET.fromstring(response.text)
+        )
+        templates = list(templates)
+        log.debug(templates)
+        ops = [session.get(
+            tmplt.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_template,
+                path._replace(app=tmplt.attrib.get("name"))
+            )
+        ) for tmplt in templates]
         results = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
@@ -119,7 +145,6 @@ class Surveyor:
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
-
 
     @staticmethod
     def on_vdc(path, session, response):
@@ -162,17 +187,16 @@ class Surveyor:
                 output.write(ruamel.yaml.dump(obj))
                 output.flush()
 
-        templates = find_xpath(
+        items = find_xpath(
             ".//*[@type='application/vnd.vmware.vcloud.catalogItem+xml']",
             ET.fromstring(response.text)
         )
         ops = [session.get(
-            tmplt.attrib.get("href"),
+            item.attrib.get("href"),
             background_callback=functools.partial(
-                Surveyor.on_template,
-                path._replace(app=tmplt.attrib.get("name"))
+                Surveyor.on_catalogitem, path
             )
-        ) for tmplt in templates]
+        ) for item in items]
         results = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION

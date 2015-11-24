@@ -8,6 +8,7 @@ except ImportError:
 import concurrent.futures
 import logging
 from logging.handlers import WatchedFileHandler
+import os
 import queue
 import sys
 import warnings
@@ -51,11 +52,12 @@ def main(args):
         operations = queue.Queue()
         results = queue.Queue()
 
+    os.makedirs(args.output, exist_ok=True)
     path = Path(args.output, None, None, None, None, None, "project.yaml")
     try:
         path = make_path(recent_project(path))
     except Exception as e:
-        log.info(e)
+        log.error(e)
 
     console = maloja.console.create_console(operations, results, args, path, loop=loop)
     results = [

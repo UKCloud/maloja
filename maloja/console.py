@@ -47,7 +47,7 @@ class Console(cmd.Cmd):
         self.token = None
         self.stop = False
         self.seq = itertools.count(1)
-        self.selection = OrderedDict()
+        self.search = set([])
 
     @property
     def routines(self):
@@ -164,37 +164,73 @@ class Console(cmd.Cmd):
             msg = app
             return msg
 
-    def do_select(self, arg):
-        log = logging.getLogger("maloja.console.do_survey")
-        name, spec = arg.strip().split()
+    def do_clear(self, arg):
+        """
+        Clears the search results.
+        """
+        self.search = set([])
+        print("Search results are now empty.")
+
+    def do_search(self, arg):
+        """
+            > search org name=Dev
+            > search vdc name=Windows
+            > search app name=Ubuntu
+            > search node name=Joomla
+
+        """
+        log = logging.getLogger("maloja.console.do_search")
+        patterns = {
+            "org": "*",
+            "catalog": "*/*",
+            "vdc": "*/*",
+            "app": "*/*/*",
+            "template": "*/*/*",
+            "node": "*/*/*/*",
+        }
+
+        bits = arg.strip().split()
+        if bits[-1].isdigit():
+            index = bits.pop(-1)
+        else:
+            index = None
+
         try:
-            locn, criteria = spec.split(":")
+            name, spec = bits
         except ValueError:
-            locn = spec.strip()
-            criteria = ""
+            name, spec = bits[0], ""
+
         try:
-            key, value = criteria.split("=")
+            key, value = spec.split("=")
         except ValueError:
-            key = value = None
+            key, value = "", ""
+
         hits = glob.glob(
-            os.path.join(self.project.root, self.project.project, "*", locn, "*.yaml")
+            os.path.join(self.project.root, self.project.project, patterns[name],
+            "{0}.yaml".format(name))
         )
         objs = []
         for hit in hits:
             with open(hit, 'r') as data:
                 obj = ruamel.yaml.load(data.read())
-                if not (key or value) or value.strip() in getattr(obj, key.strip()): 
+                if not key or value.strip() in getattr(obj, key.strip(), ""): 
                     objs.append(obj)
 
         if len(objs) > 1:
-            print("Your options:")
-            print(*["{0:01}: {1}".format(n, i.name) for n, i in enumerate(objs)],
-                    sep="\n")
-            sys.stdout.write("\n")
+            if index is not None:
+                self.search.add(objs[int(index)])
+            else:
+                print("Your options:")
+                print(*["{0:01}: {1}".format(n, i.name) for n, i in enumerate(objs)],
+                        sep="\n")
+                sys.stdout.write("\n")
         elif objs:
-            print(objs[0])
+            self.search.add(objs[0])
         else:
             print("No matches for pattern {}".format(spec))
+
+        print("Search results:\n")
+        print(*self.search, sep="\n")
 
     def do_quit(self, arg):
         """

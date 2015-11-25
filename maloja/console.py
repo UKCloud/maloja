@@ -124,10 +124,10 @@ class Console(cmd.Cmd):
                     break
                 n += 1
                 if msg is None:
-                    sys.stdout.write("\n[{0.id}] {0.job}/{0.limit} complete.\n".format(status))
+                    sys.stdout.write("\n[{0.id}] {0.level}:{0.job} complete.\n".format(status))
                 elif isinstance(msg, Token):
                     self.token = msg
-                    sys.stdout.write("\n[{0.id}] {0.job}/{0.limit} Token received.\n".format(status))
+                    sys.stdout.write("\n[{0.id}] {0.level}:{0.job} Token received.\n".format(status))
                     self.prompt = "Type 'help' for commands > "
                 elif isinstance(msg, str):
                     sys.stdout.write("\n[{0.id}] {1}\n".format(status, msg))

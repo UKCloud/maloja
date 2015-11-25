@@ -15,10 +15,10 @@ import warnings
 import requests
 from requests_futures.sessions import FuturesSession
 
+from maloja.surveyor import Status
 from maloja.surveyor import Surveyor
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
-Status = namedtuple("Status", ["id", "job", "limit"])
 Stop = namedtuple("Stop", [])
 Survey = namedtuple("Survey", ["path"])
 Token = namedtuple("Token", ["t", "url", "key", "value"])

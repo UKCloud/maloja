@@ -6,10 +6,13 @@ from __future__ import unicode_literals
 
 import unittest
 
-import ruamel.yaml
+from maloja.surveyor import yaml_dumps
+from maloja.surveyor import yaml_loads
+
 
 class YAMLTests(unittest.TestCase):
 
+    @unittest.skip("Pending model design.")
     def test_simple(self):
         inp = """\
         # example
@@ -19,7 +22,7 @@ class YAMLTests(unittest.TestCase):
           given: Alice    # one of the siblings
         """
 
-        code = ruamel.yaml.load(inp, ruamel.yaml.RoundTripLoader)
+        code = yaml_loads(inp)
         code['name']['given'] = 'Bob'
 
-        print(ruamel.yaml.dump(code, Dumper=ruamel.yaml.RoundTripDumper), end='')
+        print(yaml_dumps(code), end='')

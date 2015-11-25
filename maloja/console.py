@@ -22,9 +22,8 @@ from maloja.broker import Token
 from maloja.broker import Credentials
 from maloja.broker import Stop
 from maloja.broker import Survey
+from maloja.surveyor import yaml_loads
 
-URL = 'http://localhost'
-NUM = 3
 
 class Console(cmd.Cmd):
 
@@ -222,7 +221,7 @@ class Console(cmd.Cmd):
         objs = []
         for hit in hits:
             with open(hit, 'r') as data:
-                obj = ruamel.yaml.load(data.read())
+                obj = yaml_loads(data.read())
                 if not key or value.strip() in getattr(obj, key.strip(), ""): 
                     objs.append(obj)
 

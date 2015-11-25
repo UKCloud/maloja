@@ -16,6 +16,12 @@ from maloja.workflow.utils import record
 
 Status = namedtuple("Status", ["id", "job", "level"])
 
+#yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
+#yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
+yaml_loads = ruamel.yaml.load
+yaml_dumps = ruamel.yaml.dump
+
+
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
     elements = tree.iterfind(xpath, namespaces=namespaces)
     if not kwargs:
@@ -23,6 +29,7 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
     else:
         query = set(kwargs.items())
         return (i for i in elements if query.issubset(set(i.attrib.items())))
+
 
 def survey_loads(xml):
     namespace = "{http://www.vmware.com/vcloud/v1.5}"
@@ -70,7 +77,7 @@ class Surveyor:
                     path.app, path.node, path.file
                 ), "w"
             ) as output:
-                output.write(ruamel.yaml.dump(obj))
+                output.write(yaml_dumps(obj))
                 output.flush()
         if results and status:
             results.put((status, None))
@@ -89,7 +96,7 @@ class Surveyor:
             with open(
                 os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
             ) as output:
-                output.write(ruamel.yaml.dump(obj))
+                output.write(yaml_dumps(obj))
                 output.flush()
 
         vms = find_xpath(
@@ -160,7 +167,7 @@ class Surveyor:
             with open(
                 os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
             ) as output:
-                output.write(ruamel.yaml.dump(obj))
+                output.write(yaml_dumps(obj))
                 output.flush()
 
         vms = find_xpath(
@@ -197,7 +204,7 @@ class Surveyor:
             with open(
                 os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
             ) as output:
-                output.write(ruamel.yaml.dump(obj))
+                output.write(yaml_dumps(obj))
                 output.flush()
 
         vapps = find_xpath(
@@ -234,7 +241,7 @@ class Surveyor:
             with open(
                 os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
             ) as output:
-                output.write(ruamel.yaml.dump(obj))
+                output.write(yaml_dumps(obj))
                 output.flush()
 
         items = find_xpath(
@@ -270,7 +277,11 @@ class Surveyor:
             with open(
                 os.path.join(path.root, path.project, path.org, path.file), "w"
             ) as output:
-                output.write(ruamel.yaml.dump(obj))
+                try:
+                    data = yaml_dumps(obj)
+                except Exception as e:
+                    log.error(e)
+                output.write(data)
                 output.flush()
 
         ctlgs = find_xpath(

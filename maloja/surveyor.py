@@ -45,7 +45,7 @@ def survey_loads(xml):
 class Surveyor:
 
     @staticmethod
-    def on_vm(path, session, response):
+    def on_vm(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vm")
         os.makedirs(
             os.path.join(
@@ -66,7 +66,7 @@ class Surveyor:
                 output.flush()
 
     @staticmethod
-    def on_template(path, session, response):
+    def on_template(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_template")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
         for obj in survey_loads(response.text):
@@ -90,13 +90,13 @@ class Surveyor:
                 path._replace(node=vm.attrib.get("name"))
             )
         ) for vm in vms]
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
     @staticmethod
-    def on_catalogitem(path, session, response):
+    def on_catalogitem(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_catalogitem")
         log.debug(path)
 
@@ -113,13 +113,13 @@ class Surveyor:
                 path._replace(app=tmplt.attrib.get("name"))
             )
         ) for tmplt in templates]
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
     @staticmethod
-    def on_vapp(path, session, response):
+    def on_vapp(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vapp")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
         for obj in survey_loads(response.text):
@@ -141,13 +141,13 @@ class Surveyor:
                 path._replace(node=vm.attrib.get("name"))
             )
         ) for vm in vms]
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
     @staticmethod
-    def on_vdc(path, session, response):
+    def on_vdc(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vdc")
         log.debug(path)
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
@@ -170,13 +170,13 @@ class Surveyor:
                 path._replace(app=vapp.attrib.get("name"))
             )
         ) for vapp in vapps]
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
     @staticmethod
-    def on_catalog(path, session, response):
+    def on_catalog(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_catalog")
         for obj in survey_loads(response.text):
             path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
@@ -197,13 +197,13 @@ class Surveyor:
                 Surveyor.on_catalogitem, path
             )
         ) for item in items]
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
     @staticmethod
-    def on_org(path, session, response):
+    def on_org(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_org")
         os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
         for obj in survey_loads(response.text):
@@ -238,13 +238,13 @@ class Surveyor:
             )
         ) for ctlg in ctlgs]
 
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
     @staticmethod
-    def on_org_list(path, session, response):
+    def on_org_list(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_org_list")
         tree = ET.fromstring(response.text)
         orgs = find_xpath(
@@ -256,8 +256,11 @@ class Surveyor:
                 path._replace(org=org.attrib.get("name"))
             )
         ) for org in orgs]
-        log.debug(ops)
-        results = concurrent.futures.wait(
+        tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
+        if results and status:
+            status = status._replace(job=status.job + 1, limit=status.limit + 1)
+            results.put((status, None))
+            log.info(status)

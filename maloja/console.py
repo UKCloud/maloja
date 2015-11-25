@@ -114,18 +114,28 @@ class Console(cmd.Cmd):
         n = 0
         while not self.stop:
             time.sleep(0)
-            id_, msg = self.results.get(block=True, timeout=None)
-            n += 1
-            if isinstance(msg, Token):
-                self.token = msg
-                self.prompt = "Type 'help' for commands > "
-            if isinstance(msg, str):
-                sys.stdout.write("\n[{0}] {1}\n".format(id_, msg))
-            else:
-                sys.stdout.write("\n[{0}] {1.__name__} received.\n".format(id_, type(msg)))
-            sys.stdout.flush()
-            sys.stdout.write(self.prompt)
-            sys.stdout.flush()
+            while True:
+                try:
+                    packet = self.results.get(block=True, timeout=2)
+                    status, msg = packet
+                except ValueError:
+                    log.error(packet)
+                except queue.Empty:
+                    break
+                n += 1
+                if msg is None:
+                    sys.stdout.write("\n[{0.id}] {0.job}/{0.limit} complete.\n".format(status))
+                elif isinstance(msg, Token):
+                    self.token = msg
+                    sys.stdout.write("\n[{0.id}] {0.job}/{0.limit} Token received.\n".format(status))
+                    self.prompt = "Type 'help' for commands > "
+                elif isinstance(msg, str):
+                    sys.stdout.write("\n[{0.id}] {1}\n".format(status, msg))
+                else:
+                    sys.stdout.write("\n[{0.id}] {1.__name__} received.\n".format(status, type(msg)))
+                sys.stdout.flush()
+                sys.stdout.write(self.prompt)
+                sys.stdout.flush()
         else:
             log.debug("Closing results stream.")
             sys.stdout.write("Press return.")

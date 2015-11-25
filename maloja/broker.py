@@ -18,6 +18,7 @@ from requests_futures.sessions import FuturesSession
 from maloja.surveyor import Surveyor
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
+Status = namedtuple("Status", ["id", "job", "limit"])
 Stop = namedtuple("Stop", [])
 Survey = namedtuple("Survey", ["path"])
 Token = namedtuple("Token", ["t", "url", "key", "value"])
@@ -27,7 +28,7 @@ def handler(msg, path=None, queue=None, **kwargs):
     warnings.warn("No handler registered for {0}.".format(type(msg)))
 
 @handler.register(Credentials)
-def credentials_handler(msg, session):
+def credentials_handler(msg, session, results=None, status=None):
     log = logging.getLogger("maloja.broker.credentials_handler")
     log.debug("Handling credentials.")
     url = "{url}:{port}/{endpoint}".format(
@@ -44,17 +45,20 @@ def credentials_handler(msg, session):
     return (future,)
     
 @handler.register(Stop)
-def stop_handler(msg, session, token):
+def stop_handler(msg, session, token, **kwargs):
     log = logging.getLogger("maloja.broker.stop_handler")
     log.debug("Handling a stop.")
     return tuple()
     
 @handler.register(Survey)
-def survey_handler(msg, session, token, callback=None):
+def survey_handler(msg, session, token, callback=None, results=None, status=None):
     log = logging.getLogger("maloja.broker.survey_handler")
     if msg.path.project and not any(msg.path[2:-1]):
         endpoints = [
-            ("api/org", functools.partial(Surveyor.on_org_list, msg.path))
+            ("api/org", functools.partial(
+                Surveyor.on_org_list, msg.path, results=results, status=status
+                )
+            )
         ]
     else:
         endpoints = [
@@ -103,32 +107,36 @@ class Broker:
                 packet = self.operations.get()
                 n += 1
                 id_, msg = packet
+                status = Status(id_, 1, 1)
                 reply = None
                 if isinstance(msg, Credentials):
                     ops = handler(msg, self.session)
-                    results = concurrent.futures.wait(
+                    tasks = concurrent.futures.wait(
                         ops, timeout=6,
                         return_when=concurrent.futures.FIRST_EXCEPTION
                     )
-                    response = next(iter(results.done)).result(timeout=0)
-                    # TODO: Handle results.not_done
+                    response = next(iter(tasks.done)).result(timeout=0)
                     if response.status_code == requests.codes.ok:
                         token = Token(time.time(), msg.url, "x-vcloud-authorization", None)
                         self.token = token._replace(value=response.headers.get(token.key))
                         reply = self.token
+                    else:
+                        reply = "Authentication failed."
                 else:
                     log.debug(packet)
-                    ops = handler(msg, self.session, self.token)
-                    results = concurrent.futures.wait(
+                    ops = handler(
+                        msg, self.session, self.token,
+                        results=self.results, status=status)
+                    tasks = concurrent.futures.wait(
                         ops, timeout=6,
                         return_when=concurrent.futures.FIRST_EXCEPTION
                     )
-                    response = next(iter(results.done)).result(timeout=0)
-                    reply = response.text
+                    response = next(iter(tasks.done)).result(timeout=0)
+                    # reply = response.text
                     # TODO: Handle failure modes and results.not_done
             except Exception as e:
                 log.error(str(getattr(e, "args", e) or e))
             finally:
-                self.results.put((id_, reply))
+                self.results.put((status, reply))
         else:
             return n

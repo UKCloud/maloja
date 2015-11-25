@@ -157,21 +157,10 @@ class Console(cmd.Cmd):
         """
         log = logging.getLogger("maloja.console.do_survey")
         line = arg.strip()
-        survey = []
 
         msg = Survey(self.project)
         packet = (next(self.seq), msg)
         self.operations.put(packet)
-        log.debug(packet)
-        if not line:
-            #print("Your appliances:")
-            print(*["{0:01}: {1}".format(i.id, i.name) for i in survey],
-                    sep="\n")
-            #sys.stdout.write("\n")
-        elif line.isdigit():
-            app = survey[int(line)]
-            msg = app
-            return msg
 
     def do_clear(self, arg):
         """

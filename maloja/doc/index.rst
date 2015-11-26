@@ -10,6 +10,7 @@ Contents:
    :maxdepth: 2
 
    install
+   quickstart
 
 .. include:: ../../README.rst
 

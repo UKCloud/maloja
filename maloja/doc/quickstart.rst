@@ -12,7 +12,7 @@ Check out the Maloja repository::
 Create an options file
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Make a text file `options.private` containing connection strings to your cloud
+Make a text file '`options.private`' containing connection strings to your cloud
 endpoint on two lines like this::
 
     --url=https://api.vcd.portal.XXXXXXXXX.YYY
@@ -22,9 +22,9 @@ Invoke the Maloja console
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Launch an interactive session in a fresh window, passing your options file
-using the `@` syntax::
+using the '`@`' syntax::
 
-    > %HOME%\py3.5\Scripts\python -m maloja.main @options.private
+    > start %HOME%\py3.5\Scripts\python -m maloja.main @options.private
 
 The window will open and prompt you for your API password::
 
@@ -40,18 +40,18 @@ If no token is returned, you'll be prompted for the password again.
 Use the help command
 ~~~~~~~~~~~~~~~~~~~~
 
-* Type `help` to see what commands are available.
-* Type `help <command>` to see command-specific information.
+* Type '`help`' to see what commands are available.
+* Type '`help <command>`' to see command-specific information.
 
 Survey and search
 ~~~~~~~~~~~~~~~~~
 
-Issue a `survey` command to get information on the structure of your
+Issue a '`survey`' command to get information on the structure of your
 cloud. This is achieved recursively and asynchronously to the console. Each
 task reports when it has finished. When no more tasks are active, the survey is
 complete.
 
-Use the `search` command to view assets at every level, filter by attribute and
+Use the '`search`' command to view assets at every level, filter by attribute and
 pick from a list of results.
 
 * View a list of all Windows nodes::
@@ -66,4 +66,4 @@ Clear the buffer
 ~~~~~~~~~~~~~~~~
 
 The console stores in memory each object you have identified by search. Refresh
-this buffer with the `clear` command.
+this buffer with the '`clear`' command.

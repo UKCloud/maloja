@@ -31,17 +31,17 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
         return (i for i in elements if query.issubset(set(i.attrib.items())))
 
 
-def survey_loads(xml):
+def survey_loads(xml, types={}):
     namespace = "{http://www.vmware.com/vcloud/v1.5}"
     tree = ET.fromstring(xml)
-    typ = {
+    typ = (types or {
         namespace + "VApp": maloja.types.App,
         namespace + "Catalog": maloja.types.Catalog,
         namespace + "Vm": maloja.types.Node,
         namespace + "Org": maloja.types.Org,
         namespace + "VAppTemplate": maloja.types.Template,
         namespace + "Vdc": maloja.types.Vdc
-    }.get(tree.tag)
+    }).get(tree.tag)
     attribs = (tree.attrib.get(f, None) for f in typ._fields)
     body = (
         item.text if item is not None else None
@@ -62,6 +62,7 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
+        log.info(response.text)
         os.makedirs(
             os.path.join(
                 path.root, path.project, path.org, path.dc,

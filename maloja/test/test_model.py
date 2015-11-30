@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from collections import namedtuple
+import itertools
 import unittest
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
@@ -291,21 +292,20 @@ name: 'vm name'
 href:
 guestOs: ''
 hardwareVersion:
-hardware:
-  cpu:
-  memoryMB:
-  networkcards:
-  - name:
-  harddisks:
-  - name:
-    capacity:
-    bustype:
-  cd:
-    description:
-    media:
-  floppydisk:
-    description:
-    media:
+cpu:
+memoryMB:
+networkcards:
+- name:
+harddisks:
+- name:
+  capacity:
+  bustype:
+cd:
+  description:
+  media:
+floppydisk:
+  description:
+  media:
 isBusy:
 isDeleted:
 isDeployed:
@@ -327,15 +327,54 @@ guestcustomization:
 
 class DataObject:
 
+    _defaults = []
+
     def __init__(self, **kwargs):
-        for k, v in kwargs.items():
+        data = self._defaults + list(kwargs.items())
+        for k, v in data:
+            print((k, v))
             setattr(self, k, v)
+
+    def feed_xml(self, tree, *args, **kwargs):
+        fields = [k for k, v in self._defaults]
+        attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
+        body = ((elem.tag, elem.text) for elem in tree if elem.tag in fields)
+        for k, v in itertools.chain(attribs, body):
+            if v in ("true", "false"):
+                setattr(self, k, v == "true")
+            elif v.isdigit():
+                setattr(self, k, int(v))
+            else:
+                setattr(self, k, v)
+        return self
 
 class Vm(DataObject):
 
     NetworkConnection = namedtuple(
         "NetworkConnection", ["name", "ip", "isConnected", "macAddress"]
     )
+
+    _defaults = [
+        ("guestOs", None),
+        ("hardwareVersion", None),
+        ("cpu", None),
+        ("memoryMB", None),
+        ("networkcards", []),
+        ("harddisks", []),
+        ("cd", None),
+        ("floppydisk", None),
+        ("isBusy", None),
+        ("isDeleted", None),
+        ("isDeployed", None),
+        ("isInMaintenanceMode", None),
+        ("isPublished", None),
+        ("status", None),
+        ("storageProfileName", None),
+        ("vmToolsVersion", None),
+        ("networkconnections", []),
+        ("ipAddressAllocationMode", None),
+        ("guestcustomization", None)
+    ]
 
     @classmethod
     def from_xml(cls, tree):
@@ -354,21 +393,20 @@ class Vm(DataObject):
         """
         guestOs: ''
         hardwareVersion:
-        hardware:
-          cpu:
-          memoryMB:
-          networkcards:
-          - name:
-          harddisks:
-          - name:
-            capacity:
-            bustype:
-          cd:
-            description:
-            media:
-          floppydisk:
-            description:
-            media:
+        cpu:
+        memoryMB:
+        networkcards:
+        - name:
+        harddisks:
+        - name:
+          capacity:
+          bustype:
+        cd:
+          description:
+          media:
+        floppydisk:
+          description:
+          media:
         isBusy:
         isDeleted:
         isDeployed:
@@ -389,6 +427,18 @@ class Vm(DataObject):
         """
         return cls(**data)
 
+    def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        if tree.tag in (ns + "VMRecord", ):
+            super().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
+        if tree.tag == ns + "Vm":
+            self["networkConnections"] = [
+                Vm.NetworkConnection(
+                    i.attrib["network"],
+                    i.find(ns + "IpAddress").text,
+                    True if i.find(ns + "IsConnected").text == "true" else False,
+                    i.find(ns + "MACAddress").text)
+                for i in tree.iter(ns + "NetworkConnection")]
+        return self
 
 def survey_loads(xml, types={}):
     """
@@ -431,6 +481,17 @@ class ParseTests(unittest.TestCase):
             namespace + "Vdc": maloja.types.Vdc
         }
         print(vars(next(survey_loads(vm_xml, types))))
+
+    def test_feed_query_results(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(queryresults_xml)
+        record = next(tree.iter(ns + "VMRecord"))
+        obj = Vm()
+        self.assertIs(None, obj.guestOs)
+        self.assertIs(obj, obj.feed_xml(record))
+        self.assertEqual("STANDARD-Any", obj.storageProfileName)
+        self.assertEqual(8, obj.hardwareVersion)
+        self.assertEqual("CentOS 4/5/6/7 (64-bit)", obj.guestOs)
 
 class YAMLTests(unittest.TestCase):
 

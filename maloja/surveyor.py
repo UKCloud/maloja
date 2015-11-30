@@ -104,8 +104,6 @@ class Surveyor:
             "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
             ET.fromstring(response.text)
         )
-        vms = list(vms)
-        log.debug(vms)
         ops = [session.get(
             vm.attrib.get("href"),
             background_callback=functools.partial(

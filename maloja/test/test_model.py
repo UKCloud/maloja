@@ -321,7 +321,7 @@ class Vm(DataObject):
 
     @classmethod
     def from_xml(cls, tree):
-        #ns = "http://www.vmware.com/vcloud/v1.5"
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
         data = OrderedDict([
             ("name", tree.attrib.get("name")),
             ("href", tree.attrib.get("href"))
@@ -329,9 +329,10 @@ class Vm(DataObject):
         data["networkConnections"] = [
             cls.NetworkConnection(
                 i.attrib["network"],
-                #i.find("IpAddress").text,
-                None, None, None)
-            for i in tree.iter("NetworkConnection")]
+                i.find(ns + "IpAddress").text,
+                True if i.find(ns + "IsConnected").text == "true" else False,
+                i.find(ns + "MACAddress").text)
+            for i in tree.iter(ns + "NetworkConnection")]
         """
         guestOs: ''
         hardwareVersion:

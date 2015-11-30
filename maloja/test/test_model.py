@@ -287,11 +287,11 @@ ownerName:
 status:
 """
 
-vm = """
-name: 'vm name'
+vm_yaml = """
+name: "Test data"
 href:
-guestOs: ''
-hardwareVersion:
+guestOs: Ubuntu 12.04 LTS
+hardwareVersion: 8
 cpu:
 memoryMB:
 networkcards:
@@ -302,9 +302,8 @@ harddisks:
   bustype:
 cd:
   description:
-  media:
 floppydisk:
-  description:
+  description: Floppy Drive 1
   media:
 isBusy:
 isDeleted:
@@ -315,10 +314,10 @@ status:
 storageProfileName:
 vmToolsVersion:
 networkconnections:
-- name:
-  ip:
-  isConnected:
-  macAddress:
+- name: NIC0_NET
+  ip: 192.168.10.41
+  isConnected: true
+  macAddress: "00:50:56:01:aa:99"
 ipAddressAllocationMode:
 guestcustomization:
   enabled:
@@ -329,10 +328,21 @@ class DataObject:
 
     _defaults = []
 
+    @staticmethod
+    def typecast(val):
+        if val in ("true", "false"):
+            return val == "true"
+        try:
+            if val.isdigit():
+                return int(val)
+        except AttributeError:
+            return val
+        else:
+            return val
+
     def __init__(self, **kwargs):
         data = self._defaults + list(kwargs.items())
         for k, v in data:
-            print((k, v))
             setattr(self, k, v)
 
     def feed_xml(self, tree, *args, **kwargs):
@@ -340,12 +350,7 @@ class DataObject:
         attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
         body = ((elem.tag, elem.text) for elem in tree if elem.tag in fields)
         for k, v in itertools.chain(attribs, body):
-            if v in ("true", "false"):
-                setattr(self, k, v == "true")
-            elif v.isdigit():
-                setattr(self, k, int(v))
-            else:
-                setattr(self, k, v)
+            setattr(self, k, self.typecast(v))
         return self
 
 class Vm(DataObject):
@@ -376,62 +381,18 @@ class Vm(DataObject):
         ("guestcustomization", None)
     ]
 
-    @classmethod
-    def from_xml(cls, tree):
-        ns = "{http://www.vmware.com/vcloud/v1.5}"
-        data = OrderedDict([
-            ("name", tree.attrib.get("name")),
-            ("href", tree.attrib.get("href"))
-        ])
-        data["networkConnections"] = [
-            cls.NetworkConnection(
-                i.attrib["network"],
-                i.find(ns + "IpAddress").text,
-                True if i.find(ns + "IsConnected").text == "true" else False,
-                i.find(ns + "MACAddress").text)
-            for i in tree.iter(ns + "NetworkConnection")]
-        """
-        guestOs: ''
-        hardwareVersion:
-        cpu:
-        memoryMB:
-        networkcards:
-        - name:
-        harddisks:
-        - name:
-          capacity:
-          bustype:
-        cd:
-          description:
-          media:
-        floppydisk:
-          description:
-          media:
-        isBusy:
-        isDeleted:
-        isDeployed:
-        isInMaintenanceMode:
-        isPublished:
-        status:
-        storageProfileName:
-        vmToolsVersion:
-        networkconnections:
-        - name:
-          ip:
-          isConnected:
-          macAddress:
-        ipAddressAllocationMode:
-        guestcustomization:
-          enabled:
-          changesid:
-        """
-        return cls(**data)
+    def __init__(self, **kwargs):
+        seq, typ = ("networkconnections", Vm.NetworkConnection)
+        if seq in kwargs:
+            kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
+
+        super().__init__(**kwargs)
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         if tree.tag in (ns + "VMRecord", ):
             super().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         if tree.tag == ns + "Vm":
-            self["networkConnections"] = [
+            self.networkconnections = [
                 Vm.NetworkConnection(
                     i.attrib["network"],
                     i.find(ns + "IpAddress").text,
@@ -440,47 +401,8 @@ class Vm(DataObject):
                 for i in tree.iter(ns + "NetworkConnection")]
         return self
 
-def survey_loads(xml, types={}):
-    """
-    TODO: Move back into surveyor.
 
-    """
-    ET.register_namespace("", "http://www.vmware.com/vcloud/v1.5")
-    namespace = "{http://www.vmware.com/vcloud/v1.5}"
-    tree = ET.fromstring(xml)
-    typ = (types or {
-        namespace + "VApp": maloja.types.App,
-        namespace + "Catalog": maloja.types.Catalog,
-        namespace + "Vm": maloja.types.Node,
-        namespace + "Org": maloja.types.Org,
-        namespace + "VAppTemplate": maloja.types.Template,
-        namespace + "Vdc": maloja.types.Vdc
-    }).get(tree.tag)
-    try:
-        yield typ.from_xml(tree)
-    except AttributeError:
-        attribs = (tree.attrib.get(f, None) for f in typ._fields)
-        body = (
-            item.text if item is not None else None
-            for item in [
-                tree.find(namespace + f[0].capitalize() + f[1:]) for f in typ._fields
-            ]
-        )
-        data = (b if b is not None else a for a, b in zip(attribs, body))
-        yield typ(*data)
-
-class ParseTests(unittest.TestCase):
-
-    def test_parse(self):
-        types = {
-            namespace + "VApp": maloja.types.App,
-            namespace + "Catalog": maloja.types.Catalog,
-            namespace + "Vm": Vm,
-            namespace + "Org": maloja.types.Org,
-            namespace + "VAppTemplate": maloja.types.Template,
-            namespace + "Vdc": maloja.types.Vdc
-        }
-        print(vars(next(survey_loads(vm_xml, types))))
+class VmTests(unittest.TestCase):
 
     def test_feed_query_results(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
@@ -493,23 +415,15 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(8, obj.hardwareVersion)
         self.assertEqual("CentOS 4/5/6/7 (64-bit)", obj.guestOs)
 
-class YAMLTests(unittest.TestCase):
+    def test_feed_vm(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(vm_xml)
+        obj = Vm()
+        self.assertIs(obj, obj.feed_xml(tree))
+        self.assertEqual(1, len(obj.networkconnections))
 
-    def test_read_vm(self):
-        mapping = yaml_loads(vm)
-        #print(yaml_dumps(mapping))
-
-    @unittest.skip("Pending model design.")
-    def test_simple(self):
-        inp = """\
-        # example
-        name:
-          # details
-          family: Smith   # very common
-          given: Alice    # one of the siblings
-        """
-
-        code = yaml_loads(inp)
-        code['name']['given'] = 'Bob'
-
-        print(yaml_dumps(code), end='')
+    def test_load_yaml(self):
+        data = yaml_loads(vm_yaml)
+        obj = Vm(**data)
+        self.assertEqual(1, len(obj.networkconnections))
+        self.assertIsInstance(obj.networkconnections[0], Vm.NetworkConnection)

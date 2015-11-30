@@ -427,3 +427,8 @@ class VmTests(unittest.TestCase):
         obj = Vm(**data)
         self.assertEqual(1, len(obj.networkconnections))
         self.assertIsInstance(obj.networkconnections[0], Vm.NetworkConnection)
+
+    def test_dump_yaml(self):
+        data = yaml_loads(vm_yaml)
+        obj = Vm(**data)
+        print(yaml_dumps({k: getattr(obj, k) for k, v in obj._defaults}))

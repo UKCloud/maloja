@@ -61,8 +61,8 @@ class Surveyor:
     locks = defaultdict(threading.Lock)
 
     @staticmethod
-    def on_vmrecord(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.surveyor.on_vmrecord")
+    def on_vmrecords(path, session, response, results=None, status=None):
+        log = logging.getLogger("maloja.surveyor.on_vmrecords")
 
         log.debug(response.status_code)
         log.debug(response.text)
@@ -99,35 +99,6 @@ class Surveyor:
                     output.flush()
             finally:
                 Surveyor.locks[path].release()
-
-        url = urlparse(response.url)
-        endpoint = "/".join((
-            url.scheme + "://" + url.netloc,
-            "api/vms/query?filter=(href=={0})".format(urlquote(response.url))
-        ))
-        endpoint = "/".join((
-            url.scheme + "://" + url.netloc,
-            "api/vms/query"
-        ))
-        try:
-            ops = [session.get(
-                endpoint,
-                background_callback=functools.partial(
-                    Surveyor.on_vmrecord,
-                    path,
-                    results=results,
-                    status=child._replace(job=1)
-                )
-            )]
-            task = concurrent.futures.wait(
-                ops, timeout=3 * len(ops),
-                return_when=concurrent.futures.FIRST_EXCEPTION
-            )
-        except Exception as e:
-            log.error(e)
-        else:
-            log.debug(response.url)
-            log.debug(endpoint)
 
         if results and status:
             results.put((status, None))
@@ -167,7 +138,6 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            #status = status._replace(job=status.job + 1, level=status.level + 1)
             results.put((status, None))
 
     @staticmethod
@@ -218,19 +188,35 @@ class Surveyor:
                 output.write(yaml_dumps(obj))
                 output.flush()
 
+        url = urlparse(response.url)
+        query = "/".join((
+            url.scheme + "://" + url.netloc,
+            "api/vms/query?filter=(container=={0})".format(urlquote(response.url))
+        ))
         vms = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
             ET.fromstring(response.text)
         )
-        ops = [session.get(
-            vm.attrib.get("href"),
-            background_callback=functools.partial(
-                Surveyor.on_vm,
-                path._replace(node=vm.attrib.get("name")),
-                results=results,
-                status=child._replace(job=child.job + n)
-            )
-        ) for n, vm in enumerate(vms)]
+        try:
+            ops = [session.get(
+                vm.attrib.get("href"),
+                background_callback=functools.partial(
+                    Surveyor.on_vm,
+                    path._replace(node=vm.attrib.get("name")),
+                    results=results,
+                    status=child._replace(job=child.job + n)
+                )
+            ) for n, vm in enumerate(vms)] + [session.get(
+                query,
+                background_callback=functools.partial(
+                    Surveyor.on_vmrecords,
+                    path,
+                    results=results,
+                    status=status._replace(id=status.id + 1, job=status.job + 1)
+                )
+            )]
+        except Exception as e:
+            log.error(e)
         tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION

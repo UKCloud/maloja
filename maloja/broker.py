@@ -54,7 +54,6 @@ def stop_handler(msg, session, token, **kwargs):
 def survey_handler(msg, session, token, callback=None, results=None, status=None):
     log = logging.getLogger("maloja.broker.survey_handler")
     if msg.path.project and not any(msg.path[2:-1]):
-        # TODO: Add query API for Vm type
         endpoints = [
             ("api/org", functools.partial(
                 Surveyor.on_org_list, msg.path, results=results, status=status

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
+from collections import defaultdict
 from collections import namedtuple
 import concurrent.futures
 import functools
 import logging
 import os
+import threading
+from urllib.parse import quote as urlquote
+from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
@@ -54,6 +58,17 @@ def survey_loads(xml, types={}):
 
 class Surveyor:
 
+    locks = defaultdict(threading.Lock)
+
+    @staticmethod
+    def on_vmrecord(path, session, response, results=None, status=None):
+        log = logging.getLogger("maloja.surveyor.on_vmrecord")
+
+        log.debug(response.status_code)
+        log.debug(response.text)
+        if results and status:
+            results.put((status, None))
+
     @staticmethod
     def on_vm(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vm")
@@ -72,14 +87,48 @@ class Surveyor:
         )
         for obj in survey_loads(response.text):
             path = path._replace(file="node.yaml")
-            with open(
-                os.path.join(
-                    path.root, path.project, path.org, path.dc,
-                    path.app, path.node, path.file
-                ), "w"
-            ) as output:
-                output.write(yaml_dumps(obj))
-                output.flush()
+            try:
+                Surveyor.locks[path].acquire()
+                with open(
+                    os.path.join(
+                        path.root, path.project, path.org, path.dc,
+                        path.app, path.node, path.file
+                    ), "w"
+                ) as output:
+                    output.write(yaml_dumps(obj))
+                    output.flush()
+            finally:
+                Surveyor.locks[path].release()
+
+        url = urlparse(response.url)
+        endpoint = "/".join((
+            url.scheme + "://" + url.netloc,
+            "api/vms/query?filter=(href=={0})".format(urlquote(response.url))
+        ))
+        endpoint = "/".join((
+            url.scheme + "://" + url.netloc,
+            "api/vms/query"
+        ))
+        try:
+            ops = [session.get(
+                endpoint,
+                background_callback=functools.partial(
+                    Surveyor.on_vmrecord,
+                    path,
+                    results=results,
+                    status=child._replace(job=1)
+                )
+            )]
+            task = concurrent.futures.wait(
+                ops, timeout=3 * len(ops),
+                return_when=concurrent.futures.FIRST_EXCEPTION
+            )
+        except Exception as e:
+            log.error(e)
+        else:
+            log.debug(response.url)
+            log.debug(endpoint)
+
         if results and status:
             results.put((status, None))
 
@@ -118,7 +167,7 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            status = status._replace(job=status.job + 1, level=status.level + 1)
+            #status = status._replace(job=status.job + 1, level=status.level + 1)
             results.put((status, None))
 
     @staticmethod

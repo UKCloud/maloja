@@ -13,8 +13,6 @@ from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
-import ruamel.yaml
-
 from maloja.model import Catalog
 from maloja.model import Template
 from maloja.model import Org
@@ -35,28 +33,6 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
     else:
         query = set(kwargs.items())
         return (i for i in elements if query.issubset(set(i.attrib.items())))
-
-
-def survey_loads(xml, types={}):
-    namespace = "{http://www.vmware.com/vcloud/v1.5}"
-    tree = ET.fromstring(xml)
-    typ = (types or {
-        namespace + "VApp": VApp,
-        namespace + "Catalog": Catalog,
-        namespace + "Vm": Vm,
-        namespace + "Org": Org,
-        namespace + "VAppTemplate": Template,
-        namespace + "Vdc": Vdc
-    }).get(tree.tag)
-    attribs = (tree.attrib.get(f, None) for f in typ._fields)
-    body = (
-        item.text if item is not None else None
-        for item in [
-            tree.find(namespace + f[0].capitalize() + f[1:]) for f in typ._fields
-        ]
-    )
-    data = (b if b is not None else a for a, b in zip(attribs, body))
-    yield typ(*data)
 
 class Surveyor:
 
@@ -79,7 +55,9 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
-        log.info(response.text)
+        tree = ET.fromstring(response.text)
+        obj = Vm().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
+        path = path._replace(file="vm.yaml")
         os.makedirs(
             os.path.join(
                 path.root, path.project, path.org, path.dc,
@@ -87,20 +65,20 @@ class Surveyor:
             ),
             exist_ok=True
         )
-        for obj in survey_loads(response.text):
-            path = path._replace(file="node.yaml")
-            try:
-                Surveyor.locks[path].acquire()
-                with open(
-                    os.path.join(
-                        path.root, path.project, path.org, path.dc,
-                        path.app, path.node, path.file
-                    ), "w"
-                ) as output:
-                    output.write(yaml_dumps(obj))
-                    output.flush()
-            finally:
-                Surveyor.locks[path].release()
+        try:
+            Surveyor.locks[path].acquire()
+            with open(
+                os.path.join(path.root, path.project, path.org, path.dc, path.app, path.node, path.file),
+                "w"
+            ) as output:
+                try:
+                    data = yaml_dumps(obj)
+                except Exception as e:
+                    log.error(e)
+                output.write(data)
+                output.flush()
+        finally:
+            Surveyor.locks[path].release()
 
         if results and status:
             results.put((status, None))

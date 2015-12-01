@@ -6,16 +6,17 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from collections import namedtuple
-import itertools
 import unittest
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
+from maloja.model import Vm
 from maloja.model import yaml_dumps
 from maloja.model import yaml_loads
 
 import maloja.surveyor
 import maloja.types
+
 
 namespace = "{http://www.vmware.com/vcloud/v1.5}"
 template = """
@@ -324,83 +325,6 @@ guestcustomization:
   changesid:
 """
 
-class DataObject:
-
-    _defaults = []
-
-    @staticmethod
-    def typecast(val):
-        if val in ("true", "false"):
-            return val == "true"
-        try:
-            if val.isdigit():
-                return int(val)
-        except AttributeError:
-            return val
-        else:
-            return val
-
-    def __init__(self, **kwargs):
-        data = self._defaults + list(kwargs.items())
-        for k, v in data:
-            setattr(self, k, v)
-
-    def feed_xml(self, tree, *args, **kwargs):
-        fields = [k for k, v in self._defaults]
-        attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
-        body = ((elem.tag, elem.text) for elem in tree if elem.tag in fields)
-        for k, v in itertools.chain(attribs, body):
-            setattr(self, k, self.typecast(v))
-        return self
-
-class Vm(DataObject):
-
-    NetworkConnection = namedtuple(
-        "NetworkConnection", ["name", "ip", "isConnected", "macAddress"]
-    )
-
-    _defaults = [
-        ("guestOs", None),
-        ("hardwareVersion", None),
-        ("cpu", None),
-        ("memoryMB", None),
-        ("networkcards", []),
-        ("harddisks", []),
-        ("cd", None),
-        ("floppydisk", None),
-        ("isBusy", None),
-        ("isDeleted", None),
-        ("isDeployed", None),
-        ("isInMaintenanceMode", None),
-        ("isPublished", None),
-        ("status", None),
-        ("storageProfileName", None),
-        ("vmToolsVersion", None),
-        ("networkconnections", []),
-        ("ipAddressAllocationMode", None),
-        ("guestcustomization", None)
-    ]
-
-    def __init__(self, **kwargs):
-        seq, typ = ("networkconnections", Vm.NetworkConnection)
-        if seq in kwargs:
-            kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
-
-        super().__init__(**kwargs)
-
-    def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
-        if tree.tag in (ns + "VMRecord", ):
-            super().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
-        if tree.tag == ns + "Vm":
-            self.networkconnections = [
-                Vm.NetworkConnection(
-                    i.attrib["network"],
-                    i.find(ns + "IpAddress").text,
-                    True if i.find(ns + "IsConnected").text == "true" else False,
-                    i.find(ns + "MACAddress").text)
-                for i in tree.iter(ns + "NetworkConnection")]
-        return self
-
 
 class VmTests(unittest.TestCase):
 
@@ -431,4 +355,7 @@ class VmTests(unittest.TestCase):
     def test_dump_yaml(self):
         data = yaml_loads(vm_yaml)
         obj = Vm(**data)
-        print(yaml_dumps({k: getattr(obj, k) for k, v in obj._defaults}))
+        for attr, dflt in Vm._defaults:
+            with self.subTest(attr=attr):
+                elem = getattr(obj, attr)
+                yaml_dumps(elem)

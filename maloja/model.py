@@ -16,14 +16,15 @@ Status = namedtuple("Status", ["id", "job", "level"])
 yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
 
+
 def dataobject_as_ordereddict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_ordereddict(OrderedDict([(k, getattr(data, k)) for k, v in data._defaults]))
 
+
 def namedtuple_as_dict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_dict(vars(data))
-
 
 class DataObject:
 
@@ -93,8 +94,10 @@ class Vm(DataObject):
         super().__init__(**kwargs)
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
-        if tree.tag in (ns + "VMRecord", ):
-            super().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
+
+        if tree.tag in (ns + "Vm", ns + "VMRecord"):
+            super().feed_xml(tree, ns=ns)
+
         if tree.tag == ns + "Vm":
             self.networkconnections = [
                 Vm.NetworkConnection(

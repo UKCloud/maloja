@@ -22,6 +22,12 @@ from maloja.broker import Token
 from maloja.broker import Credentials
 from maloja.broker import Stop
 from maloja.broker import Survey
+from maloja.model import Catalog
+from maloja.model import Org
+from maloja.model import Template
+from maloja.model import VApp
+from maloja.model import Vdc
+from maloja.model import Vm
 from maloja.surveyor import yaml_loads
 
 
@@ -171,20 +177,20 @@ class Console(cmd.Cmd):
 
     def do_search(self, arg):
         """
-            > search org name=Dev
-            > search vdc name=Windows
-            > search app name=Ubuntu
-            > search node name=Joomla
+            > search org fullName=Dev
+            > search vdc description=Skyscape
+            > search template name=Windows
+            > search vm ip=192.168.2.100
 
         """
         log = logging.getLogger("maloja.console.do_search")
         patterns = {
-            "org": "*",
-            "catalog": "*/*",
-            "vdc": "*/*",
-            "app": "*/*/*",
-            "template": "*/*/*",
-            "node": "*/*/*/*",
+            "org": (Org, "*/org.yaml"),
+            "catalog": (Catalog, "*/*/catalog.yaml"),
+            "vdc": (Vdc, "*/*/vdc.yaml"),
+            "vapp": (VApp, "*/*/*/vapp.yaml"),
+            "template": (Template, "*/*/*/template.yaml"),
+            "vm": (Vm, "*/*/*/*/vm.yaml"),
         }
 
         bits = arg.strip().split()
@@ -203,16 +209,29 @@ class Console(cmd.Cmd):
         except ValueError:
             key, value = "", ""
 
+        typ, pattern = patterns[name]
         hits = glob.glob(
-            os.path.join(self.project.root, self.project.project, patterns[name],
-            "{0}.yaml".format(name))
+            os.path.join(self.project.root, self.project.project, pattern)
         )
         objs = []
         for hit in hits:
             with open(hit, 'r') as data:
-                obj = yaml_loads(data.read())
-                if not key or value.strip() in getattr(obj, key.strip(), ""): 
+                obj = typ(**yaml_loads(data.read()))
+                if not key: 
                     objs.append(obj)
+                    continue
+                else:
+                    data = dict(
+                        [(k, getattr(item, k))
+                        for seq in [
+                            i for i in vars(obj).values() if isinstance(i, list)
+                        ]
+                        for item in seq
+                        for k in getattr(item, "_fields", [])],
+                        **vars(obj))
+                    if value.strip() in data.get(key.strip(), ""):
+                        objs.append(obj)
+                        continue
 
         if len(objs) > 1:
             if index is not None:
@@ -228,7 +247,7 @@ class Console(cmd.Cmd):
             print("No matches for pattern {}".format(spec))
 
         print("Search results:\n")
-        print(*self.search, sep="\n")
+        print(*[vars(i) for i in self.search], sep="\n")
 
     def do_quit(self, arg):
         """

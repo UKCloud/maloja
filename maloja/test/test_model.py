@@ -18,8 +18,7 @@ import maloja.surveyor
 import maloja.types
 
 
-template_xml = """
-<?xml version="1.0" encoding="UTF-8"?>
+template_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <VAppTemplate xmlns="http://www.vmware.com/vcloud/v1.5" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" goldMaster="false" status="8" name="Windows_2008_R2_STD_50GB_MediumHighMem_v1.0.2" id="urn:vcloud:vm:359b91ab-bdd1-4091-a30f-da18e264d311" href="https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-359b91ab-bdd1-4091-a30f-da18e264d311" type="application/vnd.vmware.vcloud.vm+xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.dmtf.org/ovf/envelope/1 http://schemas.dmtf.org/ovf/envelope/1/dsp8023_1.1.0.xsd http://www.vmware.com/vcloud/v1.5 http://10.10.6.11/api/v1.5/schema/master.xsd">
     <Link rel="up" href="https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-30348aad-0a01-4a3a-a7f2-079e9fea1073" type="application/vnd.vmware.vcloud.vAppTemplate+xml"/>
     <Link rel="storageProfile" href="https://api.vcd.portal.skyscapecloud.com/api/vdcStorageProfile/efb95611-9c69-49fa-8257-a0afdb18f39b" type="application/vnd.vmware.vcloud.vdcStorageProfile+xml"/>
@@ -353,9 +352,25 @@ class VmTests(unittest.TestCase):
         self.assertEqual("STANDARD-Any", obj.storageProfileName)
         self.assertEqual(0, len(obj.networkconnections))
 
-    def test_feed_vm(self):
+    def test_feed_vm_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(vm_xml)
+        obj = Vm()
+        self.assertIs(obj, obj.feed_xml(tree))
+        self.assertEqual((
+            "https://api.vcd.portal.skyscapecloud.com/api/"
+            "vApp/vm-1617dae0-1391-4b02-8981-3452b5d02314"),
+            obj.href)
+        self.assertEqual(
+            "Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1",
+            obj.name)
+        self.assertEqual(None, obj.guestOs)
+        self.assertEqual(1, len(obj.networkconnections))
+        self.assertEqual("00:50:56:01:aa:99", obj.networkconnections[0].macAddress)
+
+    def test_feed_template_xml(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(template_xml)
         obj = Vm()
         self.assertIs(obj, obj.feed_xml(tree))
         self.assertEqual((

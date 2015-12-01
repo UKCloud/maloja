@@ -289,44 +289,50 @@ status:
 """
 
 vm_yaml = """
-name: "Test data"
-href:
-guestOs: Ubuntu 12.04 LTS
-hardwareVersion: 8
-cpu:
-memoryMB:
-networkcards:
-- name:
-harddisks:
-- name:
-  capacity:
-  bustype:
-cd:
-  description:
-floppydisk:
-  description: Floppy Drive 1
-  media:
-isBusy:
-isDeleted:
-isDeployed:
-isInMaintenanceMode:
-isPublished:
-status:
-storageProfileName:
-vmToolsVersion:
-networkconnections:
-- name: NIC0_NET
-  ip: 192.168.10.41
-  isConnected: true
-  macAddress: "00:50:56:01:aa:99"
-ipAddressAllocationMode:
-guestcustomization:
-  enabled:
-  changesid:
-"""
+--- !!omap
+- name: Test data
+- href:
+- guestOs: Ubuntu 12.04 LTS
+- hardwareVersion: 8
+- cpu:
+- memoryMB:
+- networkcards:
+  - name:
+- harddisks:
+  - name:
+    capacity:
+    bustype:
+- cd:
+  - description:
+- floppydisk:
+  - description: Floppy Drive 1
+    media:
+- isBusy:
+- isDeleted:
+- isDeployed:
+- isInMaintenanceMode:
+- isPublished:
+- status:
+- storageProfileName:
+- vmToolsVersion:
+- networkconnections:
+  - name: NIC0_NET
+    ip: 192.168.10.41
+    isConnected: true
+    macAddress: 00:50:56:01:aa:99
+- ipAddressAllocationMode:
+- guestcustomization:
+  - enabled:
+""".lstrip()
 
 
 class VmTests(unittest.TestCase):
+
+    def setUp(self):
+        self.oldMaxDiff, self.maxDiff = self.maxDiff, None
+
+    def tearDown(self):
+        self.maxDiff = self.oldMaxDiff
 
     def test_feed_query_results(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
@@ -364,4 +370,10 @@ class VmTests(unittest.TestCase):
         data = yaml_loads(vm_yaml)
         obj = Vm(**data)
         rv = yaml_dumps(obj)
-        self.assertEqual(vm_yaml, rv)
+        data = yaml_loads(rv)
+        check = Vm(**data)
+        for (a, _), (b, _) in zip(obj._defaults, check._defaults):
+            with self.subTest(a=a, b=b):
+                self.assertEqual(getattr(obj, a), getattr(check, b))
+        # YAML doc oddness notwithstanding
+        self.assertEqual(vm_yaml.splitlines()[1:], rv.splitlines()[1:])

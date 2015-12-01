@@ -2,6 +2,7 @@
 #   -*- encoding: UTF-8 -*-
 
 from collections import namedtuple
+from collections import OrderedDict
 import functools
 import logging
 import itertools
@@ -14,6 +15,10 @@ Status = namedtuple("Status", ["id", "job", "level"])
 
 yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
+
+def dataobject_as_ordereddict(dumper, data, flow_style=False):
+    assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
+    return dumper.represent_ordereddict(OrderedDict([(k, getattr(data, k)) for k, v in data._defaults]))
 
 def namedtuple_as_dict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
@@ -57,6 +62,8 @@ class Vm(DataObject):
     )
 
     _defaults = [
+        ("name", None),
+        ("href", None),
         ("guestOs", None),
         ("hardwareVersion", None),
         ("cpu", None),
@@ -98,5 +105,5 @@ class Vm(DataObject):
                 for i in tree.iter(ns + "NetworkConnection")]
         return self
 
+ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)
-

@@ -934,8 +934,10 @@ class VdcSurveyTests(unittest.TestCase):
     </Vdc>""")
 
     def test_xml(self):
-        obj = next(maloja.surveyor.survey_loads(VdcSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.model.Vdc)
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(VdcSurveyTests.xml)
+        obj = maloja.model.Vdc()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Vdc)
         self.assertEqual("Default vDC", obj.name)
         self.assertEqual("Default vDC", obj.description)
         self.assertEqual(
@@ -944,3 +946,4 @@ class VdcSurveyTests(unittest.TestCase):
         self.assertEqual(
             "application/vnd.vmware.vcloud.vdc+xml",
             obj.type)
+

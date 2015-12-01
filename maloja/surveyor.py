@@ -234,14 +234,23 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
+        tree = ET.fromstring(response.text)
+        obj = Vdc().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
+        path = path._replace(file="vdc.yaml")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
-        for obj in survey_loads(response.text):
-            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+        try:
+            Surveyor.locks[path].acquire()
             with open(
                 os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
             ) as output:
-                output.write(yaml_dumps(obj))
+                try:
+                    data = yaml_dumps(obj)
+                except Exception as e:
+                    log.error(e)
+                output.write(data)
                 output.flush()
+        finally:
+            Surveyor.locks[path].release()
 
         vapps = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",

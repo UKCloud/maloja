@@ -16,7 +16,6 @@ yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDum
 
 App = namedtuple("App", ["name", "type", "href"])
 Template = namedtuple("Template", ["name", "type", "href", "dateCreated"])
-Vdc = namedtuple("Vdc", ["name", "type", "href", "description"])
 
 def dataobject_as_ordereddict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
@@ -80,6 +79,15 @@ class Org(DataObject):
         ("fullName", None),
     ]
 
+class Vdc(DataObject):
+
+    _defaults = [
+        ("name", None),
+        ("href", None),
+        ("type", None),
+        ("description", None),
+    ]
+
 class Vm(DataObject):
 
     NetworkConnection = namedtuple(
@@ -134,5 +142,6 @@ class Vm(DataObject):
 
 ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Vdc, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)

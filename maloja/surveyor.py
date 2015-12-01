@@ -15,10 +15,10 @@ import xml.sax.saxutils
 
 import ruamel.yaml
 
-from maloja.model import App
 from maloja.model import Catalog
 from maloja.model import Template
 from maloja.model import Org
+from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.model import yaml_dumps
@@ -41,7 +41,7 @@ def survey_loads(xml, types={}):
     namespace = "{http://www.vmware.com/vcloud/v1.5}"
     tree = ET.fromstring(xml)
     typ = (types or {
-        namespace + "VApp": App,
+        namespace + "VApp": VApp,
         namespace + "Catalog": Catalog,
         namespace + "Vm": Vm,
         namespace + "Org": Org,
@@ -181,14 +181,23 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
+        tree = ET.fromstring(response.text)
+        obj = VApp().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
+        path = path._replace(file="vapp.yaml")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
-        for obj in survey_loads(response.text):
-            path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
+        try:
+            Surveyor.locks[path].acquire()
             with open(
                 os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
             ) as output:
-                output.write(yaml_dumps(obj))
+                try:
+                    data = yaml_dumps(obj)
+                except Exception as e:
+                    log.error(e)
+                output.write(data)
                 output.flush()
+        finally:
+            Surveyor.locks[path].release()
 
         url = urlparse(response.url)
         query = "/".join((

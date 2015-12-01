@@ -731,8 +731,10 @@ class VAppSurveyTests(unittest.TestCase):
     </VApp>""")
 
     def test_xml(self):
-        obj = next(maloja.surveyor.survey_loads(VAppSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.model.App)
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(VAppSurveyTests.xml)
+        obj = maloja.model.VApp()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.VApp)
         self.assertEqual("importedVapp", obj.name)
         self.assertEqual(
             "https://vcloud.example.com/api/vApp/vapp-bba47763-0ce1-45b9-8470-ea29ba58c52f",

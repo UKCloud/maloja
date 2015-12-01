@@ -14,7 +14,6 @@ import maloja.types
 yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
 
-App = namedtuple("App", ["name", "type", "href"])
 Template = namedtuple("Template", ["name", "type", "href", "dateCreated"])
 
 def dataobject_as_ordereddict(dumper, data, flow_style=False):
@@ -77,6 +76,14 @@ class Org(DataObject):
         ("href", None),
         ("type", None),
         ("fullName", None),
+    ]
+
+class VApp(DataObject):
+
+    _defaults = [
+        ("name", None),
+        ("href", None),
+        ("type", None),
     ]
 
 class Vdc(DataObject):
@@ -142,6 +149,7 @@ class Vm(DataObject):
 
 ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(VApp, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vdc, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)

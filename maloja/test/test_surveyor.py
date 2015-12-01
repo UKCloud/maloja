@@ -68,8 +68,10 @@ class CatalogSurveyTests(unittest.TestCase):
     </Catalog>""")
 
     def test_xml(self):
-        obj = next(maloja.surveyor.survey_loads(CatalogSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.model.Catalog)
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(CatalogSurveyTests.xml)
+        obj = maloja.model.Catalog()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Catalog)
         self.assertEqual("Default catalog", obj.name)
         self.assertEqual(
             "https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810",
@@ -77,10 +79,9 @@ class CatalogSurveyTests(unittest.TestCase):
         self.assertEqual(
             "application/vnd.vmware.vcloud.catalog+xml",
             obj.type)
-        tree = ET.fromstring(OrgSurveyTests.xml)
-        vdcs = maloja.surveyor.find_xpath(
-            "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']", tree)
-
+        self.assertEqual(
+            "2013-02-11T15:46:40.170+02:00",
+            obj.dateCreated)
 
 class OrgSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Org

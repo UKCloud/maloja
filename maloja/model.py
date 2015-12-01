@@ -15,7 +15,6 @@ yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoa
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
 
 App = namedtuple("App", ["name", "type", "href"])
-Catalog = namedtuple("Catalog", ["name", "type", "href", "dateCreated"])
 Template = namedtuple("Template", ["name", "type", "href", "dateCreated"])
 Vdc = namedtuple("Vdc", ["name", "type", "href", "description"])
 
@@ -62,6 +61,15 @@ class DataObject:
         for k, v in itertools.chain(attribs, body):
             setattr(self, k[0].lower() + k[1:], self.typecast(v))
         return self
+
+class Catalog(DataObject):
+
+    _defaults = [
+        ("name", None),
+        ("href", None),
+        ("type", None),
+        ("dateCreated", None),
+    ]
 
 class Org(DataObject):
 
@@ -124,6 +132,7 @@ class Vm(DataObject):
                 for i in tree.iter(ns + "NetworkConnection")]
         return self
 
+ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
-ruamel.yaml.RoundTripDumper.add_representer(Org, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)

@@ -42,8 +42,44 @@ class Surveyor:
     def on_vmrecords(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vmrecords")
 
-        log.debug(response.status_code)
-        log.debug(response.text)
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(response.text)
+        for elem in tree.iter(ns + "VMRecord"):
+            obj = Vm().feed_xml(elem, ns=ns)
+            try:
+                path = path._replace(node=obj.name, file="vm.yaml")
+                os.makedirs(
+                    os.path.join(
+                        path.root, path.project, path.org, path.dc,
+                        path.app, path.node
+                    ),
+                    exist_ok=True
+                )
+                fP = os.path.join(
+                    path.root, path.project, path.org,
+                    path.dc, path.app, path.node, path.file
+                )
+            except TypeError:
+                log.error("Insufficient data from {0}".format(elem.attrib.get("href", "?")))
+                continue
+
+            try:
+                Surveyor.locks[path].acquire()
+                if os.path.isfile(fP):
+                    with open(fP, "r") as input_:
+                        data = yaml_loads(input_.read())
+                        obj = Vm(**data).feed_xml(elem, ns=ns)
+                        log.debug("Loaded existing object: {0}".format(vars(obj)))
+
+                with open(fP, "w") as output:
+                    data = yaml_dumps(obj)
+                    output.write(data)
+                    output.flush()
+            except Exception as e:
+                log.error(e)
+            finally:
+                Surveyor.locks[path].release()
+
         if results and status:
             results.put((status, None))
 
@@ -55,8 +91,8 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
-        obj = Vm().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="vm.yaml")
         os.makedirs(
             os.path.join(
@@ -65,18 +101,27 @@ class Surveyor:
             ),
             exist_ok=True
         )
+        fP = os.path.join(
+            path.root, path.project, path.org,
+            path.dc, path.app, path.node, path.file
+        )
         try:
             Surveyor.locks[path].acquire()
-            with open(
-                os.path.join(path.root, path.project, path.org, path.dc, path.app, path.node, path.file),
-                "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
+            if os.path.isfile(fP):
+                with open(fP, "r") as input_:
+                    data = yaml_loads(input_.read())
+                    obj = Vm(**data)
+                    log.debug("Loaded existing object: {0}".format(vars(obj)))
+            else:
+                obj = Vm()
+
+            obj.feed_xml(tree, ns=ns)
+            with open(fP, "w") as output:
+                data = yaml_dumps(obj)
                 output.write(data)
                 output.flush()
+        except Exception as e:
+            log.error(e)
         finally:
             Surveyor.locks[path].release()
 
@@ -136,14 +181,12 @@ class Surveyor:
             child = status._replace(level=status.level + 1)
         else:
             child = Status(1, 1, 1)
-        log.debug(path)
 
         templates = find_xpath(
             ".//*[@type='application/vnd.vmware.vcloud.vAppTemplate+xml']",
             ET.fromstring(response.text)
         )
         templates = list(templates)
-        log.debug(templates)
         ops = [session.get(
             tmplt.attrib.get("href"),
             background_callback=functools.partial(

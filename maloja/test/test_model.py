@@ -352,10 +352,16 @@ class VmTests(unittest.TestCase):
         self.assertEqual(1, len(obj.networkconnections))
         self.assertIsInstance(obj.networkconnections[0], Vm.NetworkConnection)
 
-    def test_dump_yaml(self):
+    def test_dump_yaml_elementwise(self):
         data = yaml_loads(vm_yaml)
         obj = Vm(**data)
         for attr, dflt in Vm._defaults:
             with self.subTest(attr=attr):
                 elem = getattr(obj, attr)
                 yaml_dumps(elem)
+
+    def test_dump_yaml_roundtrip(self):
+        data = yaml_loads(vm_yaml)
+        obj = Vm(**data)
+        rv = yaml_dumps(obj)
+        self.assertEqual(vm_yaml, rv)

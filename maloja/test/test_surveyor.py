@@ -10,8 +10,8 @@ import xml.etree.ElementTree as ET
 
 import ruamel.yaml
 
+import maloja.model
 import maloja.surveyor
-import maloja.types
 
 class CatalogSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Catalog
@@ -69,7 +69,7 @@ class CatalogSurveyTests(unittest.TestCase):
 
     def test_xml(self):
         obj = next(maloja.surveyor.survey_loads(CatalogSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.types.Catalog)
+        self.assertIsInstance(obj, maloja.model.Catalog)
         self.assertEqual("Default catalog", obj.name)
         self.assertEqual(
             "https://vcloud.example.com/api/catalog/39867ab4-04e0-4b13-b468-08abcc1de810",
@@ -176,8 +176,10 @@ class OrgSurveyTests(unittest.TestCase):
     """)
 
     def test_xml(self):
-        obj = next(maloja.surveyor.survey_loads(OrgSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.types.Org)
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(OrgSurveyTests.xml)
+        obj = maloja.model.Org()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Org)
         self.assertEqual("Default", obj.name)
         self.assertEqual("Default Organization", obj.fullName)
         self.assertEqual(
@@ -186,17 +188,18 @@ class OrgSurveyTests(unittest.TestCase):
         self.assertEqual(
             "application/vnd.vmware.vcloud.org+xml",
             obj.type)
-        tree = ET.fromstring(OrgSurveyTests.xml)
-        vdcs = maloja.surveyor.find_xpath(
-            "./*/[@type='application/vnd.vmware.vcloud.vdc+xml']", tree)
 
     def test_yaml(self):
-        txt = textwrap.dedent("""
-            !!python/object/new:maloja.types.Org [Default, application/vnd.vmware.vcloud.org+xml,
-            'https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a',
-            Default Organization]""").strip()
-        obj = ruamel.yaml.load(txt)
-        self.assertIsInstance(obj, maloja.types.Org)
+        txt = textwrap.dedent(
+            """
+            fullName: Default Organization
+            href: https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a
+            name: Default
+            type: application/vnd.vmware.vcloud.org+xml
+            """)
+        data = ruamel.yaml.load(txt)
+        obj = maloja.model.Org(**data)
+        self.assertIsInstance(obj, maloja.model.Org)
         self.assertEqual("Default", obj.name)
         self.assertEqual("Default Organization", obj.fullName)
         self.assertEqual(
@@ -728,7 +731,7 @@ class VAppSurveyTests(unittest.TestCase):
 
     def test_xml(self):
         obj = next(maloja.surveyor.survey_loads(VAppSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.types.App)
+        self.assertIsInstance(obj, maloja.model.App)
         self.assertEqual("importedVapp", obj.name)
         self.assertEqual(
             "https://vcloud.example.com/api/vApp/vapp-bba47763-0ce1-45b9-8470-ea29ba58c52f",
@@ -931,7 +934,7 @@ class VdcSurveyTests(unittest.TestCase):
 
     def test_xml(self):
         obj = next(maloja.surveyor.survey_loads(VdcSurveyTests.xml), None)
-        self.assertIsInstance(obj, maloja.types.Vdc)
+        self.assertIsInstance(obj, maloja.model.Vdc)
         self.assertEqual("Default vDC", obj.name)
         self.assertEqual("Default vDC", obj.description)
         self.assertEqual(

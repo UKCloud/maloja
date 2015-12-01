@@ -3,9 +3,8 @@
 
 from collections import namedtuple
 
-App = namedtuple("App", ["name", "type", "href"])
-Catalog = namedtuple("Catalog", ["name", "type", "href", "dateCreated"])
-Node = namedtuple("Node", ["name", "type", "href"])
-Org = namedtuple("Org", ["name", "type", "href", "fullName"])
-Template = namedtuple("Template", ["name", "type", "href", "dateCreated"])
-Vdc = namedtuple("Vdc", ["name", "type", "href", "description"])
+Credentials = namedtuple("Credentials", ["url", "user", "password"])
+Status = namedtuple("Status", ["id", "job", "level"])
+Stop = namedtuple("Stop", [])
+Survey = namedtuple("Survey", ["path"])
+Token = namedtuple("Token", ["t", "url", "key", "value"])

@@ -15,13 +15,13 @@ import warnings
 import requests
 from requests_futures.sessions import FuturesSession
 
-from maloja.surveyor import Status
 from maloja.surveyor import Surveyor
+from maloja.types import Credentials
+from maloja.types import Status
+from maloja.types import Stop
+from maloja.types import Survey
+from maloja.types import Token
 
-Credentials = namedtuple("Credentials", ["url", "user", "password"])
-Stop = namedtuple("Stop", [])
-Survey = namedtuple("Survey", ["path"])
-Token = namedtuple("Token", ["t", "url", "key", "value"])
 
 @singledispatch
 def handler(msg, path=None, queue=None, **kwargs):

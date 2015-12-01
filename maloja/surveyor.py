@@ -15,15 +15,17 @@ import xml.sax.saxutils
 
 import ruamel.yaml
 
+from maloja.model import App
+from maloja.model import Catalog
+from maloja.model import Template
+from maloja.model import Org
+from maloja.model import Vdc
+from maloja.model import Vm
+from maloja.model import yaml_dumps
+from maloja.model import yaml_loads
+
 import maloja.types
-from maloja.workflow.utils import record
-
-Status = namedtuple("Status", ["id", "job", "level"])
-
-#yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
-#yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
-yaml_loads = ruamel.yaml.load
-yaml_dumps = ruamel.yaml.dump
+from maloja.types import Status
 
 
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
@@ -39,12 +41,12 @@ def survey_loads(xml, types={}):
     namespace = "{http://www.vmware.com/vcloud/v1.5}"
     tree = ET.fromstring(xml)
     typ = (types or {
-        namespace + "VApp": maloja.types.App,
-        namespace + "Catalog": maloja.types.Catalog,
-        namespace + "Vm": maloja.types.Node,
-        namespace + "Org": maloja.types.Org,
-        namespace + "VAppTemplate": maloja.types.Template,
-        namespace + "Vdc": maloja.types.Vdc
+        namespace + "VApp": App,
+        namespace + "Catalog": Catalog,
+        namespace + "Vm": Vm,
+        namespace + "Org": Org,
+        namespace + "VAppTemplate": Template,
+        namespace + "Vdc": Vdc
     }).get(tree.tag)
     attribs = (tree.attrib.get(f, None) for f in typ._fields)
     body = (
@@ -306,17 +308,22 @@ class Surveyor:
             child = Status(1, 1, 1)
 
         os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
+        log.debug("Hi")
         for obj in survey_loads(response.text):
             path = path._replace(file="{0}.yaml".format(type(obj).__name__.lower()))
-            with open(
-                os.path.join(path.root, path.project, path.org, path.file), "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
-                output.write(data)
-                output.flush()
+            try:
+                Surveyor.locks[path].acquire()
+                with open(
+                    os.path.join(path.root, path.project, path.org, path.file), "w"
+                ) as output:
+                    try:
+                        data = yaml_dumps(obj)
+                    except Exception as e:
+                        log.error(e)
+                    output.write(data)
+                    output.flush()
+            finally:
+                Surveyor.locks[path].release()
 
         ctlgs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.catalog+xml']",

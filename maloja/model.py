@@ -11,11 +11,13 @@ import ruamel.yaml
 
 import maloja.types
 
-Status = namedtuple("Status", ["id", "job", "level"])
-
 yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
 
+App = namedtuple("App", ["name", "type", "href"])
+Catalog = namedtuple("Catalog", ["name", "type", "href", "dateCreated"])
+Template = namedtuple("Template", ["name", "type", "href", "dateCreated"])
+Vdc = namedtuple("Vdc", ["name", "type", "href", "description"])
 
 def dataobject_as_ordereddict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
@@ -48,13 +50,27 @@ class DataObject:
             setattr(self, k, v)
 
     def feed_xml(self, tree, *args, **kwargs):
+        ns = kwargs.pop("ns", "")
         fields = [k for k, v in self._defaults]
         attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
-        body = ((elem.tag, elem.text) for elem in tree if elem.tag in fields)
+        tags = [ns + k[0].upper() + k[1:] for k, v in self._defaults]
+        body = (
+            (elem.tag.replace(ns, ""), elem.text)
+            for elem in tree
+            if elem.tag in tags
+        )
         for k, v in itertools.chain(attribs, body):
-            setattr(self, k, self.typecast(v))
+            setattr(self, k[0].lower() + k[1:], self.typecast(v))
         return self
 
+class Org(DataObject):
+
+    _defaults = [
+        ("name", None),
+        ("href", None),
+        ("type", None),
+        ("fullName", None),
+    ]
 
 class Vm(DataObject):
 
@@ -109,4 +125,5 @@ class Vm(DataObject):
         return self
 
 ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Org, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)

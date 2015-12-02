@@ -986,6 +986,7 @@ class VAppTemplateSurveyTests(unittest.TestCase):
         self.assertEqual(
             "application/vnd.vmware.vcloud.vAppTemplate+xml",
             obj.type)
+        self.assertEqual("2013-02-14T13:06:42.143+02:00", obj.dateCreated)
 
 class VdcSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Vdc

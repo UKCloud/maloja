@@ -10,6 +10,7 @@ import unittest
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
+from maloja.model import Template
 from maloja.model import Vm
 from maloja.model import yaml_dumps
 from maloja.model import yaml_loads
@@ -318,6 +319,7 @@ vm_yaml = """
     ip: 192.168.10.41
     isConnected: true
     macAddress: 00:50:56:01:aa:99
+    ipAddressAllocationMode: DHCP
 - ipAddressAllocationMode:
 - guestcustomization:
   - enabled:
@@ -371,18 +373,15 @@ class VmTests(unittest.TestCase):
     def test_feed_template_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(template_xml)
-        obj = Vm()
+        obj = Template()
         self.assertIs(obj, obj.feed_xml(tree))
         self.assertEqual((
             "https://api.vcd.portal.skyscapecloud.com/api/"
-            "vApp/vm-1617dae0-1391-4b02-8981-3452b5d02314"),
+            "vAppTemplate/vm-359b91ab-bdd1-4091-a30f-da18e264d311"),
             obj.href)
         self.assertEqual(
-            "Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1",
+            "Windows_2008_R2_STD_50GB_MediumHighMem_v1.0.2",
             obj.name)
-        self.assertEqual(None, obj.guestOs)
-        self.assertEqual(1, len(obj.networkconnections))
-        self.assertEqual("00:50:56:01:aa:99", obj.networkconnections[0].macAddress)
 
     def test_load_yaml(self):
         data = yaml_loads(vm_yaml)

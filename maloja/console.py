@@ -104,7 +104,6 @@ class Console(cmd.Cmd):
                     packet = (next(self.seq), msg)
                     self.operations.put(packet)
                     log.debug(packet)
-                    #reply = yield from self.replies.get()
                 self.stop = self.postcmd(msg, line)
                 if self.stop:
                     break
@@ -217,6 +216,8 @@ class Console(cmd.Cmd):
         for hit in hits:
             with open(hit, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))
+                if obj is None:
+                    continue
                 if not key: 
                     objs.append(obj)
                     continue

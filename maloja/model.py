@@ -106,12 +106,13 @@ class Vdc(DataObject):
 class Vm(DataObject):
 
     NetworkConnection = namedtuple(
-        "NetworkConnection", ["name", "ip", "isConnected", "macAddress"]
+        "NetworkConnection", ["name", "ip", "isConnected", "macAddress", "ipAddressAllocationMode"]
     )
 
     _defaults = [
         ("name", None),
         ("href", None),
+        ("dateCreated", None),
         ("guestOs", None),
         ("hardwareVersion", None),
         ("cpu", None),
@@ -129,7 +130,6 @@ class Vm(DataObject):
         ("storageProfileName", None),
         ("vmToolsVersion", None),
         ("networkconnections", []),
-        ("ipAddressAllocationMode", None),
         ("guestcustomization", None)
     ]
 
@@ -142,16 +142,17 @@ class Vm(DataObject):
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
 
-        if tree.tag in (ns + "Vm", ns + "VMRecord"):
+        if tree.tag in (ns + "VAppTemplate", ns + "Vm", ns + "VMRecord"):
             super().feed_xml(tree, ns=ns)
 
-        if tree.tag == ns + "Vm":
+        if tree.tag in (ns + "VAppTemplate", ns + "Vm"):
             self.networkconnections = [
                 Vm.NetworkConnection(
                     i.attrib["network"],
-                    i.find(ns + "IpAddress").text,
-                    True if i.find(ns + "IsConnected").text == "true" else False,
-                    i.find(ns + "MACAddress").text)
+                    getattr(i.find(ns + "IpAddress"), "text", None),
+                    i.find(ns + "IsConnected").text == "true",
+                    i.find(ns + "MACAddress").text,
+                    getattr(i.find(ns + "IpAddressAllocationMode"), "text", None))
                 for i in tree.iter(ns + "NetworkConnection")]
         return self
 

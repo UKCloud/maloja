@@ -13,10 +13,10 @@ Create an options file
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Make a text file '`options.private`' containing connection strings to your cloud
-endpoint on two lines like this::
+Organisation endpoint on two lines like this::
 
     --url=https://api.vcd.portal.XXXXXXXXX.YYY
-    --user=XXXX.YYY.ZZZZZZZZZZZZZZZZZZZZZ
+    --user=WWWW.XXX.YYYYYY@ZZZZZZZZZZZZZZ
 
 Invoke the Maloja console
 ~~~~~~~~~~~~~~~~~~~~~~~~~

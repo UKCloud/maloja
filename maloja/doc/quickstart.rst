@@ -52,15 +52,15 @@ task reports when it has finished. When no more tasks are active, the survey is
 complete.
 
 Use the '`search`' command to view assets at every level, filter by attribute and
-pick from a list of results.
+pick from a list of results, eg:
 
-* View a list of all Windows nodes::
+* View a list of all Windows templates::
 
-    search node name=Windows
+    search template name=Windows
 
-* Pick from the list of all Windows nodes::
+* Pick from the list of all Windows templates::
 
-    search node name=Windows 5
+    search template name=Windows 5
 
 Clear the buffer
 ~~~~~~~~~~~~~~~~

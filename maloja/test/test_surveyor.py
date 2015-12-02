@@ -743,6 +743,250 @@ class VAppSurveyTests(unittest.TestCase):
             "application/vnd.vmware.vcloud.vApp+xml",
             obj.type)
 
+class VAppTemplateSurveyTests(unittest.TestCase):
+
+    xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><VAppTemplate
+    xmlns="http://www.vmware.com/vcloud/v1.5"
+    xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1"
+    xmlns:vmext="http://www.vmware.com/vcloud/extension/v1.5"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    goldMaster="false"
+    href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb"
+    id="urn:vcloud:vapptemplate:fa813d19-3936-4099-bff9-e0ad8d1e34bb"
+    name="NewCatalogItem"
+    ovfDescriptorUploaded="true"
+    status="8"
+    type="application/vnd.vmware.vcloud.vAppTemplate+xml"
+    xsi:schemaLocation="http://www.vmware.com/vcloud/extension/v1.5 http://https://vcloud.example.com/api/v1.5/schema/vmwextensions.xsd http://schemas.dmtf.org/ovf/envelope/1 http://schemas.dmtf.org/ovf/envelope/1/dsp8023_1.1.0.xsd http://www.vmware.com/vcloud/v1.5 http://https://vcloud.example.com/api/v1.5/schema/master.xsd">
+    <Link
+        href="https://vcloud.example.com/api/vdc/afaafb99-228c-4838-ad07-5bf3aa649d42"
+        rel="up"
+        type="application/vnd.vmware.vcloud.vdc+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/catalogItem/016ed9ac-c9cc-4455-bcfb-1393edcae000"
+        rel="catalogItem"
+        type="application/vnd.vmware.vcloud.catalogItem+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb"
+        rel="remove"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb"
+        rel="edit"
+        type="application/vnd.vmware.vcloud.vAppTemplate+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/action/enableDownload"
+        rel="enable"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/action/disableDownload"
+        rel="disable"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/ovf"
+        rel="ovf"
+        type="text/xml"/>
+    <Link
+        href="https://vcloud.example.com/api/vdcStorageProfile/b520e879-71de-4d47-b2e1-e092aab97f61"
+        rel="storageProfile"
+        type="application/vnd.vmware.vcloud.vdcStorageProfile+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/owner"
+        rel="down"
+        type="application/vnd.vmware.vcloud.owner+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/metadata"
+        rel="down"
+        type="application/vnd.vmware.vcloud.metadata+xml"/>
+    <Link
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/productSections/"
+        rel="down"
+        type="application/vnd.vmware.vcloud.productSections+xml"/>
+    <Description>Catalog description</Description>
+    <Owner
+        type="application/vnd.vmware.vcloud.owner+xml">
+        <User
+            href="https://vcloud.example.com/api/admin/user/51e86769-9e2d-4edc-af4e-5d3606494cbf"
+            name="system"
+            type="application/vnd.vmware.admin.user+xml"/>
+    </Owner>
+    <Children>
+        <Vm
+            goldMaster="false"
+            href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa"
+            id="urn:vcloud:vm:078a00a2-e103-4237-97e5-c40a698aa8fa"
+            name="imported"
+            type="application/vnd.vmware.vcloud.vm+xml">
+            <VCloudExtension
+                required="false">
+                <vmext:VmVimInfo>
+                    <vmext:VmVimObjectRef>
+                        <vmext:VimServerRef
+                            href="https://vcloud.example.com/api/admin/extension/vimServer/5b2f648b-9da7-4d7b-8212-6ed8a83f2102"
+                            name="ConfigWizard Configured vCenter"
+                            type="application/vnd.vmware.admin.vmwvirtualcenter+xml"/>
+                        <vmext:MoRef>vm-269</vmext:MoRef>
+                        <vmext:VimObjectType>VIRTUAL_MACHINE</vmext:VimObjectType>
+                    </vmext:VmVimObjectRef>
+                    <vmext:DatastoreVimObjectRef>
+                        <vmext:VimServerRef
+                            href="https://vcloud.example.com/api/admin/extension/vimServer/5b2f648b-9da7-4d7b-8212-6ed8a83f2102"
+                            name="ConfigWizard Configured vCenter"
+                            type="application/vnd.vmware.admin.vmwvirtualcenter+xml"/>
+                        <vmext:MoRef>datastore-42</vmext:MoRef>
+                        <vmext:VimObjectType>DATASTORE</vmext:VimObjectType>
+                    </vmext:DatastoreVimObjectRef>
+                    <vmext:HostVimObjectRef>
+                        <vmext:VimServerRef
+                            href="https://vcloud.example.com/api/admin/extension/vimServer/5b2f648b-9da7-4d7b-8212-6ed8a83f2102"
+                            name="ConfigWizard Configured vCenter"
+                            type="application/vnd.vmware.admin.vmwvirtualcenter+xml"/>
+                        <vmext:MoRef>host-118</vmext:MoRef>
+                        <vmext:VimObjectType>HOST</vmext:VimObjectType>
+                    </vmext:HostVimObjectRef>
+                    <vmext:VirtualDisksMaxChainLength>1</vmext:VirtualDisksMaxChainLength>
+                </vmext:VmVimInfo>
+            </VCloudExtension>
+            <Link
+                href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb"
+                rel="up"
+                type="application/vnd.vmware.vcloud.vAppTemplate+xml"/>
+            <Link
+                href="https://vcloud.example.com/api/vdcStorageProfile/b520e879-71de-4d47-b2e1-e092aab97f61"
+                rel="storageProfile"
+                type="application/vnd.vmware.vcloud.vdcStorageProfile+xml"/>
+            <Link
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/action/relocate"
+                rel="relocate"
+                type="application/vnd.vmware.vcloud.relocateVmParams+xml"/>
+            <Link
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/action/consolidate"
+                rel="consolidate"/>
+            <Link
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/shadowVms"
+                rel="shadowVms"
+                type="application/vnd.vmware.vcloud.shadowVms+xml"/>
+            <Link
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/metadata"
+                rel="down"
+                type="application/vnd.vmware.vcloud.metadata+xml"/>
+            <Link
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/productSections/"
+                rel="down"
+                type="application/vnd.vmware.vcloud.productSections+xml"/>
+            <Description/>
+            <NetworkConnectionSection
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/networkConnectionSection/"
+                ovf:required="false"
+                type="application/vnd.vmware.vcloud.networkConnectionSection+xml">
+                <ovf:Info>Specifies the available VM network connections</ovf:Info>
+                <PrimaryNetworkConnectionIndex>0</PrimaryNetworkConnectionIndex>
+                <NetworkConnection
+                    needsCustomization="true"
+                    network="VM Network">
+                    <NetworkConnectionIndex>0</NetworkConnectionIndex>
+                    <IsConnected>false</IsConnected>
+                    <MACAddress>00:50:56:8d:7f:21</MACAddress>
+                    <IpAddressAllocationMode>DHCP</IpAddressAllocationMode>
+                </NetworkConnection>
+            </NetworkConnectionSection>
+            <GuestCustomizationSection
+                href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/guestCustomizationSection/"
+                ovf:required="false"
+                type="application/vnd.vmware.vcloud.guestCustomizationSection+xml">
+                <ovf:Info>Specifies Guest OS Customization Settings</ovf:Info>
+                <Enabled>false</Enabled>
+                <ChangeSid>false</ChangeSid>
+                <VirtualMachineId>078a00a2-e103-4237-97e5-c40a698aa8fa</VirtualMachineId>
+                <JoinDomainEnabled>false</JoinDomainEnabled>
+                <UseOrgSettings>false</UseOrgSettings>
+                <AdminPasswordEnabled>false</AdminPasswordEnabled>
+                <AdminPasswordAuto>true</AdminPasswordAuto>
+                <AdminAutoLogonEnabled>false</AdminAutoLogonEnabled>
+                <AdminAutoLogonCount>0</AdminAutoLogonCount>
+                <ResetPasswordRequired>false</ResetPasswordRequired>
+                <ComputerName>imported-001</ComputerName>
+                <Link
+                    href="https://vcloud.example.com/api/vAppTemplate/vm-078a00a2-e103-4237-97e5-c40a698aa8fa/guestCustomizationSection/"
+                    rel="edit"
+                    type="application/vnd.vmware.vcloud.guestCustomizationSection+xml"/>
+            </GuestCustomizationSection>
+            <VAppScopedLocalId>imported</VAppScopedLocalId>
+            <DateCreated>2013-02-14T13:06:42.143+02:00</DateCreated>
+        </Vm>
+    </Children>
+    <ovf:NetworkSection
+        xmlns:vcloud="http://www.vmware.com/vcloud/v1.5"
+        vcloud:href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/networkSection/"
+        vcloud:type="application/vnd.vmware.vcloud.networkSection+xml">
+        <ovf:Info>The list of logical networks</ovf:Info>
+        <ovf:Network
+            ovf:name="VM Network">
+            <ovf:Description>VM Network</ovf:Description>
+        </ovf:Network>
+    </ovf:NetworkSection>
+    <NetworkConfigSection
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/networkConfigSection/"
+        ovf:required="false"
+        type="application/vnd.vmware.vcloud.networkConfigSection+xml">
+        <ovf:Info>The configuration parameters for logical networks</ovf:Info>
+        <NetworkConfig
+            networkName="VM Network">
+            <Description>VM Network</Description>
+            <Configuration>
+                <IpScopes>
+                    <IpScope>
+                        <IsInherited>false</IsInherited>
+                        <Gateway>192.168.254.1</Gateway>
+                        <Netmask>255.255.255.0</Netmask>
+                        <IsEnabled>true</IsEnabled>
+                        <IpRanges>
+                            <IpRange>
+                                <StartAddress>192.168.254.100</StartAddress>
+                                <EndAddress>192.168.254.199</EndAddress>
+                            </IpRange>
+                        </IpRanges>
+                    </IpScope>
+                </IpScopes>
+                <FenceMode>isolated</FenceMode>
+                <RetainNetInfoAcrossDeployments>false</RetainNetInfoAcrossDeployments>
+            </Configuration>
+            <IsDeployed>false</IsDeployed>
+        </NetworkConfig>
+    </NetworkConfigSection>
+    <LeaseSettingsSection
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/leaseSettingsSection/"
+        ovf:required="false"
+        type="application/vnd.vmware.vcloud.leaseSettingsSection+xml">
+        <ovf:Info>Lease settings section</ovf:Info>
+        <Link
+            href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/leaseSettingsSection/"
+            rel="edit"
+            type="application/vnd.vmware.vcloud.leaseSettingsSection+xml"/>
+        <StorageLeaseInSeconds>2592000</StorageLeaseInSeconds>
+        <StorageLeaseExpiration>2013-03-16T13:08:54.587+02:00</StorageLeaseExpiration>
+    </LeaseSettingsSection>
+    <CustomizationSection
+        goldMaster="false"
+        href="https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb/customizationSection/"
+        ovf:required="false"
+        type="application/vnd.vmware.vcloud.customizationSection+xml">
+        <ovf:Info>VApp template customization section</ovf:Info>
+        <CustomizeOnInstantiate>false</CustomizeOnInstantiate>
+    </CustomizationSection>
+    <DateCreated>2013-02-14T13:06:42.143+02:00</DateCreated>
+</VAppTemplate>""")
+
+    def test_xml(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(VAppTemplateSurveyTests.xml)
+        obj = maloja.model.Template()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Template)
+        self.assertEqual("NewCatalogItem", obj.name)
+        self.assertEqual(
+            "https://vcloud.example.com/api/vAppTemplate/vappTemplate-fa813d19-3936-4099-bff9-e0ad8d1e34bb",
+            obj.href)
+        self.assertEqual(
+            "application/vnd.vmware.vcloud.vAppTemplate+xml",
+            obj.type)
+
 class VdcSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Vdc
     xmlns="http://www.vmware.com/vcloud/v1.5"

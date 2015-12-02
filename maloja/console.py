@@ -230,7 +230,8 @@ class Console(cmd.Cmd):
                         for item in seq
                         for k in getattr(item, "_fields", [])],
                         **vars(obj))
-                    if value.strip() in data.get(key.strip(), ""):
+                    match = data.get(key.strip(), "")
+                    if value.strip() in str(match):
                         objs.append(obj)
                         continue
 

@@ -7,7 +7,7 @@ Installation
 Microsoft Windows
 =================
 
-#.  Ensure the environment variable '`%HOME`' points to your user directory.
+#.  Ensure the environment variable '`%HOME%`' points to your user directory.
 #.  Download and install `Python 3.5 for Windows`_.
 #.  Create a new Python virtual environment::
 

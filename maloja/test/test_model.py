@@ -291,6 +291,7 @@ vm_yaml = """
 --- !!omap
 - name: Test data
 - href:
+- dateCreated: 2015-08-25 20:37:28.940000
 - guestOs: Ubuntu 12.04 LTS
 - hardwareVersion: 8
 - cpu:
@@ -320,7 +321,6 @@ vm_yaml = """
     isConnected: true
     macAddress: 00:50:56:01:aa:99
     ipAddressAllocationMode: DHCP
-- ipAddressAllocationMode:
 - guestcustomization:
   - enabled:
 """.lstrip()

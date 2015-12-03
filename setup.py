@@ -66,6 +66,7 @@ setup(
     packages=[
         "maloja",
         "maloja.test",
+        "maloja.plugin",
         "maloja.workflow",
         "maloja.workflow.test",
     ],

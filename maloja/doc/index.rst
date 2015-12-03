@@ -11,6 +11,7 @@ Contents:
 
    install
    quickstart
+   contribute
 
 .. include:: ../../README.rst
 

@@ -3,6 +3,8 @@
 
 from collections import namedtuple
 
+from maloja.model import Template
+from maloja.model import Vm
 from maloja.workflow.utils import Path
 
 Plugin = namedtuple("Plugin", ["name", "description", "selector", "workflow"])
@@ -20,7 +22,13 @@ def selector(*objs):
 
     Returns Workflow class if objs satisfy selection criteria.
     """
-    return True
+    rv = []
+    if not any(obj for obj in objs if isinstance(obj, Vm)):
+        rv.append(Path(None, None, None, None, None, None, "vm.yaml"))
+    if not len([obj for obj in objs if isinstance(obj, Template)]):
+        rv.append(Path(None, None, None, None, None, None, "template.yaml"))
+    return rv or Workflow
+        
 
 class Workflow:
 

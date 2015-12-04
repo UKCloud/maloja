@@ -29,6 +29,7 @@ from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.surveyor import yaml_loads
+from maloja.workflow.utils import plugin_interface
 
 
 class Console(cmd.Cmd):
@@ -173,6 +174,18 @@ class Console(cmd.Cmd):
         """
         self.search = set([])
         print("Search results are now empty.")
+
+    def do_plugin(self, arg):
+        """
+            > search org fullName=Dev
+            > search vdc description=Skyscape
+            > search template name=Windows
+            > search vm ip=192.168.2.100
+
+        """
+        log = logging.getLogger("maloja.console.do_plugin")
+        for plugin in dict(plugin_interface()).values():
+            print(plugin.selector(*self.search))
 
     def do_search(self, arg):
         """

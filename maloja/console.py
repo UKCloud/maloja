@@ -29,6 +29,7 @@ from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.surveyor import yaml_loads
+from maloja.workflow.utils import Path
 from maloja.workflow.utils import plugin_interface
 
 
@@ -231,6 +232,11 @@ class Console(cmd.Cmd):
         )
         objs = []
         for hit in hits:
+            bits = os.path.split(
+                hit.replace(os.path.join(self.project.root, self.project.project), "")
+            )
+            print(bits)
+            #path = Path(self.project.root, self.project.project, file=bits[-1])
             with open(hit, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))
                 if obj is None:

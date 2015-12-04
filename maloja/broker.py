@@ -17,6 +17,7 @@ from requests_futures.sessions import FuturesSession
 
 from maloja.surveyor import Surveyor
 from maloja.types import Credentials
+from maloja.types import Plugin
 from maloja.types import Status
 from maloja.types import Stop
 from maloja.types import Survey

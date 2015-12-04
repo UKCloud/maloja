@@ -23,6 +23,7 @@ from maloja.workflow.utils import make_path
 from maloja.workflow.utils import plugin_interface
 from maloja.workflow.utils import recent_project
 from maloja.workflow.utils import record
+from maloja.workflow.utils import split_to_path
 
 
 class DiscoveryTester(unittest.TestCase):
@@ -110,6 +111,19 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
         self.assertEqual(self.drcty.name, path.root)
         self.assertTrue(path.project)
 
+class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
+
+    def test_org(self):
+        expect = Path(
+            os.path.abspath(self.drcty.name),
+            "project", "org", None, None, None,
+            "org.yaml"
+        )
+        data = os.path.join(*(i for i in expect if not i is None))
+        rv = split_to_path(data)
+        self.assertEqual(expect[1:], rv[1:])
+        self.assertTrue(os.path.samefile(expect[0], rv[0]))
+        
 class RecordTests(NeedsTempDirectory, unittest.TestCase):
 
     def test_content_goes_to_named_file(self):

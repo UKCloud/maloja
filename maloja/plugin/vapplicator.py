@@ -5,9 +5,8 @@ from collections import namedtuple
 
 from maloja.model import Template
 from maloja.model import Vm
+from maloja.types import Plugin
 from maloja.workflow.utils import Path
-
-Plugin = namedtuple("Plugin", ["name", "description", "selector", "workflow"])
 
 __doc__ = """
 This is a demo plugin for Maloja.

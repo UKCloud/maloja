@@ -13,13 +13,24 @@ import shutil
 import tempfile
 import unittest
 
+import pkg_resources
 import ruamel.yaml
+
+import maloja.plugin.vapplicator
 
 from maloja.workflow.utils import Path
 from maloja.workflow.utils import make_path
+from maloja.workflow.utils import plugin_interface
 from maloja.workflow.utils import recent_project
 from maloja.workflow.utils import record
 
+
+class DiscoveryTester(unittest.TestCase):
+
+    def test_publishing(self):
+        self.assertIn(
+            maloja.plugin.vapplicator.plugin,
+            dict(maloja.workflow.utils.plugin_interface()).values())
 
 class NeedsTempDirectory:
 

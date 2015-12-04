@@ -7,6 +7,7 @@ import tempfile
 import operator
 import os.path
 
+import pkg_resources
 
 Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node", "file"])
  
@@ -20,6 +21,7 @@ def make_path(path:Path, prefix="proj_", suffix=""):
     else:
         return path
 
+
 def recent_project(path:Path):
     projects = [i for i in os.listdir(path.root)
              if os.path.isfile(os.path.join(path.root, i, "project.yaml"))]
@@ -28,6 +30,17 @@ def recent_project(path:Path):
     stats.sort(key=operator.itemgetter(0), reverse=True)
     return Path(
         path.root, next((i[1] for i in stats), None), None, None, None, None, path.file)
+
+
+def plugin_interface(key="maloja.plugin"):
+    for i in pkg_resources.iter_entry_points(key):
+        try:
+            ep = i.resolve()
+        except Exception as e:
+            continue
+        else:
+            yield (i.name, ep)
+
 
 @contextlib.contextmanager
 def record(nameOrStream, parent=None, suffix=".yaml"):

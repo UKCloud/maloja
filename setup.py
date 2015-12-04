@@ -100,6 +100,9 @@ setup(
         "console_scripts": [
             "maloja = maloja.workflow.main:run",
         ],
+        "maloja.plugin": [
+            "vapplicator = maloja.plugin.vapplicator:plugin",
+        ],
     },
     zip_safe=False
 )

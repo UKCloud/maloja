@@ -187,6 +187,10 @@ class Console(cmd.Cmd):
         for plugin in dict(plugin_interface()).values():
             print(plugin.selector(*self.search))
 
+        # TODO: Either:
+        # * Invoke plugin directly (needs args passing), or
+        # * Pass messages via broker
+
     def do_search(self, arg):
         """
             > search org fullName=Dev

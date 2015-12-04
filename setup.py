@@ -85,6 +85,9 @@ setup(
             "doc/html/_static/*.js",
             "doc/html/_static/*.png",
         ],
+        "maloja.workflow": [
+            "*.pt",
+        ],
     },
     install_requires=deps,
     extras_require={

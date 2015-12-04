@@ -1,0 +1,2 @@
+recursive-include maloja *.css *.jpg *.js *.png *.rst *.yaml *.pt *.txt
+global-exclude *.private

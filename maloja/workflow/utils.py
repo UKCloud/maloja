@@ -76,30 +76,3 @@ def record(nameOrStream, parent=None, suffix=".yaml"):
         os.rename(fN, os.path.join(parent, nameOrStream))
     else:
         yield nameOrStream
-    return rv
-    
-
-def plugin_interface(key="maloja.plugin"):
-    for i in pkg_resources.iter_entry_points(key):
-        try:
-            ep = i.resolve()
-        except Exception as e:
-            continue
-        else:
-            yield (i.name, ep)
-
-
-@contextlib.contextmanager
-def record(nameOrStream, parent=None, suffix=".yaml"):
-    if isinstance(nameOrStream, str):
-        fD, fN = tempfile.mkstemp(suffix=suffix, dir=parent)
-        try:
-            rv = open(fN, 'w')
-            yield rv
-        except Exception as e:
-            raise e
-        rv.close()
-        os.close(fD)
-        os.rename(fN, os.path.join(parent, nameOrStream))
-    else:
-        yield nameOrStream

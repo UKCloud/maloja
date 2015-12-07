@@ -18,10 +18,6 @@ import concurrent.futures
 import ruamel.yaml
 
 from maloja.broker import Broker
-from maloja.broker import Token
-from maloja.broker import Credentials
-from maloja.broker import Stop
-from maloja.broker import Survey
 from maloja.model import Catalog
 from maloja.model import Org
 from maloja.model import Template
@@ -29,7 +25,13 @@ from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.surveyor import yaml_loads
+from maloja.types import Token
+from maloja.types import Credentials
+from maloja.types import Stop
+from maloja.types import Survey
+from maloja.types import Workflow
 from maloja.workflow.utils import Path
+from maloja.workflow.utils import split_to_path
 from maloja.workflow.utils import plugin_interface
 
 
@@ -185,12 +187,23 @@ class Console(cmd.Cmd):
 
         """
         log = logging.getLogger("maloja.console.do_plugin")
-        for plugin in dict(plugin_interface()).values():
-            print(plugin.selector(*self.search))
+        for n, plugin in enumerate(dict(plugin_interface()).values()):
+            paths = plugin.selector(*self.search)
+            if paths is plugin.workflow:
+                missing = None
+                tmplt = "{0:01}: {1.name} available."
+            else:
+                missing = ", ".join(i.file for i in paths)
+                tmplt = "{0:01}: {1.name} missing {missing}"
+            print(tmplt.format(n, plugin, missing=missing))
 
         # TODO: Either:
         # * Invoke plugin directly (needs args passing), or
         # * Pass messages via broker
+
+        #msg = Workflow(self.project)
+        #packet = (next(self.seq), msg)
+        #self.operations.put(packet)
 
     def do_search(self, arg):
         """
@@ -235,7 +248,6 @@ class Console(cmd.Cmd):
             bits = os.path.split(
                 hit.replace(os.path.join(self.project.root, self.project.project), "")
             )
-            print(bits)
             #path = Path(self.project.root, self.project.project, file=bits[-1])
             with open(hit, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))

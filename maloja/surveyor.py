@@ -36,6 +36,15 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
 
 class Surveyor:
 
+    patterns = {
+        "org": (Org, "*/org.yaml"),
+        "catalog": (Catalog, "*/*/catalog.yaml"),
+        "vdc": (Vdc, "*/*/vdc.yaml"),
+        "vapp": (VApp, "*/*/*/vapp.yaml"),
+        "template": (Template, "*/*/*/template.yaml"),
+        "vm": (Vm, "*/*/*/*/vm.yaml"),
+    }
+
     locks = defaultdict(threading.Lock)
 
     @staticmethod

@@ -24,6 +24,7 @@ from maloja.model import Template
 from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
+from maloja.surveyor import Surveyor
 from maloja.surveyor import yaml_loads
 from maloja.types import Token
 from maloja.types import Credentials
@@ -230,14 +231,6 @@ class Console(cmd.Cmd):
 
         """
         log = logging.getLogger("maloja.console.do_search")
-        patterns = {
-            "org": (Org, "*/org.yaml"),
-            "catalog": (Catalog, "*/*/catalog.yaml"),
-            "vdc": (Vdc, "*/*/vdc.yaml"),
-            "vapp": (VApp, "*/*/*/vapp.yaml"),
-            "template": (Template, "*/*/*/template.yaml"),
-            "vm": (Vm, "*/*/*/*/vm.yaml"),
-        }
 
         try:
             bits = arg.strip().split()
@@ -259,7 +252,7 @@ class Console(cmd.Cmd):
         except ValueError:
             key, value = "", ""
 
-        typ, pattern = patterns[name]
+        typ, pattern = Surveyor.patterns[name]
         hits = glob.glob(
             os.path.join(self.project.root, self.project.project, pattern)
         )

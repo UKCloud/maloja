@@ -14,6 +14,10 @@ from maloja.surveyor import yaml_loads
 from maloja.types import Plugin
 from maloja.workflow.utils import Path
 
+from chameleon import PageTemplateFile
+import pkg_resources
+
+
 __doc__ = """
 This is a demo plugin for Maloja.
 
@@ -55,6 +59,31 @@ class Workflow:
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.plugin.vapplicator")
         log.debug(self.context)
+
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "ComposeVAppParams.pt"
+            )
+        )
+
+        template = next(iter(self.context[Template]), None)
+        if template is not None:
+            data = {
+                "appliance": {
+                    "name": "My Test VM",
+                    "description": "This VM is for testing",
+                    "vms": [],
+                },
+                "networks": [],
+                "template": {
+                    "name": template.name,
+                    "href": template.href
+                }
+            }
+
+        xml = macro(**data)
+        if self.results and status:
+            self.results.put((status, None))
 
 plugin = Plugin(
     "vapplicator",

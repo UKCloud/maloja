@@ -56,7 +56,7 @@ class Console(cmd.Cmd):
         self.token = None
         self.stop = False
         self.seq = itertools.count(1)
-        self.search = set([])
+        self.search = OrderedDict([])
 
     @property
     def routines(self):
@@ -113,6 +113,7 @@ class Console(cmd.Cmd):
                     break
             except Exception as e:
                 print(e)
+                raise
         else:
             log.debug("Closing command stream.")
             return n
@@ -175,7 +176,7 @@ class Console(cmd.Cmd):
         """
         Clears the search results.
         """
-        self.search = set([])
+        self.search = OrderedDict([])
         print("Search results are now empty.")
 
     def do_plugin(self, arg):
@@ -188,7 +189,7 @@ class Console(cmd.Cmd):
         """
         log = logging.getLogger("maloja.console.do_plugin")
         for n, plugin in enumerate(dict(plugin_interface()).values()):
-            paths = plugin.selector(*self.search)
+            paths = plugin.selector(*self.search.keys())
             if paths is plugin.workflow:
                 missing = None
                 tmplt = "{0:01}: {1.name} available."
@@ -207,6 +208,8 @@ class Console(cmd.Cmd):
 
     def do_search(self, arg):
         """
+        'Search' locates items by their attributes:
+
             > search org fullName=Dev
             > search vdc description=Skyscape
             > search template name=Windows
@@ -254,7 +257,7 @@ class Console(cmd.Cmd):
                 if obj is None:
                     continue
                 if not key: 
-                    objs.append(obj)
+                    objs.append((obj, split_to_path(hit, self.project.root)))
                     continue
                 else:
                     data = dict(
@@ -267,24 +270,25 @@ class Console(cmd.Cmd):
                         **vars(obj))
                     match = data.get(key.strip(), "")
                     if value.strip() in str(match):
-                        objs.append(obj)
+                        objs.append((obj, split_to_path(hit, self.project.root)))
                         continue
 
         if len(objs) > 1:
             if index is not None:
-                self.search.add(objs[int(index)])
+                obj = objs[int(index)]
+                self.search[obj[0]] = obj[1]
             else:
                 print("Your options:")
                 print(*["{0:01}: {1}".format(n, i.name) for n, i in enumerate(objs)],
                         sep="\n")
                 sys.stdout.write("\n")
         elif objs:
-            self.search.add(objs[0])
+            self.search[objs[0][0]] = objs[0][1]
         else:
             print("No matches for pattern {}".format(spec))
 
         print("Search results:\n")
-        print(*[vars(i) for i in self.search], sep="\n")
+        print(*[vars(obj) for obj in self.search], sep="\n")
 
     def do_quit(self, arg):
         """

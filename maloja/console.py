@@ -181,22 +181,37 @@ class Console(cmd.Cmd):
 
     def do_plugin(self, arg):
         """
-            > search org fullName=Dev
-            > search vdc description=Skyscape
-            > search template name=Windows
-            > search vm ip=192.168.2.100
+        'Plugin' lists plugins and their availability. Supply a number from
+        that menu to invoke the plugin.
+
+            > plugin
+            (a list will be shown)
+
+            > plugin 2
 
         """
         log = logging.getLogger("maloja.console.do_plugin")
-        for n, plugin in enumerate(dict(plugin_interface()).values()):
-            paths = plugin.selector(*self.search.keys())
-            if paths is plugin.workflow:
-                missing = None
-                tmplt = "{0:01}: {1.name} available."
-            else:
-                missing = ", ".join(i.file for i in paths)
-                tmplt = "{0:01}: {1.name} missing {missing}"
-            print(tmplt.format(n, plugin, missing=missing))
+
+        index = arg.strip()
+        if not index.isdigit():
+            index = None
+
+        menu = list(dict(plugin_interface()).values())
+        if index is not None:
+            obj = menu[int(index)]
+            print(obj)
+        else:
+            print("Your plugins:")
+            for n, plugin in enumerate(menu):
+                paths = plugin.selector(*self.search.keys())
+                if paths is plugin.workflow:
+                    missing = None
+                    tmplt = "{0:01}: {1.name} available."
+                else:
+                    missing = ", ".join(os.path.splitext(i.file)[0] for i in paths)
+                    tmplt = "{0:01}: {1.name} missing {missing}"
+                print(tmplt.format(n, plugin, missing=missing))
+            sys.stdout.write("\n")
 
         # TODO: Either:
         # * Invoke plugin directly (needs args passing), or

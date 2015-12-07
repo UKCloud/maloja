@@ -198,8 +198,14 @@ class Console(cmd.Cmd):
 
         menu = list(dict(plugin_interface()).values())
         if index is not None:
-            obj = menu[int(index)]
-            print(obj)
+            plugin = menu[int(index)]
+            # TODO: Either:
+            # * Invoke plugin directly (needs args passing), or
+            # * Pass messages via broker
+
+            msg = Workflow(plugin, self.search.values())
+            packet = (next(self.seq), msg)
+            self.operations.put(packet)
         else:
             print("Your plugins:")
             for n, plugin in enumerate(menu):
@@ -212,14 +218,6 @@ class Console(cmd.Cmd):
                     tmplt = "{0:01}: {1.name} missing {missing}"
                 print(tmplt.format(n, plugin, missing=missing))
             sys.stdout.write("\n")
-
-        # TODO: Either:
-        # * Invoke plugin directly (needs args passing), or
-        # * Pass messages via broker
-
-        #msg = Workflow(self.project)
-        #packet = (next(self.seq), msg)
-        #self.operations.put(packet)
 
     def do_search(self, arg):
         """
@@ -241,11 +239,15 @@ class Console(cmd.Cmd):
             "vm": (Vm, "*/*/*/*/vm.yaml"),
         }
 
-        bits = arg.strip().split()
-        if bits[-1].isdigit():
-            index = bits.pop(-1)
-        else:
-            index = None
+        try:
+            bits = arg.strip().split()
+            if bits[-1].isdigit():
+                index = bits.pop(-1)
+            else:
+                index = None
+        except IndexError:
+            self.do_help("search")
+            return
 
         try:
             name, spec = bits

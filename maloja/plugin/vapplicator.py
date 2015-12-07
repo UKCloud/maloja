@@ -2,6 +2,8 @@
 #   -*- encoding: UTF-8 -*-
 
 from collections import namedtuple
+from collections import OrderedDict
+import logging
 
 from maloja.model import Template
 from maloja.model import Vm
@@ -37,7 +39,7 @@ class Workflow:
         self.executor = executor
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
-        pass
+        log = logging.getLogger("maloja.plugin.vapplicator")
 
 plugin = Plugin(
     "vapplicator",

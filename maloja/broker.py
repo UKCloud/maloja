@@ -22,6 +22,7 @@ from maloja.types import Status
 from maloja.types import Stop
 from maloja.types import Survey
 from maloja.types import Token
+from maloja.types import Workflow
 
 
 @singledispatch
@@ -29,7 +30,7 @@ def handler(msg, path=None, queue=None, **kwargs):
     warnings.warn("No handler registered for {0}.".format(type(msg)))
 
 @handler.register(Credentials)
-def credentials_handler(msg, session, results=None, status=None):
+def credentials_handler(msg, session, results=None, status=None, **kwargs):
     log = logging.getLogger("maloja.broker.credentials_handler")
     log.debug("Handling credentials.")
     url = "{url}:{port}/{endpoint}".format(
@@ -52,7 +53,7 @@ def stop_handler(msg, session, token, **kwargs):
     return tuple()
     
 @handler.register(Survey)
-def survey_handler(msg, session, token, callback=None, results=None, status=None):
+def survey_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
     log = logging.getLogger("maloja.broker.survey_handler")
     if msg.path.project and not any(msg.path[2:-1]):
         endpoints = [
@@ -81,6 +82,22 @@ def survey_handler(msg, session, token, callback=None, results=None, status=None
         session.headers.update(headers)
         rv.append(session.get(url, background_callback=callback))
     return rv
+
+
+@handler.register(Workflow)
+def workflow_handler(
+    msg, session, token,
+    callback=None, results=None, status=None,
+    **kwargs
+):
+    log = logging.getLogger("maloja.broker.workflow_handler")
+    try:
+        worker = msg.plugin.workflow(msg.paths, results, session.executor)
+    except Exception as e:
+        log.error(str(getattr(e, "args", e) or e))
+        return tuple()
+    else:
+        return (session.executor.submit(worker, session, token, callback, status),)
 
 class Broker:
 

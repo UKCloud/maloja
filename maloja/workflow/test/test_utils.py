@@ -123,7 +123,51 @@ class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
         rv = split_to_path(data, expect.root)
         self.assertEqual(expect[1:], rv[1:])
         self.assertTrue(os.path.samefile(expect[0], rv[0]))
-        
+
+    def test_vdc(self):
+        expect = Path(
+            self.drcty.name,
+            "project", "org", "vdc", None, None,
+            "vdc.yaml"
+        )
+        data = os.path.join(*(i for i in expect if not i is None))
+        rv = split_to_path(data, expect.root)
+        self.assertEqual(expect[1:], rv[1:])
+        self.assertTrue(os.path.samefile(expect[0], rv[0]))
+
+    def test_template(self):
+        expect = Path(
+            self.drcty.name,
+            "project", "org", "vdc", "template", None,
+            "template.yaml"
+        )
+        data = os.path.join(*(i for i in expect if not i is None))
+        rv = split_to_path(data, expect.root)
+        self.assertEqual(expect[1:], rv[1:])
+        self.assertTrue(os.path.samefile(expect[0], rv[0]))
+
+    def test_vapp(self):
+        expect = Path(
+            self.drcty.name,
+            "project", "org", "vdc", "vapp", None,
+            "vapp.yaml"
+        )
+        data = os.path.join(*(i for i in expect if not i is None))
+        rv = split_to_path(data, expect.root)
+        self.assertEqual(expect[1:], rv[1:])
+        self.assertTrue(os.path.samefile(expect[0], rv[0]))
+
+    def test_vm(self):
+        expect = Path(
+            self.drcty.name,
+            "project", "org", "vdc", "template", "vm",
+            "vm.yaml"
+        )
+        data = os.path.join(*(i for i in expect if not i is None))
+        rv = split_to_path(data, expect.root)
+        self.assertEqual(expect[1:], rv[1:])
+        self.assertTrue(os.path.samefile(expect[0], rv[0]))
+
 class RecordTests(NeedsTempDirectory, unittest.TestCase):
 
     def test_content_goes_to_named_file(self):

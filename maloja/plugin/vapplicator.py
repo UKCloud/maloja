@@ -62,7 +62,7 @@ class Workflow:
 
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
-                "maloja.workflow", "ComposeVAppParams.pt"
+                "maloja.workflow", "InstantiateVAppTemplateParams.pt"
             )
         )
 

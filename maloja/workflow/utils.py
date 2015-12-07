@@ -33,7 +33,7 @@ def recent_project(path:Path):
         path.root, next((i[1] for i in stats), None), None, None, None, None, path.file)
 
 
-def split_to_path(data):
+def split_to_path(data, root=None):
     lookup = {
         "org.yaml": -4,
         "vdc.yaml": -5,
@@ -49,7 +49,12 @@ def split_to_path(data):
         itertools.repeat(None, 7 + index),
         itertools.repeat(bits[-1], 1)
     ))
-    return Path(*data)._replace(root=drive + os.path.join(*bits[:index]))
+    rv = Path(*data)
+    if root is None:
+        rv = rv._replace(root=drive + os.path.join(*bits[:index]))
+    else:
+        rv = rv._replace(root=root)
+    return rv
     
 
 def plugin_interface(key="maloja.plugin"):

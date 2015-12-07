@@ -115,12 +115,12 @@ class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
 
     def test_org(self):
         expect = Path(
-            os.path.abspath(self.drcty.name),
+            self.drcty.name,
             "project", "org", None, None, None,
             "org.yaml"
         )
         data = os.path.join(*(i for i in expect if not i is None))
-        rv = split_to_path(data)
+        rv = split_to_path(data, expect.root)
         self.assertEqual(expect[1:], rv[1:])
         self.assertTrue(os.path.samefile(expect[0], rv[0]))
         

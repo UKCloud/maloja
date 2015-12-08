@@ -7,6 +7,7 @@ from collections import OrderedDict
 import concurrent.futures
 import logging
 import os.path
+import uuid
 
 from maloja.model import Org
 from maloja.model import Template
@@ -77,8 +78,8 @@ class Workflow:
         template = list(self.context[Template].keys())[0]
         data = {
             "appliance": {
-                "name": "My Test VM",
-                "description": "This VM is for testing",
+                "name": uuid.uuid4().hex,
+                "description": "Created by Maloja vapplicator",
                 "vms": [],
             },
             "networks": [],

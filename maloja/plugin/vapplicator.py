@@ -4,6 +4,7 @@
 from collections import defaultdict
 from collections import namedtuple
 from collections import OrderedDict
+import concurrent.futures
 import logging
 import os.path
 
@@ -73,7 +74,7 @@ class Workflow:
             )
         )
 
-
+        template = list(self.context[Vdc].keys())[0]
         data = {
             "appliance": {
                 "name": "My Test VM",
@@ -87,9 +88,21 @@ class Workflow:
             }
         }
 
+        url = "{vdc}/{endpoint}".format(
+            vdc=list(self.context[Vdc].keys())[0].href,
+            endpoint="action/instantiateVAppTemplate"
+        )
         xml = macro(**data)
-        log.debug(xml)
-        
+        op = session.post(
+            url,
+            headers={"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"},
+            data=xml
+        )
+        tasks = concurrent.futures.wait(
+            [op], timeout=3,
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+
         if self.results and status:
             self.results.put((status, None))
 

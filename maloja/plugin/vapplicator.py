@@ -7,11 +7,16 @@ from collections import OrderedDict
 import logging
 import os.path
 
+from maloja.model import Org
 from maloja.model import Template
+from maloja.model import Vdc
 from maloja.model import Vm
+
 from maloja.surveyor import Surveyor
 from maloja.surveyor import yaml_loads
+
 from maloja.types import Plugin
+
 from maloja.workflow.utils import Path
 
 from chameleon import PageTemplateFile
@@ -32,6 +37,8 @@ def selector(*objs):
     Returns Workflow class if objs satisfy selection criteria.
     """
     rv = []
+    if not any(obj for obj in objs if isinstance(obj, Vdc)):
+        rv.append(Path(None, None, None, None, None, None, "vdc.yaml"))
     if not any(obj for obj in objs if isinstance(obj, Vm)):
         rv.append(Path(None, None, None, None, None, None, "vm.yaml"))
     if not len([obj for obj in objs if isinstance(obj, Template)]):
@@ -66,22 +73,23 @@ class Workflow:
             )
         )
 
-        template = next(iter(self.context[Template]), None)
-        if template is not None:
-            data = {
-                "appliance": {
-                    "name": "My Test VM",
-                    "description": "This VM is for testing",
-                    "vms": [],
-                },
-                "networks": [],
-                "template": {
-                    "name": template.name,
-                    "href": template.href
-                }
+
+        data = {
+            "appliance": {
+                "name": "My Test VM",
+                "description": "This VM is for testing",
+                "vms": [],
+            },
+            "networks": [],
+            "template": {
+                "name": template.name,
+                "href": template.href
             }
+        }
 
         xml = macro(**data)
+        log.debug(xml)
+        
         if self.results and status:
             self.results.put((status, None))
 

@@ -74,7 +74,7 @@ class Workflow:
             )
         )
 
-        template = list(self.context[Vdc].keys())[0]
+        template = list(self.context[Template].keys())[0]
         data = {
             "appliance": {
                 "name": "My Test VM",
@@ -95,13 +95,19 @@ class Workflow:
         xml = macro(**data)
         op = session.post(
             url,
-            headers={"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"},
             data=xml
         )
-        tasks = concurrent.futures.wait(
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
+
+        log.debug(session.headers)
+        log.debug(xml)
+        done, not_done = concurrent.futures.wait(
             [op], timeout=3,
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
+        response = done.pop().result()
+        log.info(response.status_code)
 
         if self.results and status:
             self.results.put((status, None))

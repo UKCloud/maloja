@@ -97,6 +97,11 @@ def workflow_handler(
         log.error(str(getattr(e, "args", e) or e))
         return tuple()
     else:
+        headers = {
+            "Accept": "application/*+xml;version=5.5",
+            token.key: token.value,
+        }
+        session.headers.update(headers)
         return (session.executor.submit(worker, session, token, callback, status),)
 
 class Broker:

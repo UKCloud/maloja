@@ -20,6 +20,12 @@ def add_api_options(parser):
         help="Registered user for API access")
     return parser
 
+def add_builder_options(parser):
+    parser.add_argument(
+        "--input", required=False, default="",
+        help="path to input directory")
+    return parser
+
 def add_cache_options(parser):
     parser.add_argument(
         "--output", default=DFLT_LOCN,

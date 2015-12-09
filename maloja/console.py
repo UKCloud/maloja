@@ -256,7 +256,7 @@ class Console(cmd.Cmd):
         hits = glob.glob(
             os.path.join(self.project.root, self.project.project, pattern)
         )
-        objs = []
+        results = []
         for hit in hits:
             bits = os.path.split(
                 hit.replace(os.path.join(self.project.root, self.project.project), "")
@@ -267,7 +267,7 @@ class Console(cmd.Cmd):
                 if obj is None:
                     continue
                 if not key: 
-                    objs.append((obj, split_to_path(hit, self.project.root)))
+                    results.append((obj, split_to_path(hit, self.project.root)))
                     continue
                 else:
                     data = dict(
@@ -280,20 +280,21 @@ class Console(cmd.Cmd):
                         **vars(obj))
                     match = data.get(key.strip(), "")
                     if value.strip() in str(match):
-                        objs.append((obj, split_to_path(hit, self.project.root)))
+                        results.append((obj, split_to_path(hit, self.project.root)))
                         continue
 
-        if len(objs) > 1:
+        if len(results) > 1:
             if index is not None:
-                obj = objs[int(index)]
-                self.search[obj[0]] = obj[1]
+                obj, path = results[int(index)]
+                self.search[obj] = path
             else:
                 print("Your options:")
-                print(*["{0:01}: {1}".format(n, i.name) for n, i in enumerate(objs)],
+                print(*["{0:01}: {1}".format(n, getattr(obj, "name", obj))
+                        for n, (obj, path) in enumerate(results)],
                         sep="\n")
                 sys.stdout.write("\n")
-        elif objs:
-            self.search[objs[0][0]] = objs[0][1]
+        elif results:
+            self.search[results[0][0]] = results[0][1]
         else:
             print("No matches for pattern {}".format(spec))
 

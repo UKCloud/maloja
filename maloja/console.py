@@ -39,12 +39,13 @@ from maloja.workflow.utils import plugin_interface
 
 class Console(cmd.Cmd):
 
-    def __init__(self, operations, results, creds, path, *args, loop=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, operations, results, creds, ref, entry="", loop=None, **kwargs):
+        super().__init__(**kwargs)
         self.operations = operations
         self.results = results
         self.creds = creds
-        self.project = path
+        self.ref = ref
+        self.entry = entry
         if loop is None:
             self.commands = queue.Queue()
         else:
@@ -170,7 +171,7 @@ class Console(cmd.Cmd):
         log = logging.getLogger("maloja.console.do_survey")
         line = arg.strip()
 
-        msg = Survey(self.project)
+        msg = Survey(self.ref)
         packet = (next(self.seq), msg)
         self.operations.put(packet)
 
@@ -255,13 +256,13 @@ class Console(cmd.Cmd):
 
         typ, pattern = Surveyor.patterns[name]
         hits = glob.glob(
-            os.path.join(self.project.root, self.project.project, pattern)
+            os.path.join(self.ref.root, self.ref.project, pattern)
         )
         #results = []
         results = [
             (obj, path)
             for obj, path in filter_records(
-                *hits, root=self.project.root, key=key, value=value
+                *hits, root=self.ref.root, key=key, value=value
             )
             if path.file.startswith(name)
         ]
@@ -294,7 +295,7 @@ class Console(cmd.Cmd):
 
 def create_console(operations, results, options, path, loop=None):
     creds = Credentials(options.url, options.user, None)
-    console = Console(operations, results, creds, path, loop=loop)
+    console = Console(operations, results, creds, path, options.input, loop=loop)
     executor = concurrent.futures.ThreadPoolExecutor(
         max(4, len(Broker.tasks) + len(console.tasks) + 2 * len(path))
     )

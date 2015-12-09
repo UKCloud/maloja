@@ -35,8 +35,10 @@ def recent_project(path:Path):
 
 def split_to_path(data, root=None):
     lookup = {
+        "project.yaml": -3,
         "org.yaml": -4,
         "vdc.yaml": -5,
+        "catalog.yaml": -5,
         "vapp.yaml": -6,
         "template.yaml": -6,
         "vm.yaml": -7,

@@ -53,7 +53,11 @@ def filter_records(*args, root="", key="", value=""):
     for fP in args:
         path = split_to_path(fP, root)
         name = os.path.splitext(path.file)[0]
-        typ, pattern = Surveyor.patterns[name]
+        try:
+            typ, pattern = Surveyor.patterns[name]
+        except KeyError:
+            continue
+
         with open(fP, 'r') as data:
             obj = typ(**yaml_loads(data.read()))
             if obj is None:

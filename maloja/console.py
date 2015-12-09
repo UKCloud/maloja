@@ -25,6 +25,7 @@ from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.surveyor import Surveyor
+from maloja.surveyor import filter_records
 from maloja.surveyor import yaml_loads
 from maloja.types import Token
 from maloja.types import Credentials
@@ -256,32 +257,14 @@ class Console(cmd.Cmd):
         hits = glob.glob(
             os.path.join(self.project.root, self.project.project, pattern)
         )
-        results = []
-        for hit in hits:
-            bits = os.path.split(
-                hit.replace(os.path.join(self.project.root, self.project.project), "")
+        #results = []
+        results = [
+            (obj, path)
+            for obj, path in filter_records(
+                *hits, root=self.project.root, key=key, value=value
             )
-            #path = Path(self.project.root, self.project.project, file=bits[-1])
-            with open(hit, 'r') as data:
-                obj = typ(**yaml_loads(data.read()))
-                if obj is None:
-                    continue
-                if not key: 
-                    results.append((obj, split_to_path(hit, self.project.root)))
-                    continue
-                else:
-                    data = dict(
-                        [(k, getattr(item, k))
-                        for seq in [
-                            i for i in vars(obj).values() if isinstance(i, list)
-                        ]
-                        for item in seq
-                        for k in getattr(item, "_fields", [])],
-                        **vars(obj))
-                    match = data.get(key.strip(), "")
-                    if value.strip() in str(match):
-                        results.append((obj, split_to_path(hit, self.project.root)))
-                        continue
+            if path.file.startswith(name)
+        ]
 
         if len(results) > 1:
             if index is not None:

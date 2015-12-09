@@ -53,6 +53,7 @@ def parsers(description=__doc__):
     )
     parser = add_common_options(parser)
     parser = add_api_options(parser)
+    parser = add_builder_options(parser)
     parser = add_cache_options(parser)
     subparsers = parser.add_subparsers(
         dest="command",

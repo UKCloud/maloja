@@ -7,6 +7,7 @@ import concurrent.futures
 import functools
 import logging
 import os
+import os.path
 import threading
 from urllib.parse import quote as urlquote
 from urllib.parse import urlparse
@@ -25,6 +26,8 @@ from maloja.model import yaml_loads
 import maloja.types
 from maloja.types import Status
 
+from maloja.workflow.utils import split_to_path
+
 
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
     elements = tree.iterfind(xpath, namespaces=namespaces)
@@ -33,6 +36,45 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
     else:
         query = set(kwargs.items())
         return (i for i in elements if query.issubset(set(i.attrib.items())))
+
+
+def filter_records(*args, root="", key="", value=""):
+    """
+    Reads files from the argument list, turns them into objects and yields
+    those which match key, value criteria.
+
+    Matching of attributes flattens the object hierarchy. Attributes at the top
+    level of the object take precedence over those with the same name further
+    down in its children.
+
+    Return values are 2-tuples of object and path.
+
+    """
+    for fP in args:
+        path = split_to_path(fP, root)
+        name = os.path.splitext(path.file)[0]
+        typ, pattern = Surveyor.patterns[name]
+        with open(fP, 'r') as data:
+            obj = typ(**yaml_loads(data.read()))
+            if obj is None:
+                continue
+            if not key:
+                yield (obj, path)
+                continue
+            else:
+                data = dict(
+                    [(k, getattr(item, k))
+                    for seq in [
+                        i for i in vars(obj).values() if isinstance(i, list)
+                    ]
+                    for item in seq
+                    for k in getattr(item, "_fields", [])],
+                    **vars(obj)
+                )
+                match = data.get(key.strip(), "")
+                if value.strip() in str(match):
+                    yield (obj, path)
+
 
 class Surveyor:
 

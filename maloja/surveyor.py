@@ -18,6 +18,7 @@ import xml.sax.saxutils
 from requests.exceptions import HTTPError
 
 from maloja.model import Catalog
+from maloja.model import Gateway
 from maloja.model import Template
 from maloja.model import Org
 from maloja.model import VApp
@@ -292,8 +293,8 @@ class Surveyor:
                         break
 
                 for elem in tree.iter(ns + "EdgeGatewayServiceConfiguration"):
-                    log.debug(elem)
-                    log.debug(response.text)
+                    obj = Gateway().feed_xml(elem, ns="{http://www.vmware.com/vcloud/v1.5}")
+                    log.debug(vars(obj))
 
         except Exception as e:
             log.error(e)

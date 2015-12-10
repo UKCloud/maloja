@@ -68,6 +68,39 @@ class Catalog(DataObject):
         ("dateCreated", None),
     ]
 
+class Gateway(DataObject):
+
+    SNAT = namedtuple(
+        "SNAT", ["int", "ext"]
+    )
+
+    _defaults = [
+        ("nat", []),
+    ]
+
+    def __init__(self, **kwargs):
+        seq, typ = ("nat", Gateway.SNAT)
+        if seq in kwargs:
+            kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
+
+        super().__init__(**kwargs)
+
+    def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        super().feed_xml(tree, ns=ns)
+
+        elem = tree.find(ns + "NatService")
+        for elem in elem.iter(ns + "NatRule"):
+            if elem.find(ns + "RuleType").text == "SNAT":
+                rule = elem.find(ns + "GatewayNatRule")
+                self.nat.append(
+                    Gateway.SNAT(
+                        rule.find(ns + "OriginalIp").text,
+                        rule.find(ns + "TranslatedIp").text
+                    )
+                )
+
+        return self
+
 class Org(DataObject):
 
     _defaults = [
@@ -157,6 +190,7 @@ class Vm(DataObject):
         return self
 
 ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Gateway, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(VApp, dataobject_as_ordereddict)

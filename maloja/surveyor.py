@@ -9,10 +9,13 @@ import logging
 import os
 import os.path
 import threading
+import time
 from urllib.parse import quote as urlquote
 from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
+
+from requests.exceptions import HTTPError
 
 from maloja.model import Catalog
 from maloja.model import Template
@@ -265,7 +268,36 @@ class Surveyor:
             child = status._replace(level=status.level + 1)
         else:
             child = Status(1, 1, 1)
-        log.debug(response.text)
+
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(response.text)
+        backoff = 5
+        try:
+            for elem in tree.iter(ns + "EdgeGatewayRecord"):
+                while True:
+                    op = session.get(elem.attrib.get("href"))
+                    done, not_done = concurrent.futures.wait(
+                        [op], timeout=10,
+                        return_when=concurrent.futures.FIRST_EXCEPTION
+                    )
+                    try:
+                        response = done.pop().result()
+                        if response.status_code != 200:
+                            raise HTTPError(response.status_code)
+                    except (HTTPError, KeyError):
+                        time.sleep(backoff)
+                        backoff += 5
+                    else:
+                        tree = ET.fromstring(response.text)
+                        break
+
+                for elem in tree.iter(ns + "EdgeGatewayServiceConfiguration"):
+                    log.debug(elem)
+                    log.debug(response.text)
+
+        except Exception as e:
+            log.error(e)
+
         if results and status:
             results.put((status, None))
 

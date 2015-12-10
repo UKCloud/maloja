@@ -259,6 +259,18 @@ class Surveyor:
             results.put((status, None))
 
     @staticmethod
+    def on_edgeGateway(path, session, response, results=None, status=None):
+        log = logging.getLogger("maloja.surveyor.on_edgeGateway")
+        if status:
+            child = status._replace(level=status.level + 1)
+        else:
+            child = Status(1, 1, 1)
+        log.debug(response.text)
+        if results and status:
+            results.put((status, None))
+
+
+    @staticmethod
     def on_vapp(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vapp")
         if status:
@@ -346,11 +358,26 @@ class Surveyor:
         finally:
             Surveyor.locks[path].release()
 
+        edgeGWs = find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
+            tree,
+            rel="edgeGateways"
+        )
+
         vapps = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",
-            ET.fromstring(response.text)
+            tree
         )
         ops = [session.get(
+            edgeGW.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_edgeGateway,
+                path,
+                results=results,
+                status=child._replace(job=child.job + n)
+            )
+        ) for n, edgeGW in enumerate(edgeGWs)] + [
+            session.get(
             vapp.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_vapp,
@@ -359,6 +386,7 @@ class Surveyor:
                 status=child._replace(job=child.job + n)
             )
         ) for n, vapp in enumerate(vapps)]
+
         tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION

@@ -65,13 +65,13 @@ def parser(description=__doc__):
     )
 
 def parsers(description=__doc__):
-    parser =  parser(description)
-    parser = add_common_options(parser)
-    parser = add_api_options(parser)
-    parser = add_builder_options(parser)
-    parser = add_cache_options(parser)
-    subparsers = parser.add_subparsers(
+    rv =  parser(description)
+    rv = add_common_options(rv)
+    rv = add_api_options(rv)
+    rv = add_builder_options(rv)
+    rv = add_cache_options(rv)
+    subparsers = rv.add_subparsers(
         dest="command",
         help="Commands:",
     )
-    return (parser, subparsers)
+    return (rv, subparsers)

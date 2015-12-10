@@ -4,6 +4,7 @@
 import argparse
 import logging
 import os.path
+import sys
 
 __doc__ = """
 CLI Interface to Maloja toolkit.
@@ -46,11 +47,25 @@ def add_common_options(parser):
         help="Set a file path for log output")
     return parser
 
-def parsers(description=__doc__):
-    parser =  argparse.ArgumentParser(
+def add_planner_options(parser):
+    parser.add_argument(
+        "infile", nargs="?", type=argparse.FileType("r"),
+        default=sys.stdin,
+        help="Send a design to the planner"
+    )
+    parser.add_argument(
+        "--output", default=DFLT_LOCN,
+        help="path to output directory [{}]".format(DFLT_LOCN))
+    return parser
+
+def parser(description=__doc__):
+    return argparse.ArgumentParser(
         description,
         fromfile_prefix_chars="@"
     )
+
+def parsers(description=__doc__):
+    parser =  parser(description)
     parser = add_common_options(parser)
     parser = add_api_options(parser)
     parser = add_builder_options(parser)

@@ -294,7 +294,8 @@ class Surveyor:
 
                 for elem in tree.iter(ns + "EdgeGatewayServiceConfiguration"):
                     obj = Gateway().feed_xml(elem, ns="{http://www.vmware.com/vcloud/v1.5}")
-                    log.debug(vars(obj))
+                    data = yaml_dumps(obj)
+                    log.debug(data)
 
         except Exception as e:
             log.error(e)

@@ -191,6 +191,7 @@ class Vm(DataObject):
 
 ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Gateway.SNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(VApp, dataobject_as_ordereddict)

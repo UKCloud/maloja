@@ -85,6 +85,9 @@ setup(
             "doc/html/_static/*.js",
             "doc/html/_static/*.png",
         ],
+        "maloja.test": [
+            "*.yaml",
+        ],
         "maloja.workflow": [
             "*.pt",
         ],

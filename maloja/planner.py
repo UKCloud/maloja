@@ -1,23 +1,14 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
-try:
-    import asyncio
-except ImportError:
-    asyncio = None
-import concurrent.futures
 import logging
 from logging.handlers import WatchedFileHandler
 import os
-import queue
 import sys
 import warnings
 
 import maloja.cli
-import maloja.console
-from maloja.workflow.utils import Path
-from maloja.workflow.utils import make_path
-from maloja.workflow.utils import recent_project
+from maloja.model import yaml_loads
 
 
 __doc__ = """
@@ -45,11 +36,15 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
+    doc = yaml_loads(args.design.read())
+    print(doc)
+
     return 0
 
 
 def run():
     p = maloja.cli.parser(description=__doc__)
+    p = maloja.cli.add_common_options(p)
     p = maloja.cli.add_planner_options(p)
     args = p.parse_args()
     rv = 0

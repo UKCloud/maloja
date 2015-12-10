@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+- &VM !!omap
+    - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-7113a6c2-9bbd-40e8-bef6-ded6bb5a5e10
+    - dateCreated: '2013-07-17T10:38:56.457+01:00'
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - hardwareVersion: 8
+    - cpu:
+    - memoryMB: 2048
+    - networkcards: []
+    - harddisks: []
+    - cd:
+    - floppydisk:
+    - isBusy: false
+    - isDeleted: false
+    - isDeployed: false
+    - isInMaintenanceMode: false
+    - isPublished: false
+    - status:
+    - storageProfileName: STANDARD-Any
+    - vmToolsVersion: 0
+    - networkconnections:
+      - name: NIC0_NET
+        ip: 192.168.2.100
+        isConnected: false
+        macAddress: 00:50:56:01:aa:99
+        ipAddressAllocationMode: POOL
+    - guestcustomization:
+- << : *VM
+  isDeployed: true
+  status: POWERED_ON
+  networkconnections:
+    - name: NIC0_NET
+      ip: 192.168.2.101

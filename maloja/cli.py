@@ -49,7 +49,7 @@ def add_common_options(parser):
 
 def add_planner_options(parser):
     parser.add_argument(
-        "infile", nargs="?", type=argparse.FileType("r"),
+        "design", nargs="?", type=argparse.FileType("r"),
         default=sys.stdin,
         help="Send a design to the planner"
     )

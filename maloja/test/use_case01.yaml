@@ -1,5 +1,7 @@
 %YAML 1.2
 ---
+- &NET !!omap
+    - rules: []
 - &VM !!omap
     - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-7113a6c2-9bbd-40e8-bef6-ded6bb5a5e10

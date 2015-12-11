@@ -71,6 +71,9 @@ class Catalog(DataObject):
 
 class Gateway(DataObject):
 
+    DNAT = namedtuple(
+        "DNAT", ["int", "ext"]
+    )
     SNAT = namedtuple(
         "SNAT", ["int", "ext"]
     )
@@ -79,6 +82,7 @@ class Gateway(DataObject):
         ("name", None),
         ("href", None),
         ("type", None),
+        ("dnat", []),
         ("snat", []),
     ]
 
@@ -97,7 +101,15 @@ class Gateway(DataObject):
         )
         elem = config.find(ns + "NatService")
         for elem in elem.iter(ns + "NatRule"):
-            if elem.find(ns + "RuleType").text == "SNAT":
+            if elem.find(ns + "RuleType").text == "DNAT":
+                rule = elem.find(ns + "GatewayNatRule")
+                self.dnat.append(
+                    Gateway.DNAT(
+                        rule.find(ns + "TranslatedIp").text,
+                        rule.find(ns + "OriginalIp").text
+                    )
+                )
+            elif elem.find(ns + "RuleType").text == "SNAT":
                 rule = elem.find(ns + "GatewayNatRule")
                 self.snat.append(
                     Gateway.SNAT(

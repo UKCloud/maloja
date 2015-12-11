@@ -193,6 +193,10 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
             obj.type)
         self.assertEqual(1, len(obj.snat))
         self.assertEqual("192.168.1.1", obj.snat[0].int)
+        self.assertEqual("51.179.194.122", obj.snat[0].ext)
+        self.assertEqual(1, len(obj.dnat))
+        self.assertEqual("192.168.1.1", obj.dnat[0].int)
+        self.assertEqual("51.179.194.122", obj.dnat[0].ext)
 
     def tost_yaml(self):
         txt = textwrap.dedent(

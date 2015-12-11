@@ -6,6 +6,7 @@ from collections import OrderedDict
 import functools
 import logging
 import itertools
+from xml.etree import ElementTree as ET
 
 import ruamel.yaml
 
@@ -75,11 +76,14 @@ class Gateway(DataObject):
     )
 
     _defaults = [
-        ("nat", []),
+        ("name", None),
+        ("href", None),
+        ("type", None),
+        ("snat", []),
     ]
 
     def __init__(self, **kwargs):
-        seq, typ = ("nat", Gateway.SNAT)
+        seq, typ = ("snat", Gateway.SNAT)
         if seq in kwargs:
             kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
 
@@ -88,11 +92,14 @@ class Gateway(DataObject):
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         super().feed_xml(tree, ns=ns)
 
-        elem = tree.find(ns + "NatService")
+        config = tree.find(
+            "./*/{}EdgeGatewayServiceConfiguration".format(ns)
+        )
+        elem = config.find(ns + "NatService")
         for elem in elem.iter(ns + "NatRule"):
             if elem.find(ns + "RuleType").text == "SNAT":
                 rule = elem.find(ns + "GatewayNatRule")
-                self.nat.append(
+                self.snat.append(
                     Gateway.SNAT(
                         rule.find(ns + "OriginalIp").text,
                         rule.find(ns + "TranslatedIp").text

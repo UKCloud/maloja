@@ -184,13 +184,12 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         tree = ET.fromstring(EdgeGatewaySurveyTests.xml)
         obj = maloja.model.Gateway()
         self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Gateway)
-        self.assertEqual("Default", obj.name)
-        self.assertEqual("Default Organization", obj.fullName)
+        self.assertEqual("nft002bfi2", obj.name)
         self.assertEqual(
-            "https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a",
+            "https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56",
             obj.href)
         self.assertEqual(
-            "application/vnd.vmware.vcloud.org+xml",
+            "application/vnd.vmware.admin.edgeGateway+xml",
             obj.type)
 
     def tost_yaml(self):

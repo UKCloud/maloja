@@ -286,7 +286,6 @@ class Surveyor:
                         response = done.pop().result()
                         if response.status_code != 200:
                             raise HTTPError(response.status_code)
-                        log.debug(response.text)
                     except (HTTPError, KeyError):
                         time.sleep(backoff)
                         backoff += 5
@@ -294,11 +293,9 @@ class Surveyor:
                         tree = ET.fromstring(response.text)
                         break
 
-                for elem in tree.iter(ns + "EdgeGatewayServiceConfiguration"):
-                    objs.append(
-                        Gateway().feed_xml(
-                            elem,
-                            ns="{http://www.vmware.com/vcloud/v1.5}")
+                    obj = Gateway().feed_xml(
+                        elem,
+                        ns="{http://www.vmware.com/vcloud/v1.5}"
                     )
 
         except Exception as e:
@@ -307,7 +304,6 @@ class Surveyor:
         if len(objs) != 1:
             log.warning("Found {} Edge Gatways.".format(len(objs)))
 
-        obj = objs[0]
         path = path._replace(file="edge.yaml")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
         try:

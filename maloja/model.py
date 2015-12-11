@@ -74,6 +74,10 @@ class Gateway(DataObject):
 
     Service = namedtuple("Service", ["addr", "port"])
 
+    FW = namedtuple(
+        "FW", ["int", "ext"]
+    )
+
     DNAT = namedtuple(
         "DNAT", ["int", "ext"]
     )
@@ -85,9 +89,19 @@ class Gateway(DataObject):
         ("name", None),
         ("href", None),
         ("type", None),
+        ("fw", []),
         ("dnat", []),
         ("snat", []),
     ]
+
+    @staticmethod
+    def servicecast(val):
+        # TODO: Accept port value
+        val = val.lower()
+        if "any" in val:
+            return None
+        else:
+            return [Gateway.Service(ip_address(i), None) for i in val.split("-")]
 
     def __init__(self, **kwargs):
         seq, typ = ("snat", Gateway.SNAT)
@@ -103,36 +117,30 @@ class Gateway(DataObject):
             "./*/{}EdgeGatewayServiceConfiguration".format(ns)
         )
         elem = config.find(ns + "FirewallService")
-        for elem in elem.iter(ns + "FirewallRule"):
-            print(ET.dump(elem))
+        for rule in elem.iter(ns + "FirewallRule"):
+            int_ip = rule.find(ns + "DestinationIp").text
+            self.fw.append(
+                Gateway.FW(
+                    self.servicecast(rule.find(ns + "DestinationIp").text),
+                    self.servicecast(rule.find(ns + "SourceIp").text),
+                )
+            )
         elem = config.find(ns + "NatService")
         for elem in elem.iter(ns + "NatRule"):
             if elem.find(ns + "RuleType").text == "DNAT":
                 rule = elem.find(ns + "GatewayNatRule")
                 self.dnat.append(
                     Gateway.DNAT(
-                        Gateway.Service(
-                            ip_address(rule.find(ns + "TranslatedIp").text),
-                            None
-                        ),
-                        Gateway.Service(
-                            ip_address(rule.find(ns + "OriginalIp").text),
-                            None
-                        )
+                        self.servicecast(rule.find(ns + "TranslatedIp").text),
+                        self.servicecast(rule.find(ns + "OriginalIp").text),
                     )
                 )
             elif elem.find(ns + "RuleType").text == "SNAT":
                 rule = elem.find(ns + "GatewayNatRule")
                 self.snat.append(
                     Gateway.SNAT(
-                        Gateway.Service(
-                            rule.find(ns + "OriginalIp").text,
-                            None
-                        ),
-                        Gateway.Service(
-                            rule.find(ns + "TranslatedIp").text,
-                            None
-                        )
+                        self.servicecast(rule.find(ns + "OriginalIp").text),
+                        self.servicecast(rule.find(ns + "TranslatedIp").text)
                     )
                 )
 

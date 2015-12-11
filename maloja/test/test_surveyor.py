@@ -192,11 +192,11 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
             "application/vnd.vmware.admin.edgeGateway+xml",
             obj.type)
         self.assertEqual(1, len(obj.snat))
-        self.assertEqual("192.168.1.1", obj.snat[0].int)
-        self.assertEqual("51.179.194.122", obj.snat[0].ext)
+        self.assertEqual("192.168.1.1", str(obj.snat[0].int.addr))
+        self.assertEqual("51.179.194.122", str(obj.snat[0].ext.addr))
         self.assertEqual(1, len(obj.dnat))
-        self.assertEqual("192.168.1.1", obj.dnat[0].int)
-        self.assertEqual("51.179.194.122", obj.dnat[0].ext)
+        self.assertEqual("192.168.1.1", str(obj.dnat[0].int.addr))
+        self.assertEqual("51.179.194.122", str(obj.dnat[0].ext.addr))
 
     def tost_yaml(self):
         txt = textwrap.dedent(

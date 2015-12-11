@@ -6,6 +6,7 @@ from collections import OrderedDict
 import functools
 import logging
 import itertools
+from ipaddress import ip_address
 from xml.etree import ElementTree as ET
 
 import ruamel.yaml
@@ -71,6 +72,8 @@ class Catalog(DataObject):
 
 class Gateway(DataObject):
 
+    Service = namedtuple("Service", ["addr", "port"])
+
     DNAT = namedtuple(
         "DNAT", ["int", "ext"]
     )
@@ -99,22 +102,37 @@ class Gateway(DataObject):
         config = tree.find(
             "./*/{}EdgeGatewayServiceConfiguration".format(ns)
         )
+        elem = config.find(ns + "FirewallService")
+        for elem in elem.iter(ns + "FirewallRule"):
+            print(ET.dump(elem))
         elem = config.find(ns + "NatService")
         for elem in elem.iter(ns + "NatRule"):
             if elem.find(ns + "RuleType").text == "DNAT":
                 rule = elem.find(ns + "GatewayNatRule")
                 self.dnat.append(
                     Gateway.DNAT(
-                        rule.find(ns + "TranslatedIp").text,
-                        rule.find(ns + "OriginalIp").text
+                        Gateway.Service(
+                            ip_address(rule.find(ns + "TranslatedIp").text),
+                            None
+                        ),
+                        Gateway.Service(
+                            ip_address(rule.find(ns + "OriginalIp").text),
+                            None
+                        )
                     )
                 )
             elif elem.find(ns + "RuleType").text == "SNAT":
                 rule = elem.find(ns + "GatewayNatRule")
                 self.snat.append(
                     Gateway.SNAT(
-                        rule.find(ns + "OriginalIp").text,
-                        rule.find(ns + "TranslatedIp").text
+                        Gateway.Service(
+                            rule.find(ns + "OriginalIp").text,
+                            None
+                        ),
+                        Gateway.Service(
+                            rule.find(ns + "TranslatedIp").text,
+                            None
+                        )
                     )
                 )
 

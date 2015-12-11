@@ -286,6 +286,7 @@ class Surveyor:
                         response = done.pop().result()
                         if response.status_code != 200:
                             raise HTTPError(response.status_code)
+                        log.debug(response.text)
                     except (HTTPError, KeyError):
                         time.sleep(backoff)
                         backoff += 5
@@ -325,7 +326,6 @@ class Surveyor:
 
         if results and status:
             results.put((status, None))
-
 
     @staticmethod
     def on_vapp(path, session, response, results=None, status=None):

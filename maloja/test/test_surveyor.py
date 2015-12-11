@@ -83,6 +83,136 @@ class CatalogSurveyTests(unittest.TestCase):
             "2013-02-11T15:46:40.170+02:00",
             obj.dateCreated)
 
+class EdgeGatewaySurveyTests(unittest.TestCase):
+    xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><EdgeGateway
+    xmlns="http://www.vmware.com/vcloud/v1.5" status="1" name="nft002bfi2" id="urn:vcloud:gateway:4547daf2-6370-483a-877b-b16e0f33ba56" href="https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56" type="application/vnd.vmware.admin.edgeGateway+xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vmware.com/vcloud/v1.5 http://10.10.6.14/api/v1.5/schema/master.xsd">
+        <Link rel="up" href="https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1" type="application/vnd.vmware.vcloud.vdc+xml"/>
+        <Link rel="edgeGateway:redeploy" href="https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56/action/redeploy"/>
+        <Link rel="edgeGateway:configureServices" href="https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56/action/configureServices" type="application/vnd.vmware.admin.edgeGatewayServiceConfiguration+xml"/>
+        <Link rel="edgeGateway:reapplyServices" href="https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56/action/reapplyServices"/>
+        <Link rel="edgeGateway:syncSyslogSettings" href="https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56/action/syncSyslogServerSettings"/>
+        <Description/>
+        <Configuration>
+            <GatewayBackingConfig>full</GatewayBackingConfig>
+            <GatewayInterfaces>
+                <GatewayInterface>
+                    <Name>nft002bfi2</Name>
+                    <DisplayName>nft002bfi2</DisplayName>
+                    <Network href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/e4be0000-480b-4431-91f7-c9bf1582a316" name="nft002bfi2" type="application/vnd.vmware.admin.network+xml"/>
+                    <InterfaceType>uplink</InterfaceType>
+                    <SubnetParticipation>
+                        <Gateway>172.26.71.161</Gateway>
+                        <Netmask>255.255.255.224</Netmask>
+                        <IpAddress>172.26.71.163</IpAddress>
+                        <IpRanges/>
+                    </SubnetParticipation>
+                    <SubnetParticipation>
+                        <Gateway>51.179.194.121</Gateway>
+                        <Netmask>255.255.255.248</Netmask>
+                        <IpAddress>51.179.194.122</IpAddress>
+                        <IpRanges>
+                            <IpRange>
+                                <StartAddress>51.179.194.122</StartAddress>
+                                <EndAddress>51.179.194.126</EndAddress>
+                            </IpRange>
+                        </IpRanges>
+                    </SubnetParticipation>
+                    <ApplyRateLimit>false</ApplyRateLimit>
+                    <InRateLimit>100.0</InRateLimit>
+                    <OutRateLimit>100.0</OutRateLimit>
+                    <UseForDefaultRoute>true</UseForDefaultRoute>
+                </GatewayInterface>
+            </GatewayInterfaces>
+            <EdgeGatewayServiceConfiguration>
+                <FirewallService>
+                    <IsEnabled>true</IsEnabled>
+                    <DefaultAction>allow</DefaultAction>
+                    <LogDefaultAction>false</LogDefaultAction>
+                    <FirewallRule>
+                        <Id>1</Id>
+                        <IsEnabled>true</IsEnabled>
+                        <MatchOnTranslate>false</MatchOnTranslate>
+                        <Description>Web service</Description>
+                        <Policy>allow</Policy>
+                        <Protocols>
+                            <Tcp>true</Tcp>
+                        </Protocols>
+                        <Port>80</Port>
+                        <DestinationPortRange>80</DestinationPortRange>
+                        <DestinationIp>51.179.194.122-51.179.194.123</DestinationIp>
+                        <SourcePort>80</SourcePort>
+                        <SourcePortRange>80</SourcePortRange>
+                        <SourceIp>Any</SourceIp>
+                        <EnableLogging>false</EnableLogging>
+                    </FirewallRule>
+                </FirewallService>
+                <NatService>
+                    <IsEnabled>true</IsEnabled>
+                    <NatRule>
+                        <RuleType>SNAT</RuleType>
+                        <IsEnabled>true</IsEnabled>
+                        <Id>65537</Id>
+                        <GatewayNatRule>
+                            <Interface href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/e4be0000-480b-4431-91f7-c9bf1582a316" name="nft002bfi2" type="application/vnd.vmware.admin.network+xml"/>
+                            <OriginalIp>192.168.1.1</OriginalIp>
+                            <TranslatedIp>51.179.194.122</TranslatedIp>
+                        </GatewayNatRule>
+                    </NatRule>
+                    <NatRule>
+                        <RuleType>DNAT</RuleType>
+                        <IsEnabled>true</IsEnabled>
+                        <Id>65538</Id>
+                        <GatewayNatRule>
+                            <Interface href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/e4be0000-480b-4431-91f7-c9bf1582a316" name="nft002bfi2" type="application/vnd.vmware.admin.network+xml"/>
+                            <OriginalIp>51.179.194.122</OriginalIp>
+                            <OriginalPort>80</OriginalPort>
+                            <TranslatedIp>192.168.1.1</TranslatedIp>
+                            <TranslatedPort>80</TranslatedPort>
+                            <Protocol>tcp</Protocol>
+                        </GatewayNatRule>
+                    </NatRule>
+                </NatService>
+            </EdgeGatewayServiceConfiguration>
+            <HaEnabled>false</HaEnabled>
+            <UseDefaultRouteForDnsRelay>false</UseDefaultRouteForDnsRelay>
+        </Configuration>
+    </EdgeGateway>
+    """)
+
+    def test_xml(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(EdgeGatewaySurveyTests.xml)
+        obj = maloja.model.Gateway()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Gateway)
+        self.assertEqual("Default", obj.name)
+        self.assertEqual("Default Organization", obj.fullName)
+        self.assertEqual(
+            "https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a",
+            obj.href)
+        self.assertEqual(
+            "application/vnd.vmware.vcloud.org+xml",
+            obj.type)
+
+    def tost_yaml(self):
+        txt = textwrap.dedent(
+            """
+            fullName: Default Organization
+            href: https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a
+            name: Default
+            type: application/vnd.vmware.vcloud.org+xml
+            """)
+        data = ruamel.yaml.load(txt)
+        obj = maloja.model.Org(**data)
+        self.assertIsInstance(obj, maloja.model.Org)
+        self.assertEqual("Default", obj.name)
+        self.assertEqual("Default Organization", obj.fullName)
+        self.assertEqual(
+            "https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a",
+            obj.href)
+        self.assertEqual(
+            "application/vnd.vmware.vcloud.org+xml",
+            obj.type)
+
 class OrgSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Org
         xmlns="http://www.vmware.com/vcloud/v1.5"

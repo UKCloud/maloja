@@ -270,6 +270,7 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
+        objs = []
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
         backoff = 5
@@ -293,12 +294,34 @@ class Surveyor:
                         break
 
                 for elem in tree.iter(ns + "EdgeGatewayServiceConfiguration"):
-                    obj = Gateway().feed_xml(elem, ns="{http://www.vmware.com/vcloud/v1.5}")
-                    data = yaml_dumps(obj)
-                    log.debug(data)
+                    objs.append(
+                        Gateway().feed_xml(
+                            elem,
+                            ns="{http://www.vmware.com/vcloud/v1.5}")
+                    )
 
         except Exception as e:
             log.error(e)
+
+        if len(objs) != 1:
+            log.warning("Found {} Edge Gatways.".format(len(objs)))
+
+        obj = objs[0]
+        path = path._replace(file="edge.yaml")
+        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
+        try:
+            Surveyor.locks[path].acquire()
+            with open(
+                os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
+            ) as output:
+                try:
+                    data = yaml_dumps(obj)
+                except Exception as e:
+                    log.error(e)
+                output.write(data)
+                output.flush()
+        finally:
+            Surveyor.locks[path].release()
 
         if results and status:
             results.put((status, None))

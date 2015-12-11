@@ -191,6 +191,8 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         self.assertEqual(
             "application/vnd.vmware.admin.edgeGateway+xml",
             obj.type)
+        self.assertEqual(1, len(obj.snat))
+        self.assertEqual("192.168.1.1", obj.snat[0].int)
 
     def tost_yaml(self):
         txt = textwrap.dedent(

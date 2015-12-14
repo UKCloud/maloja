@@ -54,7 +54,7 @@ Microsoft Windows 8.1
 =====================
 
 #.  Ensure the environment variable '`%HOME%`' points to your user directory.
-#.  Download and install `Python 3.5 for Windows`_.
+#.  Download and install `Python 3.5.1 for Windows`_.
 #.  Create a new Python virtual environment::
 
     > C:\Program Files (x86)\Python 3.5\python.exe -m venv %HOME%\py3.5
@@ -80,4 +80,4 @@ Microsoft Windows 8.1
 
 .. _PyPI: https://pypi.python.org/pypi
 .. _Python 3.5 for Windows: https://www.python.org/ftp/python/3.5.0/python-3.5.0.exe
-
+.. _Python 3.5.1 for Windows: https://www.python.org/ftp/python/3.5.1/python-3.5.1.exe

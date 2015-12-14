@@ -74,7 +74,7 @@ class Catalog(DataObject):
 class Gateway(DataObject):
 
     FW = namedtuple(
-        "FW", ["int", "ext"]
+        "FW", ["description", "int_addr", "int_port", "ext_addr", "ext_port"]
     )
 
     DNAT = namedtuple(
@@ -120,8 +120,11 @@ class Gateway(DataObject):
             int_ip = rule.find(ns + "DestinationIp").text
             self.fw.append(
                 Gateway.FW(
+                    getattr(rule.find(ns + "Description"), "text", None),
                     self.servicecast(rule.find(ns + "DestinationIp").text),
+                    getattr(rule.find(ns + "Port"), "text", None),
                     self.servicecast(rule.find(ns + "SourceIp").text),
+                    getattr(rule.find(ns + "SourcePort"), "text", None),
                 )
             )
         elem = config.find(ns + "NatService")

@@ -139,7 +139,7 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
                         </Protocols>
                         <Port>80</Port>
                         <DestinationPortRange>80</DestinationPortRange>
-                        <DestinationIp>51.179.194.122-51.179.194.123</DestinationIp>
+                        <DestinationIp>51.179.194.122/32</DestinationIp>
                         <SourcePort>80</SourcePort>
                         <SourcePortRange>80</SourcePortRange>
                         <SourceIp>Any</SourceIp>

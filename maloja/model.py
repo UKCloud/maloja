@@ -111,8 +111,10 @@ class Gateway(DataObject):
         super().__init__(**kwargs)
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        log = logging.getLogger("maloja.model.Gateway")
         super().feed_xml(tree, ns=ns)
 
+        log.debug(ET.dump(tree))
         config = tree.find(
             "./*/{}EdgeGatewayServiceConfiguration".format(ns)
         )
@@ -143,7 +145,7 @@ class Gateway(DataObject):
                         self.servicecast(rule.find(ns + "TranslatedIp").text)
                     )
                 )
-
+        # list(ipaddress.ip_network("51.179.194.122").hosts()) or [ipaddress.ip_address("51.179.194.122")]
         return self
 
 class Org(DataObject):

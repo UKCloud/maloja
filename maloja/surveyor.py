@@ -270,7 +270,7 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
-        objs = []
+        obj = None
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
         backoff = 5
@@ -291,18 +291,17 @@ class Surveyor:
                         backoff += 5
                     else:
                         tree = ET.fromstring(response.text)
+                        obj = Gateway().feed_xml(
+                            tree,
+                            ns="{http://www.vmware.com/vcloud/v1.5}"
+                        )
                         break
-
-                    obj = Gateway().feed_xml(
-                        elem,
-                        ns="{http://www.vmware.com/vcloud/v1.5}"
-                    )
 
         except Exception as e:
             log.error(e)
 
-        if len(objs) != 1:
-            log.warning("Found {} Edge Gatways.".format(len(objs)))
+        if obj is None:
+            log.warning("Found no Edge Gatway.")
 
         path = path._replace(file="edge.yaml")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)

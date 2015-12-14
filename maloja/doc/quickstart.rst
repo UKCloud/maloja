@@ -22,7 +22,13 @@ Invoke the Maloja console
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Launch an interactive session in a fresh window, passing your options file
-using the '`@`' syntax::
+using the '`@`' syntax, eg:
+
+On Ubuntu 14.04::
+
+    $ ~/py3.4/bin/python -m maloja.main @options.private
+
+On Windows 8.1::
 
     > start %HOME%\py3.5\Scripts\python -m maloja.main @options.private
 

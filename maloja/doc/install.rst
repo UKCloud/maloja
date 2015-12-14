@@ -40,6 +40,11 @@ Ubuntu Linux 14.04 LTS
     Running setup.py install for chameleon
     Successfully installed chameleon-2.24
 
+    $ ~/py3.4/bin/pip install requests-futures
+    Installing collected packages: requests, requests-futures
+    Running setup.py install for requests-futures
+    Successfully installed requests-2.8.1 requests-futures-0.9.5
+
     $ ~/py3.4/bin/pip install ruamel.yaml
     Installing collected packages: ruamel.base, ruamel.yaml
     Running setup.py install for ruamel.yaml
@@ -60,6 +65,7 @@ Microsoft Windows 8.1
 
 #. Use `pip` to install the following packages:
 
+    * chameleon
     * requests-futures
     * ruamel.yaml
 

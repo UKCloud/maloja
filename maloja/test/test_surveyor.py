@@ -139,7 +139,7 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
                         </Protocols>
                         <Port>80</Port>
                         <DestinationPortRange>80</DestinationPortRange>
-                        <DestinationIp>51.179.194.122/32</DestinationIp>
+                        <DestinationIp>51.179.194.122/31</DestinationIp>
                         <SourcePort>80</SourcePort>
                         <SourcePortRange>80</SourcePortRange>
                         <SourceIp>Any</SourceIp>
@@ -192,11 +192,11 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
             "application/vnd.vmware.admin.edgeGateway+xml",
             obj.type)
         self.assertEqual(1, len(obj.snat))
-        self.assertEqual("192.168.1.1", str(obj.snat[0].int[0].addr))
-        self.assertEqual("51.179.194.122", str(obj.snat[0].ext[0].addr))
+        self.assertEqual("192.168.1.1", str(obj.snat[0].int_addr[0]))
+        self.assertEqual("51.179.194.122", str(obj.snat[0].ext_addr[0]))
         self.assertEqual(1, len(obj.dnat))
-        self.assertEqual("192.168.1.1", str(obj.dnat[0].int[0].addr))
-        self.assertEqual("51.179.194.122", str(obj.dnat[0].ext[0].addr))
+        self.assertEqual("192.168.1.1", str(obj.dnat[0].int_addr[0]))
+        self.assertEqual("51.179.194.122", str(obj.dnat[0].ext_addr[0]))
         self.assertEqual(1, len(obj.fw))
 
     def tost_yaml(self):

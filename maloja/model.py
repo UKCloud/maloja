@@ -5,6 +5,7 @@ from collections import namedtuple
 from collections import OrderedDict
 import functools
 import logging
+import ipaddress
 import itertools
 from ipaddress import ip_address
 from xml.etree import ElementTree as ET
@@ -72,17 +73,15 @@ class Catalog(DataObject):
 
 class Gateway(DataObject):
 
-    Service = namedtuple("Service", ["addr", "port"])
-
     FW = namedtuple(
         "FW", ["int", "ext"]
     )
 
     DNAT = namedtuple(
-        "DNAT", ["int", "ext"]
+        "DNAT", ["int_addr", "int_port", "ext_addr", "ext_port"]
     )
     SNAT = namedtuple(
-        "SNAT", ["int", "ext"]
+        "SNAT", ["int_addr", "int_port", "ext_addr", "ext_port"]
     )
 
     _defaults = [
@@ -96,12 +95,11 @@ class Gateway(DataObject):
 
     @staticmethod
     def servicecast(val):
-        # TODO: Accept port value
         val = val.lower()
         if "any" in val:
             return None
         else:
-            return [Gateway.Service(ip_address(i), None) for i in val.split("-")]
+            return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
 
     def __init__(self, **kwargs):
         seq, typ = ("snat", Gateway.SNAT)
@@ -114,7 +112,6 @@ class Gateway(DataObject):
         log = logging.getLogger("maloja.model.Gateway")
         super().feed_xml(tree, ns=ns)
 
-        log.debug(ET.dump(tree))
         config = tree.find(
             "./*/{}EdgeGatewayServiceConfiguration".format(ns)
         )
@@ -134,7 +131,9 @@ class Gateway(DataObject):
                 self.dnat.append(
                     Gateway.DNAT(
                         self.servicecast(rule.find(ns + "TranslatedIp").text),
+                        getattr(rule.find(ns + "TranslatedPort"), "text", None),
                         self.servicecast(rule.find(ns + "OriginalIp").text),
+                        getattr(rule.find(ns + "OriginalPort"), "text", None)
                     )
                 )
             elif elem.find(ns + "RuleType").text == "SNAT":
@@ -142,10 +141,11 @@ class Gateway(DataObject):
                 self.snat.append(
                     Gateway.SNAT(
                         self.servicecast(rule.find(ns + "OriginalIp").text),
-                        self.servicecast(rule.find(ns + "TranslatedIp").text)
+                        getattr(rule.find(ns + "OriginalPort"), "text", None),
+                        self.servicecast(rule.find(ns + "TranslatedIp").text),
+                        getattr(rule.find(ns + "TranslatedPort"), "text", None),
                     )
                 )
-        # list(ipaddress.ip_network("51.179.194.122").hosts()) or [ipaddress.ip_address("51.179.194.122")]
         return self
 
 class Org(DataObject):
@@ -238,6 +238,8 @@ class Vm(DataObject):
 
 ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Gateway.FW, namedtuple_as_dict)
+ruamel.yaml.RoundTripDumper.add_representer(Gateway.DNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.SNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)

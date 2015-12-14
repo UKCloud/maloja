@@ -301,7 +301,7 @@ class Surveyor:
             log.error(e)
 
         if obj is None:
-            log.warning("Found no Edge Gatway.")
+            log.warning("Found no Edge Gateway.")
 
         path = path._replace(file="edge.yaml")
         os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
@@ -413,8 +413,15 @@ class Surveyor:
         edgeGWs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
             tree,
+            rel="orgVdcNetworks"
+        )
+
+        orgVdcNets = find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
+            tree,
             rel="edgeGateways"
         )
+        log.debug(list(orgVdcNets))
 
         vapps = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",

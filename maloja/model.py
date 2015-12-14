@@ -27,6 +27,10 @@ def namedtuple_as_dict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_dict(data._asdict())
 
+def object_as_str(dumper, data, flow_style=False):
+    assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
+    return dumper.represent_str(str(data))
+
 class DataObject:
 
     _defaults = []
@@ -122,9 +126,9 @@ class Gateway(DataObject):
                 Gateway.FW(
                     getattr(rule.find(ns + "Description"), "text", None),
                     self.servicecast(rule.find(ns + "DestinationIp").text),
-                    getattr(rule.find(ns + "Port"), "text", None),
+                    int(getattr(rule.find(ns + "Port"), "text", "0")) or None,
                     self.servicecast(rule.find(ns + "SourceIp").text),
-                    getattr(rule.find(ns + "SourcePort"), "text", None),
+                    int(getattr(rule.find(ns + "SourcePort"), "text", "0")) or None,
                 )
             )
         elem = config.find(ns + "NatService")
@@ -134,9 +138,9 @@ class Gateway(DataObject):
                 self.dnat.append(
                     Gateway.DNAT(
                         self.servicecast(rule.find(ns + "TranslatedIp").text),
-                        getattr(rule.find(ns + "TranslatedPort"), "text", None),
+                        int(getattr(rule.find(ns + "TranslatedPort"), "text", "0")) or None,
                         self.servicecast(rule.find(ns + "OriginalIp").text),
-                        getattr(rule.find(ns + "OriginalPort"), "text", None)
+                        int(getattr(rule.find(ns + "OriginalPort"), "text", "0")) or None
                     )
                 )
             elif elem.find(ns + "RuleType").text == "SNAT":
@@ -144,9 +148,9 @@ class Gateway(DataObject):
                 self.snat.append(
                     Gateway.SNAT(
                         self.servicecast(rule.find(ns + "OriginalIp").text),
-                        getattr(rule.find(ns + "OriginalPort"), "text", None),
+                        int(getattr(rule.find(ns + "OriginalPort"), "text", "0")) or None,
                         self.servicecast(rule.find(ns + "TranslatedIp").text),
-                        getattr(rule.find(ns + "TranslatedPort"), "text", None),
+                        int(getattr(rule.find(ns + "TranslatedPort"), "text", "0")) or None
                     )
                 )
         return self
@@ -239,6 +243,7 @@ class Vm(DataObject):
                 for i in tree.iter(ns + "NetworkConnection")]
         return self
 
+ruamel.yaml.RoundTripDumper.add_representer(ipaddress.IPv4Address, object_as_str)
 ruamel.yaml.RoundTripDumper.add_representer(Catalog, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.FW, namedtuple_as_dict)

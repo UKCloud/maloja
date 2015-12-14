@@ -273,6 +273,7 @@ class Surveyor:
         obj = None
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
+        log.debug(response.text)
         backoff = 5
         try:
             for elem in tree.iter(ns + "EdgeGatewayRecord"):
@@ -290,6 +291,7 @@ class Surveyor:
                         time.sleep(backoff)
                         backoff += 5
                     else:
+                        log.debug(response.text)
                         tree = ET.fromstring(response.text)
                         obj = Gateway().feed_xml(
                             tree,
@@ -413,13 +415,13 @@ class Surveyor:
         edgeGWs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
             tree,
-            rel="orgVdcNetworks"
+            rel="edgeGateways"
         )
 
         orgVdcNets = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
             tree,
-            rel="edgeGateways"
+            rel="orgVdcNetworks"
         )
         log.debug(list(orgVdcNets))
 

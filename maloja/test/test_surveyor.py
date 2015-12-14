@@ -201,7 +201,7 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         self.assertEqual("Web service", obj.fw[0].description)
         self.assertEqual("51.179.194.122", str(obj.fw[0].int_addr[0]))
         self.assertEqual("51.179.194.123", str(obj.fw[0].int_addr[1]))
-        self.assertEqual("80", obj.fw[0].ext_port)
+        self.assertEqual(80, obj.fw[0].ext_port)
 
     def tost_yaml(self):
         txt = textwrap.dedent(

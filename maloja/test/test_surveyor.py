@@ -203,18 +203,39 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         self.assertEqual("51.179.194.123", str(obj.fw[0].int_addr[1]))
         self.assertEqual(80, obj.fw[0].ext_port)
 
-    def tost_yaml(self):
-        txt = textwrap.dedent(
-            """
-            fullName: Default Organization
-            href: https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a
-            name: Default
-            type: application/vnd.vmware.vcloud.org+xml
+    def test_yaml(self):
+        txt = textwrap.dedent("""
+            !!omap
+            - name: edge_02
+            - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
+            - type: application/vnd.vmware.admin.edgeGateway+xml
+            - fw:
+              - description: Web service
+                int_addr:
+                - 51.179.194.122
+                - 51.179.194.123
+                int_port: 80
+                ext_addr:
+                ext_port: 80
+            - dnat:
+              - int_addr:
+                - 192.168.1.1
+                int_port: 80
+                ext_addr:
+                - 51.179.194.122
+                ext_port: 80
+            - snat:
+              - int_addr:
+                - 192.168.1.1
+                int_port:
+                ext_addr:
+                - 51.179.194.122
+                ext_port:
             """)
         data = ruamel.yaml.load(txt)
-        obj = maloja.model.Org(**data)
-        self.assertIsInstance(obj, maloja.model.Org)
-        self.assertEqual("Default", obj.name)
+        obj = maloja.model.Gateway(**data)
+        self.assertIsInstance(obj, maloja.model.Gateway)
+        self.assertEqual("edge_02", obj.name)
         self.assertEqual("Default Organization", obj.fullName)
         self.assertEqual(
             "https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a",

@@ -3,17 +3,21 @@
 
 import logging
 from logging.handlers import WatchedFileHandler
+import itertools
 import os
 import sys
 import warnings
 
 import maloja.cli
+from maloja.model import Gateway
 from maloja.model import yaml_loads
 
 
 __doc__ = """
 This is to prototype YAML design. Will becom e the planner module.
 """
+
+types = [Gateway]
 
 def main(args):
 
@@ -36,8 +40,10 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    doc = yaml_loads(args.design.read())
-    print(doc)
+    for data in yaml_loads(args.design.read()):
+        typ = types.pop()
+        obj = typ(**data)
+        print(vars(obj))
 
     return 0
 

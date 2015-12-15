@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 - &EDGE !!omap
-    - name: nft002bfi2
+    - name: gw_01
     - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
     - type: application/vnd.vmware.admin.edgeGateway+xml
     - fw:
@@ -14,28 +14,28 @@
         ext_port: 80
     - dnat:
       - int_addr:
-        - 192.168.1.1
+        - 10.124.24.62
         int_port: 80
         ext_addr:
         - 51.179.194.122
         ext_port: 80
     - snat:
       - int_addr:
-        - 192.168.1.1
+        - 10.124.24.62
         int_port:
         ext_addr:
         - 51.179.194.122
         ext_port:
 - &NET !!omap
-    - name: Arbitrary net
+    - name: USER_NET
     - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162
     - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
-    - defaultGateway:
-    - netmask:
+    - defaultGateway: 10.124.24.1
+    - netmask: 255.255.255.192
     - dnsSuffix:
     - dns:
-      -
-      -
+      - 10.124.15.3
+      - 10.124.15.3
 - &VM !!omap
     - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-7113a6c2-9bbd-40e8-bef6-ded6bb5a5e10
@@ -64,8 +64,11 @@
         ipAddressAllocationMode: POOL
     - guestcustomization:
 - << : *VM
+  name: node_062
+  cpu: 2
+  memoryMB: 4096
   isDeployed: true
   status: POWERED_ON
   networkconnections:
-    - name: NIC0_NET
-      ip: 192.168.2.101
+    - name: USER_NET
+      ip: 10.124.24.62

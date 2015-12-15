@@ -106,9 +106,9 @@ class Gateway(DataObject):
             return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
 
     def __init__(self, **kwargs):
-        seq, typ = ("snat", Gateway.SNAT)
-        if seq in kwargs:
-            kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
+        for seq, typ in [("fw", Gateway.FW), ("dnat", Gateway.DNAT), ("snat", Gateway.SNAT)]:
+            if seq in kwargs:
+                kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
 
         super().__init__(**kwargs)
 

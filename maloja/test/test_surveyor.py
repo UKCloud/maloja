@@ -236,13 +236,23 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         obj = maloja.model.Gateway(**data)
         self.assertIsInstance(obj, maloja.model.Gateway)
         self.assertEqual("edge_02", obj.name)
-        self.assertEqual("Default Organization", obj.fullName)
         self.assertEqual(
-            "https://vcloud.example.com/api/org/7b832bc5-3d65-45a2-8d35-da28388ab80a",
+            "https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56",
             obj.href)
         self.assertEqual(
-            "application/vnd.vmware.vcloud.org+xml",
+            "application/vnd.vmware.admin.edgeGateway+xml",
             obj.type)
+        self.assertEqual(1, len(obj.snat))
+        self.assertEqual("192.168.1.1", str(obj.snat[0].int_addr[0]))
+        self.assertEqual("51.179.194.122", str(obj.snat[0].ext_addr[0]))
+        self.assertEqual(1, len(obj.dnat))
+        self.assertEqual("192.168.1.1", str(obj.dnat[0].int_addr[0]))
+        self.assertEqual("51.179.194.122", str(obj.dnat[0].ext_addr[0]))
+        self.assertEqual(1, len(obj.fw))
+        self.assertEqual("Web service", obj.fw[0].description)
+        self.assertEqual("51.179.194.122", str(obj.fw[0].int_addr[0]))
+        self.assertEqual("51.179.194.123", str(obj.fw[0].int_addr[1]))
+        self.assertEqual(80, obj.fw[0].ext_port)
 
 class OrgSurveyTests(unittest.TestCase):
     xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><Org

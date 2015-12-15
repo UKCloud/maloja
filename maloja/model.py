@@ -161,7 +161,17 @@ class Network(DataObject):
         ("name", None),
         ("href", None),
         ("type", None),
+        ("defaultGateway", None),
+        ("netmask", None),
+        ("dnsSuffix", None),
+        ("dns", []),
     ]
+
+    def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        log = logging.getLogger("maloja.model.Network")
+        self.dns = [tree.attrib.get("dns1"), tree.attrib.get("dns2")]
+        super().feed_xml(tree, ns=ns)
+        return self
 
 class Org(DataObject):
 

@@ -19,6 +19,7 @@ from requests.exceptions import HTTPError
 
 from maloja.model import Catalog
 from maloja.model import Gateway
+from maloja.model import Network
 from maloja.model import Template
 from maloja.model import Org
 from maloja.model import VApp
@@ -320,6 +321,59 @@ class Surveyor:
             results.put((status, None))
 
     @staticmethod
+    def on_orgVdcNetwork(path, session, response, results=None, status=None):
+        log = logging.getLogger("maloja.surveyor.on_orgVdcNetwork")
+        if status:
+            child = status._replace(level=status.level + 1)
+        else:
+            child = Status(1, 1, 1)
+
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(response.text)
+        backoff = 5
+        try:
+            for elem in tree.iter(ns + "OrgVdcNetworkRecord"):
+                while True:
+                    op = session.get(elem.attrib.get("href"))
+                    done, not_done = concurrent.futures.wait(
+                        [op], timeout=10,
+                        return_when=concurrent.futures.FIRST_EXCEPTION
+                    )
+                    try:
+                        response = done.pop().result()
+                        if response.status_code != 200:
+                            raise HTTPError(response.status_code)
+                    except (HTTPError, KeyError):
+                        time.sleep(backoff)
+                        backoff += 5
+                    else:
+                        tree = ET.fromstring(response.text)
+                        obj = Network().feed_xml(tree, ns=ns)
+                        break
+
+                path = path._replace(file="network-{0.name}.yaml".format(obj))
+                os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
+                try:
+                    Surveyor.locks[path].acquire()
+                    with open(
+                        os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
+                    ) as output:
+                        try:
+                            data = yaml_dumps(obj)
+                        except Exception as e:
+                            log.error(e)
+                        output.write(data)
+                        output.flush()
+                finally:
+                    Surveyor.locks[path].release()
+
+        except Exception as e:
+            log.error(e)
+
+        if results and status:
+            results.put((status, None))
+
+    @staticmethod
     def on_vapp(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vapp")
         if status:
@@ -418,7 +472,6 @@ class Surveyor:
             tree,
             rel="orgVdcNetworks"
         )
-        # TODO: Launch ops on orgVdcNets
 
         vapps = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",
@@ -433,6 +486,15 @@ class Surveyor:
                 status=child._replace(job=child.job + n)
             )
         ) for n, edgeGW in enumerate(edgeGWs)] + [
+            session.get(
+            orgVdcNet.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_orgVdcNetwork,
+                path,
+                results=results,
+                status=child._replace(job=child.job + n)
+            )
+        ) for n, orgVdcNet in enumerate(orgVdcNets)] + [
             session.get(
             vapp.attrib.get("href"),
             background_callback=functools.partial(

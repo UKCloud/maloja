@@ -155,6 +155,14 @@ class Gateway(DataObject):
                 )
         return self
 
+class Network(DataObject):
+
+    _defaults = [
+        ("name", None),
+        ("href", None),
+        ("type", None),
+    ]
+
 class Org(DataObject):
 
     _defaults = [
@@ -249,6 +257,7 @@ ruamel.yaml.RoundTripDumper.add_representer(Gateway, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.FW, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.DNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.SNAT, namedtuple_as_dict)
+ruamel.yaml.RoundTripDumper.add_representer(Network, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(VApp, dataobject_as_ordereddict)

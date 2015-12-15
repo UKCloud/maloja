@@ -1,7 +1,41 @@
 %YAML 1.2
 ---
+- &EDGE !!omap
+    - name: nft002bfi2
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
+    - type: application/vnd.vmware.admin.edgeGateway+xml
+    - fw:
+      - description: Web service
+        int_addr:
+        - 51.179.194.122
+        - 51.179.194.123
+        int_port: 80
+        ext_addr:
+        ext_port: 80
+    - dnat:
+      - int_addr:
+        - 192.168.1.1
+        int_port: 80
+        ext_addr:
+        - 51.179.194.122
+        ext_port: 80
+    - snat:
+      - int_addr:
+        - 192.168.1.1
+        int_port:
+        ext_addr:
+        - 51.179.194.122
+        ext_port:
 - &NET !!omap
-    - rules: []
+    - name: Arbitrary net
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway:
+    - netmask:
+    - dnsSuffix:
+    - dns:
+      -
+      -
 - &VM !!omap
     - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-7113a6c2-9bbd-40e8-bef6-ded6bb5a5e10

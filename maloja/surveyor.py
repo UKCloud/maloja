@@ -273,31 +273,26 @@ class Surveyor:
         obj = None
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
-        log.debug(response.text)
         backoff = 5
         try:
-            for elem in tree.iter(ns + "EdgeGatewayRecord"):
-                while True:
-                    op = session.get(elem.attrib.get("href"))
-                    done, not_done = concurrent.futures.wait(
-                        [op], timeout=10,
-                        return_when=concurrent.futures.FIRST_EXCEPTION
-                    )
-                    try:
-                        response = done.pop().result()
-                        if response.status_code != 200:
-                            raise HTTPError(response.status_code)
-                    except (HTTPError, KeyError):
-                        time.sleep(backoff)
-                        backoff += 5
-                    else:
-                        log.debug(response.text)
-                        tree = ET.fromstring(response.text)
-                        obj = Gateway().feed_xml(
-                            tree,
-                            ns="{http://www.vmware.com/vcloud/v1.5}"
-                        )
-                        break
+            elem = next(tree.iter(ns + "EdgeGatewayRecord"))
+            while True:
+                op = session.get(elem.attrib.get("href"))
+                done, not_done = concurrent.futures.wait(
+                    [op], timeout=10,
+                    return_when=concurrent.futures.FIRST_EXCEPTION
+                )
+                try:
+                    response = done.pop().result()
+                    if response.status_code != 200:
+                        raise HTTPError(response.status_code)
+                except (HTTPError, KeyError):
+                    time.sleep(backoff)
+                    backoff += 5
+                else:
+                    tree = ET.fromstring(response.text)
+                    obj = Gateway().feed_xml(tree, ns=ns)
+                    break
 
         except Exception as e:
             log.error(e)
@@ -423,7 +418,7 @@ class Surveyor:
             tree,
             rel="orgVdcNetworks"
         )
-        log.debug(list(orgVdcNets))
+        # TODO: Launch ops on orgVdcNets
 
         vapps = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",

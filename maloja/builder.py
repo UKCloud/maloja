@@ -1,84 +1,69 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
-from collections import defaultdict
-from collections import namedtuple
-import concurrent.futures
-import functools
 import logging
+from logging.handlers import WatchedFileHandler
+import itertools
 import os
-import threading
-from urllib.parse import quote as urlquote
-from urllib.parse import urlparse
-import xml.etree.ElementTree as ET
-import xml.sax.saxutils
+import sys
+import warnings
 
-from maloja.model import Catalog
-from maloja.model import Template
-from maloja.model import Org
-from maloja.model import VApp
-from maloja.model import Vdc
+import maloja.cli
+from maloja.model import Gateway
+from maloja.model import Network
 from maloja.model import Vm
-from maloja.model import yaml_dumps
 from maloja.model import yaml_loads
-from maloja.builder import find_xpath
-
-import maloja.types
-from maloja.types import Status
+from maloja.planner import check_objects
+from maloja.planner import read_objects
 
 
-class Builder:
+__doc__ = """
+The builder module modifies cloud assets according to a design file.
 
-    @staticmethod
-    def on_vmrecords(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_vmrecords")
-        if results and status:
-            results.put((status, None))
+"""
 
-    @staticmethod
-    def on_vm(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_vm")
-        if results and status:
-            results.put((status, None))
+def main(args):
 
-    @staticmethod
-    def on_template(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_template")
-        if results and status:
-            results.put((status, None))
+    log = logging.getLogger("maloja")
+    log.setLevel(args.log_level)
 
-    @staticmethod
-    def on_catalogitem(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_catalogitem")
-        if results and status:
-            results.put((status, None))
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)-7s %(name)s|%(message)s")
+    ch = logging.StreamHandler()
 
-    @staticmethod
-    def on_vapp(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_vapp")
-        if results and status:
-            results.put((status, None))
+    if args.log_path is None:
+        ch.setLevel(args.log_level)
+    else:
+        fh = WatchedFileHandler(args.log_path)
+        fh.setLevel(args.log_level)
+        fh.setFormatter(formatter)
+        log.addHandler(fh)
+        ch.setLevel(logging.WARNING)
 
-    @staticmethod
-    def on_vdc(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_vdc")
-        if results and status:
-            results.put((status, None))
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
 
-    @staticmethod
-    def on_catalog(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_catalog")
-        if results and status:
-            results.put((status, None))
+    objs = list(read_objects(args.design.read()))
+    objs = check_objects(objs)
+    return 0
 
-    @staticmethod
-    def on_org(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_org")
-        if results and status:
-            results.put((status, None))
 
-    @staticmethod
-    def on_org_list(path, session, response, results=None, status=None):
-        log = logging.getLogger("maloja.builder.on_org_list")
-        if results and status:
-            results.put((status, None))
+def run():
+    p = maloja.cli.parser(description=__doc__)
+    p = maloja.cli.add_common_options(p)
+    p = maloja.cli.add_planner_options(p)
+    args = p.parse_args()
+    rv = 0
+    if args.version:
+        sys.stdout.write(maloja.__version__ + "\n")
+    else:
+        rv = main(args)
+
+    if rv == 2:
+        sys.stderr.write("\n Missing command.\n\n")
+        p.print_help()
+
+    sys.exit(rv)
+
+if __name__ == "__main__":
+    run()

@@ -217,6 +217,7 @@ class Vm(DataObject):
     _defaults = [
         ("name", None),
         ("href", None),
+        ("type", None),
         ("dateCreated", None),
         ("guestOs", None),
         ("hardwareVersion", None),

@@ -5,11 +5,13 @@ import logging
 from logging.handlers import WatchedFileHandler
 import itertools
 import os
+from pprint import pprint
 import sys
 import warnings
 
 import maloja.cli
 from maloja.model import Gateway
+from maloja.model import Network
 from maloja.model import yaml_loads
 
 
@@ -17,7 +19,10 @@ __doc__ = """
 This is to prototype YAML design. Will becom e the planner module.
 """
 
-types = [Gateway]
+types = {
+"application/vnd.vmware.admin.edgeGateway+xml": Gateway,
+"application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
+}
 
 def main(args):
 
@@ -41,9 +46,9 @@ def main(args):
     log.addHandler(ch)
 
     for data in yaml_loads(args.design.read()):
-        typ = types.pop()
+        typ = types[data.get("type", None)]
         obj = typ(**data)
-        print(vars(obj))
+        pprint(obj)
 
     return 0
 

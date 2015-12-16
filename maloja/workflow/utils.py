@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
+from collections import defaultdict
 from collections import namedtuple
 import contextlib
 import itertools
@@ -11,7 +12,14 @@ import os.path
 import pkg_resources
 
 Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node", "file"])
+
  
+def group_by_type(items):
+    return defaultdict(list,
+        {k: list(v) for k, v in itertools.groupby(items, key=type)}
+    )
+
+
 def make_path(path:Path, prefix="proj_", suffix=""):
     os.makedirs(path.root, exist_ok=True)
 

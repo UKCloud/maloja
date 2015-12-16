@@ -5,6 +5,7 @@ import logging
 from logging.handlers import WatchedFileHandler
 import itertools
 import os
+import queue
 import sys
 import warnings
 
@@ -12,15 +13,25 @@ import maloja.cli
 from maloja.model import Gateway
 from maloja.model import Network
 from maloja.model import Vm
-from maloja.model import yaml_loads
 from maloja.planner import check_objects
 from maloja.planner import read_objects
+from maloja.workflow.utils import group_by_type
 
 
 __doc__ = """
 The builder module modifies cloud assets according to a design file.
 
 """
+
+class Builder:
+
+    def __init__(self, objs, results, executor=None, loop=None, **kwargs):
+        log = logging.getLogger("maloja.builder.Builder")
+        self.plans = group_by_type(objs)
+        self.results = results
+
+    def __call__(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.builder")
 
 def main(args):
 
@@ -45,6 +56,8 @@ def main(args):
 
     objs = list(read_objects(args.design.read()))
     objs = check_objects(objs)
+    q = queue.Queue()
+    b = Builder(objs, q)
     return 0
 
 

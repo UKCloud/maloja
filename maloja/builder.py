@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
+import concurrent.futures
 import logging
 from logging.handlers import WatchedFileHandler
 import itertools
@@ -9,12 +10,14 @@ import queue
 import sys
 import warnings
 
+from maloja.broker import Broker
 import maloja.cli
 from maloja.model import Gateway
 from maloja.model import Network
 from maloja.model import Vm
 from maloja.planner import check_objects
 from maloja.planner import read_objects
+from maloja.types import Credentials
 from maloja.workflow.utils import group_by_type
 
 
@@ -25,13 +28,28 @@ The builder module modifies cloud assets according to a design file.
 
 class Builder:
 
-    def __init__(self, objs, results, executor=None, loop=None, **kwargs):
+    def __init__(self, objs, operations, results, creds, path, executor=None, loop=None, **kwargs):
         log = logging.getLogger("maloja.builder.Builder")
         self.plans = group_by_type(objs)
+        self.operations = operations
         self.results = results
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
+        log.debug("Called")
+
+def create_builder(objs, operations, results, options, path=tuple(), loop=None):
+    creds = Credentials(options.url, options.user, None)
+    executor = concurrent.futures.ThreadPoolExecutor(
+        max(4, len(Broker.tasks) + 2 * len(path))
+    )
+    broker = Broker(operations, results, executor=executor, loop=loop)
+    builder = Builder(objs, operations, results, creds, path, options.input, loop=loop)
+    for task in broker.tasks:
+        func = getattr(broker, task)
+        broker.tasks[task] = executor.submit(func)
+        
+    return builder
 
 def main(args):
 
@@ -56,14 +74,18 @@ def main(args):
 
     objs = list(read_objects(args.design.read()))
     objs = check_objects(objs)
-    q = queue.Queue()
-    b = Builder(objs, q)
+    operations = queue.Queue()
+    results = queue.Queue()
+    b = create_builder(objs, operations, results, args)
+    log.debug(b)
     return 0
 
 
 def run():
     p = maloja.cli.parser(description=__doc__)
     p = maloja.cli.add_common_options(p)
+    p = maloja.cli.add_api_options(p)
+    p = maloja.cli.add_builder_options(p)
     p = maloja.cli.add_planner_options(p)
     args = p.parse_args()
     rv = 0

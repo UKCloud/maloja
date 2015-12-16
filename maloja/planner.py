@@ -12,6 +12,7 @@ import warnings
 import maloja.cli
 from maloja.model import Gateway
 from maloja.model import Network
+from maloja.model import Vm
 from maloja.model import yaml_loads
 
 
@@ -22,6 +23,7 @@ This is to prototype YAML design. Will becom e the planner module.
 types = {
 "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
 "application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
+"application/vnd.vmware.vcloud.vm+xml": Vm,
 }
 
 def main(args):
@@ -45,11 +47,27 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    for data in yaml_loads(args.design.read()):
-        typ = types[data.get("type", None)]
-        obj = typ(**data)
-        pprint(obj)
+    objs = []
+    for n, data in enumerate(yaml_loads(args.design.read())):
+        try:
+            typ = types[data.get("type", None)]
+        except KeyError:
+            log.warning("Type unrecognised at item {}".format(n + 1))
+            continue
 
+        try:
+            obj = typ(**data)
+        except TypeError as e:
+            log.warning("Type mismatch at item {}".format(n + 1))
+            log.warning(e)
+            continue
+
+        log.info(obj)
+        objs.append(obj)
+
+    missing = set(types.values()) - {type(i) for i in objs}
+    for typ in missing:
+        log.warning("Missing an object of type {0.__name__}".format(typ))
     return 0
 
 

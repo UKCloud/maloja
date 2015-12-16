@@ -73,3 +73,6 @@
   networkconnections:
     - name: USER_NET
       ip: 10.124.24.62
+      isConnected: true
+      macAddress:
+      ipAddressAllocationMode: STATIC

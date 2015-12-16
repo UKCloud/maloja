@@ -22,6 +22,10 @@ are shown below:
 Ubuntu Linux 14.04 LTS
 ======================
 
+#. Install `python3-dev` from the package repository of your OS::
+
+    $ sudo apt-get install -y python3-dev
+
 #. Install `python-virtualenv` from the package repository of your OS::
 
     $ sudo apt-get install python-virtualenv

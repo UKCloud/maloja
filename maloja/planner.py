@@ -11,6 +11,7 @@ import warnings
 import maloja.cli
 from maloja.model import Gateway
 from maloja.model import Network
+from maloja.model import Template
 from maloja.model import Vm
 from maloja.model import yaml_loads
 
@@ -23,6 +24,7 @@ The planner module allows offline inspection of a design file.
 types = {
 "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
 "application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
+"application/vnd.vmware.vcloud.vAppTemplate+xml": Template,
 "application/vnd.vmware.vcloud.vm+xml": Vm,
 }
 

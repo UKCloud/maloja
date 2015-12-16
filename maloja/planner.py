@@ -5,7 +5,6 @@ import logging
 from logging.handlers import WatchedFileHandler
 import itertools
 import os
-from pprint import pprint
 import sys
 import warnings
 
@@ -17,7 +16,8 @@ from maloja.model import yaml_loads
 
 
 __doc__ = """
-This is to prototype YAML design. Will becom e the planner module.
+The planner module allows offline inspection of a design file.
+
 """
 
 types = {
@@ -25,6 +25,36 @@ types = {
 "application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
 "application/vnd.vmware.vcloud.vm+xml": Vm,
 }
+
+
+def read_objects(text):
+    log = logging.getLogger("maloja.planner")
+    for n, data in enumerate(yaml_loads(text)):
+        try:
+            typ = types[data.get("type", None)]
+        except KeyError:
+            log.warning("Type unrecognised at item {}".format(n + 1))
+            continue
+
+        try:
+            obj = typ(**data)
+        except TypeError as e:
+            log.warning("Type mismatch at item {}".format(n + 1))
+            log.warning(e)
+            continue
+
+        log.info(obj)
+        yield obj
+
+
+def check_objects(seq):
+    log = logging.getLogger("maloja.planner")
+    missing = set(types.values()) - {type(obj) for obj in seq}
+    for typ in missing:
+        log.warning("Missing an object of type {0.__name__}".format(typ))
+    log.info("Approved {0} objects of {0}".format(len(seq)))
+    return seq
+
 
 def main(args):
 
@@ -47,27 +77,8 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    objs = []
-    for n, data in enumerate(yaml_loads(args.design.read())):
-        try:
-            typ = types[data.get("type", None)]
-        except KeyError:
-            log.warning("Type unrecognised at item {}".format(n + 1))
-            continue
-
-        try:
-            obj = typ(**data)
-        except TypeError as e:
-            log.warning("Type mismatch at item {}".format(n + 1))
-            log.warning(e)
-            continue
-
-        log.info(obj)
-        objs.append(obj)
-
-    missing = set(types.values()) - {type(i) for i in objs}
-    for typ in missing:
-        log.warning("Missing an object of type {0.__name__}".format(typ))
+    objs = list(read_objects(args.design.read()))
+    objs = check_objects(objs)
     return 0
 
 

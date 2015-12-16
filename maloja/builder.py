@@ -2,6 +2,8 @@
 #   -*- encoding: UTF-8 -*-
 
 import concurrent.futures
+import getpass
+import itertools
 import logging
 from logging.handlers import WatchedFileHandler
 import itertools
@@ -18,6 +20,7 @@ from maloja.model import Vm
 from maloja.planner import check_objects
 from maloja.planner import read_objects
 from maloja.types import Credentials
+from maloja.types import Stop
 from maloja.workflow.utils import group_by_type
 
 
@@ -28,15 +31,26 @@ The builder module modifies cloud assets according to a design file.
 
 class Builder:
 
-    def __init__(self, objs, operations, results, creds, path, executor=None, loop=None, **kwargs):
+    def __init__(self, objs, operations, results, path, executor=None, loop=None, **kwargs):
         log = logging.getLogger("maloja.builder.Builder")
         self.plans = group_by_type(objs)
         self.operations = operations
         self.results = results
+        self.token = None
+        self.seq = itertools.count(1)
+        self.tasks = []
 
-    def __call__(self, session, token, callback=None, status=None, **kwargs):
+    def __call__(self, session, creds, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
-        log.debug("Called")
+        if self.token is None:
+            password = getpass.getpass(prompt="Enter your API password: ")
+            creds = creds._replace(password=password.strip())
+            packet = (next(self.seq), creds)
+            self.operations.put(packet)
+            sys.stdout.flush()
+
+        packet = (next(self.seq), Stop())
+        self.operations.put(packet)
 
 def create_builder(objs, operations, results, options, path=tuple(), loop=None):
     creds = Credentials(options.url, options.user, None)
@@ -44,11 +58,12 @@ def create_builder(objs, operations, results, options, path=tuple(), loop=None):
         max(4, len(Broker.tasks) + 2 * len(path))
     )
     broker = Broker(operations, results, executor=executor, loop=loop)
-    builder = Builder(objs, operations, results, creds, path, options.input, loop=loop)
+    builder = Builder(objs, operations, results, path, options.input, loop=loop)
     for task in broker.tasks:
         func = getattr(broker, task)
-        broker.tasks[task] = executor.submit(func)
-        
+        builder.tasks.append(executor.submit(func))
+
+    builder.tasks.append(executor.submit(builder(broker.session, creds))) 
     return builder
 
 def main(args):
@@ -76,8 +91,12 @@ def main(args):
     objs = check_objects(objs)
     operations = queue.Queue()
     results = queue.Queue()
-    b = create_builder(objs, operations, results, args)
-    log.debug(b)
+    builder = create_builder(objs, operations, results, args)
+    results = [
+        i.result()
+        for i in concurrent.futures.as_completed(set(builder.tasks))
+        if i.done()
+    ]
     return 0
 
 

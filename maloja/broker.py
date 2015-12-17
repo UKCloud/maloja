@@ -15,6 +15,7 @@ import warnings
 import requests
 from requests_futures.sessions import FuturesSession
 
+from maloja.builder import Builder
 from maloja.surveyor import Surveyor
 from maloja.types import Credentials
 from maloja.types import Design
@@ -54,9 +55,8 @@ def design_handler(
     **kwargs
 ):
     log = logging.getLogger("maloja.broker.design_handler")
-    log.debug("Hi.")
     try:
-        worker = msg.plugin.workflow(msg.paths, results, session.executor)
+        builder = Builder(msg.objects, results, session.executor)
     except Exception as e:
         log.error(str(getattr(e, "args", e) or e))
         return tuple()
@@ -66,7 +66,7 @@ def design_handler(
             token.key: token.value,
         }
         session.headers.update(headers)
-        return (session.executor.submit(worker, session, token, callback, status),)
+        return (session.executor.submit(builder, session, token, callback, status),)
 
 @handler.register(Stop)
 def stop_handler(msg, session, token, **kwargs):

@@ -20,6 +20,7 @@ import maloja.console
 import maloja.planner
 from maloja.types import Credentials
 from maloja.types import Design
+from maloja.types import Stop
 from maloja.types import Token
 from maloja.workflow.utils import Path
 from maloja.workflow.utils import make_path
@@ -84,6 +85,14 @@ def main(args):
             status, reply = results.get()
 
         operations.put((1, Design(objs)))
+
+        while not isinstance(reply, Stop):
+            status, reply = results.get()
+            log.info(status)
+            log.info(reply)
+        else:
+            operations.put((2, reply))
+
         results = [
             i.result()
             for i in concurrent.futures.as_completed(set(broker.tasks.values()))

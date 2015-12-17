@@ -39,13 +39,15 @@ class Builder:
         log = logging.getLogger("maloja.builder")
 
         template = self.plans[Template][0]
+        vms = self.plans[Vm]
+        log.debug(vms)
         data = {
             "appliance": {
                 "name": uuid.uuid4().hex,
                 "description": "Created by Maloja builder",
-                "vms": [],
+                "vms": self.plans[Vm],
             },
-            "networks": [],
+            "networks": self.plans[Network],
             "template": {
                 "name": template.name,
                 "href": template.href

@@ -31,11 +31,11 @@ href network.href;"/>
      ovf:required="false">
         <ovf:Info />
         <PrimaryNetworkConnectionIndex>0</PrimaryNetworkConnectionIndex>
-        <NetworkConnection tal:repeat="(n, net) enumerate(vm.networks)"
+        <NetworkConnection tal:repeat="(n, net) enumerate(vm.networkconnections)"
 tal:attributes="
 network networks[n].name;">
            <NetworkConnectionIndex tal:content="n"></NetworkConnectionIndex>
-           <IsConnected>true</IsConnected>
+           <IsConnected tal:content="'true' if net.isConnected else 'false'"></IsConnected>
            <IpAddressAllocationMode>POOL</IpAddressAllocationMode>
         </NetworkConnection>
      </NetworkConnectionSection>
@@ -50,7 +50,7 @@ type 'application/vnd.vmware.vcloud.guestCustomizationSection+xml'">
     <AdminPasswordEnabled>false</AdminPasswordEnabled>
     <AdminAutoLogonEnabled>false</AdminAutoLogonEnabled>
     <AdminAutoLogonCount>0</AdminAutoLogonCount>
-    <CustomizationScript tal:content="vm.script"></CustomizationScript>
+    <CustomizationScript tal:content="vm.guestcustomization"></CustomizationScript>
 <ComputerName
 tal:content="vm.name"></ComputerName>
 </GuestCustomizationSection>

@@ -55,20 +55,6 @@ class Builder:
         packet = (next(self.seq), Stop())
         self.operations.put(packet)
 
-def create_builder(objs, operations, results, options, path=tuple(), loop=None):
-    creds = Credentials(options.url, options.user, None)
-    executor = concurrent.futures.ThreadPoolExecutor(
-        max(4, len(Broker.tasks) + 2 * len(path))  # TODO: Declare builder tasks
-    )
-    broker = Broker(operations, results, executor=executor, loop=loop)
-    builder = Builder(objs, operations, results, path, options.input, loop=loop)
-    for task in broker.tasks:
-        func = getattr(broker, task)
-        builder.tasks.append(executor.submit(func))
-
-    builder.tasks.append(executor.submit(builder(broker.session, creds))) 
-    return builder
-
 def main(args):
 
     log = logging.getLogger("maloja")

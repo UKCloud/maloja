@@ -18,6 +18,7 @@ import concurrent.futures
 import ruamel.yaml
 
 from maloja.broker import Broker
+from maloja.broker import create_broker
 from maloja.model import Catalog
 from maloja.model import Org
 from maloja.model import Template
@@ -329,4 +330,21 @@ def create_console(operations, results, options, path, loop=None):
             func = getattr(console, task)
             console.tasks[task] = executor.submit(func)
             
+    return console
+
+def create_console(operations, results, options, path, loop=None):
+    n = max(4, len(Broker.tasks) + 3)
+    broker = create_broker(operations, results, max_workers=n, loop=loop)
+
+    creds = Credentials(options.url, options.user, None)
+    console = Console(operations, results, creds, path, options.output, loop=loop)
+    if loop is not None:
+        # launch asyncio coroutines
+        for coro in console.routines:
+            loop.create_task(coro(executor, loop=loop))
+    else:
+        for task in console.tasks:
+            func = getattr(console, task)
+            console.tasks[task] = broker.session.executor.submit(func)
+
     return console

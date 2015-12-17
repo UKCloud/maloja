@@ -163,3 +163,12 @@ class Broker:
                 self.results.put((status, reply))
         else:
             return n
+
+def create_broker(operations, results, max_workers=None, loop=None):
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers)
+    broker = Broker(operations, results, executor=executor, loop=loop)
+    for task in broker.tasks:
+        func = getattr(broker, task)
+        broker.tasks[task] = executor.submit(func)
+
+    return broker

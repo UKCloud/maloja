@@ -40,6 +40,12 @@ from maloja.workflow.utils import plugin_interface
 
 class Console(cmd.Cmd):
 
+    tasks = {
+        "input_task": None,
+        "command_task": None,
+        "results_task": None,
+    }
+
     def __init__(self, operations, results, creds, ref, entry="", loop=None, **kwargs):
         super().__init__(**kwargs)
         self.operations = operations
@@ -52,11 +58,6 @@ class Console(cmd.Cmd):
         else:
             self.commands = asyncio.Queue(loop=loop)
         self.prompt = ""
-        self.tasks = {
-            "input_task": None,
-            "command_task": None,
-            "results_task": None,
-        }
         self.token = None
         self.stop = False
         self.seq = itertools.count(1)
@@ -310,30 +311,7 @@ class Console(cmd.Cmd):
 
 
 def create_console(operations, results, options, path, loop=None):
-    creds = Credentials(options.url, options.user, None)
-    console = Console(operations, results, creds, path, options.input, loop=loop)
-    executor = concurrent.futures.ThreadPoolExecutor(
-        max(4, len(Broker.tasks) + len(console.tasks) + 2 * len(path))
-    )
-    broker = Broker(operations, results, executor=executor, loop=loop)
-    if loop is not None:
-        # launch asyncio coroutines
-        for coro in console.routines:
-            loop.create_task(coro(executor, loop=loop))
-    else:
-        # launch looping threads
-        for task in broker.tasks:
-            func = getattr(broker, task)
-            broker.tasks[task] = executor.submit(func)
-            
-        for task in console.tasks:
-            func = getattr(console, task)
-            console.tasks[task] = executor.submit(func)
-            
-    return console
-
-def create_console(operations, results, options, path, loop=None):
-    n = max(4, len(Broker.tasks) + 3)
+    n = max(16, len(Broker.tasks) + len(Console.tasks) + len(path))
     broker = create_broker(operations, results, max_workers=n, loop=loop)
 
     creds = Credentials(options.url, options.user, None)

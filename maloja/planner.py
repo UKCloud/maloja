@@ -32,6 +32,7 @@ types = {
 
 
 def read_objects(text):
+    # FIXME: First object of each type provides defaults
     log = logging.getLogger("maloja.planner")
     for n, data in enumerate(yaml_loads(text)):
         try:
@@ -83,6 +84,7 @@ def main(args):
 
     objs = list(read_objects(args.design.read()))
     objs = check_objects(objs)
+    print(*[vars(i) for i in objs], sep="\n")
     return 0
 
 

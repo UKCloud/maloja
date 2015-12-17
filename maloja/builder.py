@@ -11,6 +11,7 @@ import warnings
 from maloja.model import Gateway
 from maloja.model import Network
 from maloja.model import Template
+from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.planner import check_objects
 from maloja.planner import read_objects
@@ -54,8 +55,25 @@ class Builder:
             )
         )
 
+        url = "{vdc.href}/{endpoint}".format(
+            vdc=self.plans[Vdc][0],
+            endpoint="action/composeVApp"
+        )
         xml = macro(**data)
+        op = session.post(url, data=xml)
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.composeVAppParams+xml"}
+        )
+
+        done, not_done = concurrent.futures.wait(
+            [op], timeout=6,
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+        response = done.pop().result()
         log.debug(xml)
+        log.debug(response.status_code)
+        log.debug(response.text)
+
         if status:
             self.results.put((status, Stop()))
 

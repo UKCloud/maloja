@@ -5,10 +5,12 @@ import concurrent.futures
 import itertools
 import logging
 import sys
+import uuid
 import warnings
 
 from maloja.model import Gateway
 from maloja.model import Network
+from maloja.model import Template
 from maloja.model import Vm
 from maloja.planner import check_objects
 from maloja.planner import read_objects
@@ -36,12 +38,28 @@ class Builder:
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
 
+        template = self.plans[Template][0]
+        data = {
+            "appliance": {
+                "name": uuid.uuid4().hex,
+                "description": "Created by Maloja builder",
+                "vms": [],
+            },
+            "networks": [],
+            "template": {
+                "name": template.name,
+                "href": template.href
+            }
+        }
+
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
-                "maloja.workflow", "InstantiateVAppTemplateParams.pt"
+                "maloja.workflow", "ComposeVAppParams.pt"
             )
         )
-        log.debug(macro)
+
+        xml = macro(**data)
+        log.debug(xml)
         if status:
             self.results.put((status, Stop()))
 

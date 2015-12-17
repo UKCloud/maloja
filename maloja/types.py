@@ -4,7 +4,7 @@
 from collections import namedtuple
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
-Design = namedtuple("Design", ["objs"])
+Design = namedtuple("Design", ["objects"])
 Plugin = namedtuple("Plugin", ["name", "description", "selector", "workflow"])
 Status = namedtuple("Status", ["id", "job", "level"])
 Stop = namedtuple("Stop", [])

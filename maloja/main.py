@@ -6,6 +6,7 @@ try:
 except ImportError:
     asyncio = None
 import concurrent.futures
+import getpass
 import logging
 from logging.handlers import WatchedFileHandler
 import os
@@ -14,7 +15,12 @@ import sys
 import warnings
 
 import maloja.cli
+import maloja.broker
 import maloja.console
+import maloja.planner
+from maloja.types import Credentials
+from maloja.types import Design
+from maloja.types import Token
 from maloja.workflow.utils import Path
 from maloja.workflow.utils import make_path
 from maloja.workflow.utils import recent_project
@@ -62,13 +68,26 @@ def main(args):
     except Exception as e:
         log.error(e)
 
-    log.info(args.command)
-    console = maloja.console.create_console(operations, results, args, path, loop=loop)
-    results = [
-        i.result()
-        for i in concurrent.futures.as_completed(set(console.tasks.values()))
-        if i.done()
-    ]
+    if args.command == "build":
+        objs = []
+        broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)
+        with open(args.input, "r") as data:
+            objs = list(maloja.planner.read_objects(data.read()))
+            objs = maloja.planner.check_objects(objs)
+        reply = None
+        while not isinstance(reply, Token):
+            password = getpass.getpass(prompt="Enter your API password: ")
+            creds = Credentials(args.url, args.user, password.strip())
+            operations.put((0, creds))
+            status, reply = results.get()
+        operations.put((1, Design(objs)))
+    else:
+        console = maloja.console.create_console(operations, results, args, path, loop=loop)
+        results = [
+            i.result()
+            for i in concurrent.futures.as_completed(set(console.tasks.values()))
+            if i.done()
+        ]
     return 0
 
 

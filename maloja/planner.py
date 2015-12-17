@@ -32,7 +32,6 @@ types = {
 
 
 def read_objects(text):
-    # FIXME: First object of each type provides defaults
     log = logging.getLogger("maloja.planner")
     for n, data in enumerate(yaml_loads(text)):
         try:
@@ -41,8 +40,9 @@ def read_objects(text):
             log.warning("Type unrecognised at item {}".format(n + 1))
             continue
 
+        attribs = {k: data.get(k, None) for k, v in typ._defaults}
         try:
-            obj = typ(**data)
+            obj = typ(**attribs)
         except TypeError as e:
             log.warning("Type mismatch at item {}".format(n + 1))
             log.warning(e)

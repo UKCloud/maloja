@@ -71,16 +71,25 @@ def main(args):
     if args.command == "build":
         objs = []
         broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)
+
         with open(args.input, "r") as data:
             objs = list(maloja.planner.read_objects(data.read()))
             objs = maloja.planner.check_objects(objs)
+
         reply = None
         while not isinstance(reply, Token):
             password = getpass.getpass(prompt="Enter your API password: ")
             creds = Credentials(args.url, args.user, password.strip())
             operations.put((0, creds))
             status, reply = results.get()
+
         operations.put((1, Design(objs)))
+        results = [
+            i.result()
+            for i in concurrent.futures.as_completed(set(broker.tasks.values()))
+            if i.done()
+        ]
+
     else:
         console = maloja.console.create_console(operations, results, args, path, loop=loop)
         results = [
@@ -88,6 +97,7 @@ def main(args):
             for i in concurrent.futures.as_completed(set(console.tasks.values()))
             if i.done()
         ]
+
     return 0
 
 

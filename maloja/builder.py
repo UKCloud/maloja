@@ -29,6 +29,9 @@ The builder module modifies cloud assets according to a design file.
 
 """
 
+# Send a Design to the broker.
+# Add Broker handler
+
 class Builder:
 
     def __init__(self, objs, operations, results, path, executor=None, loop=None, **kwargs):
@@ -55,7 +58,7 @@ class Builder:
 def create_builder(objs, operations, results, options, path=tuple(), loop=None):
     creds = Credentials(options.url, options.user, None)
     executor = concurrent.futures.ThreadPoolExecutor(
-        max(4, len(Broker.tasks) + 2 * len(path))
+        max(4, len(Broker.tasks) + 2 * len(path))  # TODO: Declare builder tasks
     )
     broker = Broker(operations, results, executor=executor, loop=loop)
     builder = Builder(objs, operations, results, path, options.input, loop=loop)

@@ -23,8 +23,8 @@ def add_api_options(parser):
 
 def add_builder_options(parser):
     parser.add_argument(
-        "--input", required=False, default="",
-        help="path to input directory")
+        "--input", required=True,
+        help="path to design file")
     return parser
 
 def add_cache_options(parser):
@@ -68,10 +68,11 @@ def parsers(description=__doc__):
     rv =  parser(description)
     rv = add_common_options(rv)
     rv = add_api_options(rv)
-    rv = add_builder_options(rv)
     rv = add_cache_options(rv)
     subparsers = rv.add_subparsers(
         dest="command",
         help="Commands:",
     )
+    p = subparsers.add_parser("build")
+    p = add_builder_options(p)
     return (rv, subparsers)

@@ -11,6 +11,7 @@ import warnings
 from maloja.model import Gateway
 from maloja.model import Network
 from maloja.model import Template
+from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.planner import check_objects
@@ -39,9 +40,10 @@ class Builder:
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
 
+        prototypes = self.plans[VApp] + self.plans[Template]
         data = {
             "appliance": {
-                "name": uuid.uuid4().hex,
+                "name": prototypes[0].name,
                 "description": "Created by Maloja builder",
                 "vms": self.plans[Vm],
             },

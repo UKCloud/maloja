@@ -53,9 +53,6 @@ def add_planner_options(parser):
         default=sys.stdin,
         help="Send a design to the planner"
     )
-    parser.add_argument(
-        "--output", default=DFLT_LOCN,
-        help="path to output directory [{}]".format(DFLT_LOCN))
     return parser
 
 def parser(description=__doc__):

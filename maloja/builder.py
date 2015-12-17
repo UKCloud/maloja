@@ -101,26 +101,3 @@ def main(args):
         if i.done()
     ]
     return 0
-
-
-def run():
-    p = maloja.cli.parser(description=__doc__)
-    p = maloja.cli.add_common_options(p)
-    p = maloja.cli.add_api_options(p)
-    p = maloja.cli.add_builder_options(p)
-    p = maloja.cli.add_planner_options(p)
-    args = p.parse_args()
-    rv = 0
-    if args.version:
-        sys.stdout.write(maloja.__version__ + "\n")
-    else:
-        rv = main(args)
-
-    if rv == 2:
-        sys.stderr.write("\n Missing command.\n\n")
-        p.print_help()
-
-    sys.exit(rv)
-
-if __name__ == "__main__":
-    run()

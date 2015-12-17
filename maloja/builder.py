@@ -38,9 +38,6 @@ class Builder:
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
 
-        template = self.plans[Template][0]
-        vms = self.plans[Vm]
-        log.debug(vms)
         data = {
             "appliance": {
                 "name": uuid.uuid4().hex,
@@ -48,10 +45,7 @@ class Builder:
                 "vms": self.plans[Vm],
             },
             "networks": self.plans[Network],
-            "template": {
-                "name": template.name,
-                "href": template.href
-            }
+            "template": self.plans[Template][0]
         }
 
         macro = PageTemplateFile(

@@ -1,5 +1,10 @@
 %YAML 1.2
 ---
+- &VDC !!omap
+    - name: Skyscape Python Development (IL2-PROD-STANDARD)
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1
+    - type: application/vnd.vmware.vcloud.vdc+xml
+    - description: Skyscape Python Development (IL2-PROD-STANDARD)
 - &EDGE !!omap
     - name: gw_01
     - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56

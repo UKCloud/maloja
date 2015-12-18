@@ -20,6 +20,7 @@ if (maj, min_) < (2, 7):
     ]
 if (maj, min_) < (3, 3):
     deps += [
+        "ipaddress>=1.0.15",
         "requests-futures>=0.9.5"
     ]
 if (maj, min_) == (3, 3):
@@ -84,6 +85,9 @@ setup(
             "doc/html/_static/*.gif",
             "doc/html/_static/*.js",
             "doc/html/_static/*.png",
+        ],
+        "maloja.test": [
+            "*.yaml",
         ],
         "maloja.workflow": [
             "*.pt",

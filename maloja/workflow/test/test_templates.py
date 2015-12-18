@@ -21,23 +21,29 @@ class ComposeVAppTests(unittest.TestCase):
                         {
                             "name": "vm_001",
                             "href": "http://cloud.io/vms/1",
-                            "networks": [
-                                {"href": "http://cloud.io/networks/3"},
-                                {"href": "http://cloud.io/networks/4"},
+                            "networkconnections": [
+                                {
+                                    "href": "http://cloud.io/networks/3",
+                                    "isConnected": True,
+                                },
+                                {
+                                    "href": "http://cloud.io/networks/4",
+                                    "isConnected": True,
+                                },
                             ],
-                            "script": "#!/bin/sh\n",
+                            "guestcustomization": "#!/bin/sh\n",
                         },
                 ],
             },
             "networks": [{
                 "interface": "public ethernet",
                 "name": "managed-external-network",
-                "href": "http://cloud/api/networks/12345678"
+                "href": "http://cloud/api/networks/12345678",
             },
             {
                 "interface": "data network",
                 "name": "managed-data-network",
-                "href": "http://cloud/api/networks/98765432"
+                "href": "http://cloud/api/networks/98765432",
             },
             ],
             "template": {

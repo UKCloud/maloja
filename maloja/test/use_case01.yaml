@@ -1,0 +1,88 @@
+%YAML 1.2
+---
+- &VDC !!omap
+    - name: Skyscape Python Development (IL2-PROD-STANDARD)
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1
+    - type: application/vnd.vmware.vcloud.vdc+xml
+    - description: Skyscape Python Development (IL2-PROD-STANDARD)
+- &EDGE !!omap
+    - name: gw_01
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
+    - type: application/vnd.vmware.admin.edgeGateway+xml
+    - fw:
+      - description: Web service
+        int_addr:
+        - 51.179.194.122
+        - 51.179.194.123
+        int_port: 80
+        ext_addr:
+        ext_port: 80
+    - dnat:
+      - int_addr:
+        - 10.124.24.62
+        int_port: 80
+        ext_addr:
+        - 51.179.194.122
+        ext_port: 80
+    - snat:
+      - int_addr:
+        - 10.124.24.62
+        int_port:
+        ext_addr:
+        - 51.179.194.122
+        ext_port:
+- &NET !!omap
+    - name: USER_NET
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 10.124.24.1
+    - netmask: 255.255.255.192
+    - dnsSuffix:
+    - dns:
+      - 10.124.15.3
+      - 10.124.15.3
+- &VAPP !!omap
+    - name: use-case01 # skeleton_template has no VMs
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-d0576ba5-0b3a-4019-88f5-a69f078a9ae9
+    - type: application/vnd.vmware.vcloud.vAppTemplate+xml
+    - dateCreated: 2015-12-03T15:07:57.580Z
+- &VM !!omap
+    - name: node-001
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-7113a6c2-9bbd-40e8-bef6-ded6bb5a5e10
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - dateCreated: 2013-07-17T10:38:56.457+01:00
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - hardwareVersion: 8
+    - cpu:
+    - memoryMB: 2048
+    - networkcards: []
+    - harddisks: []
+    - cd:
+    - floppydisk:
+    - isBusy: false
+    - isDeleted: false
+    - isDeployed: false
+    - isInMaintenanceMode: false
+    - isPublished: false
+    - status:
+    - storageProfileName: STANDARD-Any
+    - vmToolsVersion: 0
+    - networkconnections:
+      - name: NIC0_NET
+        ip: 192.168.2.100
+        isConnected: false
+        macAddress: 00:50:56:01:aa:99
+        ipAddressAllocationMode: POOL
+    - guestcustomization:
+- << : *VM
+  name: node-062
+  cpu: 2
+  memoryMB: 4096
+  isDeployed: true
+  status: POWERED_ON
+  networkconnections:
+    - name: USER_NET
+      ip: 10.124.24.62
+      isConnected: true
+      macAddress:
+      ipAddressAllocationMode: STATIC

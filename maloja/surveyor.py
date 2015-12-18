@@ -7,13 +7,19 @@ import concurrent.futures
 import functools
 import logging
 import os
+import os.path
 import threading
+import time
 from urllib.parse import quote as urlquote
 from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
+from requests.exceptions import HTTPError
+
 from maloja.model import Catalog
+from maloja.model import Gateway
+from maloja.model import Network
 from maloja.model import Template
 from maloja.model import Org
 from maloja.model import VApp
@@ -25,6 +31,8 @@ from maloja.model import yaml_loads
 import maloja.types
 from maloja.types import Status
 
+from maloja.workflow.utils import split_to_path
+
 
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
     elements = tree.iterfind(xpath, namespaces=namespaces)
@@ -33,6 +41,49 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
     else:
         query = set(kwargs.items())
         return (i for i in elements if query.issubset(set(i.attrib.items())))
+
+
+def filter_records(*args, root="", key="", value=""):
+    """
+    Reads files from the argument list, turns them into objects and yields
+    those which match key, value criteria.
+
+    Matching of attributes flattens the object hierarchy. Attributes at the top
+    level of the object take precedence over those with the same name further
+    down in its children.
+
+    Return values are 2-tuples of object and path.
+
+    """
+    for fP in args:
+        path = split_to_path(fP, root)
+        name = os.path.splitext(path.file)[0]
+        try:
+            typ, pattern = Surveyor.patterns[name]
+        except KeyError:
+            continue
+
+        with open(fP, 'r') as data:
+            obj = typ(**yaml_loads(data.read()))
+            if obj is None:
+                continue
+            if not key:
+                yield (obj, path)
+                continue
+            else:
+                data = dict(
+                    [(k, getattr(item, k))
+                    for seq in [
+                        i for i in vars(obj).values() if isinstance(i, list)
+                    ]
+                    for item in seq
+                    for k in getattr(item, "_fields", [])],
+                    **vars(obj)
+                )
+                match = data.get(key.strip(), "")
+                if value.strip() in str(match):
+                    yield (obj, path)
+
 
 class Surveyor:
 
@@ -213,6 +264,116 @@ class Surveyor:
             results.put((status, None))
 
     @staticmethod
+    def on_edgeGateway(path, session, response, results=None, status=None):
+        log = logging.getLogger("maloja.surveyor.on_edgeGateway")
+        if status:
+            child = status._replace(level=status.level + 1)
+        else:
+            child = Status(1, 1, 1)
+
+        obj = None
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(response.text)
+        backoff = 5
+        try:
+            elem = next(tree.iter(ns + "EdgeGatewayRecord"))
+            while True:
+                op = session.get(elem.attrib.get("href"))
+                done, not_done = concurrent.futures.wait(
+                    [op], timeout=10,
+                    return_when=concurrent.futures.FIRST_EXCEPTION
+                )
+                try:
+                    response = done.pop().result()
+                    if response.status_code != 200:
+                        raise HTTPError(response.status_code)
+                except (HTTPError, KeyError):
+                    time.sleep(backoff)
+                    backoff += 5
+                else:
+                    tree = ET.fromstring(response.text)
+                    obj = Gateway().feed_xml(tree, ns=ns)
+                    break
+
+        except Exception as e:
+            log.error(e)
+
+        if obj is None:
+            log.warning("Found no Edge Gateway.")
+
+        path = path._replace(file="edge.yaml")
+        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
+        try:
+            Surveyor.locks[path].acquire()
+            with open(
+                os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
+            ) as output:
+                try:
+                    data = yaml_dumps(obj)
+                except Exception as e:
+                    log.error(e)
+                output.write(data)
+                output.flush()
+        finally:
+            Surveyor.locks[path].release()
+
+        if results and status:
+            results.put((status, None))
+
+    @staticmethod
+    def on_orgVdcNetwork(path, session, response, results=None, status=None):
+        log = logging.getLogger("maloja.surveyor.on_orgVdcNetwork")
+        if status:
+            child = status._replace(level=status.level + 1)
+        else:
+            child = Status(1, 1, 1)
+
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(response.text)
+        backoff = 5
+        try:
+            for elem in tree.iter(ns + "OrgVdcNetworkRecord"):
+                while True:
+                    op = session.get(elem.attrib.get("href"))
+                    done, not_done = concurrent.futures.wait(
+                        [op], timeout=10,
+                        return_when=concurrent.futures.FIRST_EXCEPTION
+                    )
+                    try:
+                        response = done.pop().result()
+                        if response.status_code != 200:
+                            raise HTTPError(response.status_code)
+                    except (HTTPError, KeyError):
+                        time.sleep(backoff)
+                        backoff += 5
+                    else:
+                        tree = ET.fromstring(response.text)
+                        obj = Network().feed_xml(tree, ns=ns)
+                        break
+
+                path = path._replace(file="network-{0.name}.yaml".format(obj))
+                os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
+                try:
+                    Surveyor.locks[path].acquire()
+                    with open(
+                        os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
+                    ) as output:
+                        try:
+                            data = yaml_dumps(obj)
+                        except Exception as e:
+                            log.error(e)
+                        output.write(data)
+                        output.flush()
+                finally:
+                    Surveyor.locks[path].release()
+
+        except Exception as e:
+            log.error(e)
+
+        if results and status:
+            results.put((status, None))
+
+    @staticmethod
     def on_vapp(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vapp")
         if status:
@@ -300,11 +461,41 @@ class Surveyor:
         finally:
             Surveyor.locks[path].release()
 
+        edgeGWs = find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
+            tree,
+            rel="edgeGateways"
+        )
+
+        orgVdcNets = find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
+            tree,
+            rel="orgVdcNetworks"
+        )
+
         vapps = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",
-            ET.fromstring(response.text)
+            tree
         )
         ops = [session.get(
+            edgeGW.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_edgeGateway,
+                path,
+                results=results,
+                status=child._replace(job=child.job + n)
+            )
+        ) for n, edgeGW in enumerate(edgeGWs)] + [
+            session.get(
+            orgVdcNet.attrib.get("href"),
+            background_callback=functools.partial(
+                Surveyor.on_orgVdcNetwork,
+                path,
+                results=results,
+                status=child._replace(job=child.job + n)
+            )
+        ) for n, orgVdcNet in enumerate(orgVdcNets)] + [
+            session.get(
             vapp.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_vapp,
@@ -313,6 +504,7 @@ class Surveyor:
                 status=child._replace(job=child.job + n)
             )
         ) for n, vapp in enumerate(vapps)]
+
         tasks = concurrent.futures.wait(
             ops, timeout=3 * len(ops),
             return_when=concurrent.futures.FIRST_EXCEPTION

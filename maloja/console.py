@@ -18,6 +18,7 @@ import concurrent.futures
 import ruamel.yaml
 
 from maloja.broker import Broker
+from maloja.broker import create_broker
 from maloja.model import Catalog
 from maloja.model import Org
 from maloja.model import Template
@@ -25,6 +26,7 @@ from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.surveyor import Surveyor
+from maloja.surveyor import filter_records
 from maloja.surveyor import yaml_loads
 from maloja.types import Token
 from maloja.types import Credentials
@@ -38,22 +40,24 @@ from maloja.workflow.utils import plugin_interface
 
 class Console(cmd.Cmd):
 
-    def __init__(self, operations, results, creds, path, *args, loop=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    tasks = {
+        "input_task": None,
+        "command_task": None,
+        "results_task": None,
+    }
+
+    def __init__(self, operations, results, creds, ref, entry="", loop=None, **kwargs):
+        super().__init__(**kwargs)
         self.operations = operations
         self.results = results
         self.creds = creds
-        self.project = path
+        self.ref = ref
+        self.entry = entry
         if loop is None:
             self.commands = queue.Queue()
         else:
             self.commands = asyncio.Queue(loop=loop)
         self.prompt = ""
-        self.tasks = {
-            "input_task": None,
-            "command_task": None,
-            "results_task": None,
-        }
         self.token = None
         self.stop = False
         self.seq = itertools.count(1)
@@ -169,9 +173,24 @@ class Console(cmd.Cmd):
         log = logging.getLogger("maloja.console.do_survey")
         line = arg.strip()
 
-        msg = Survey(self.project)
+        msg = Survey(self.ref)
         packet = (next(self.seq), msg)
         self.operations.put(packet)
+
+    def do_build(self, arg):
+        """
+        Starts building from entry
+
+        """
+        for dirPath, dirNames, fileNames in os.walk(self.entry):
+            for fN in fileNames:
+                fP = os.path.join(dirPath, fN)
+                try:
+                    obj, path = next(filter_records(fP))
+                except StopIteration:
+                    continue
+                else:
+                    print(obj)
 
     def do_clear(self, arg):
         """
@@ -254,34 +273,15 @@ class Console(cmd.Cmd):
 
         typ, pattern = Surveyor.patterns[name]
         hits = glob.glob(
-            os.path.join(self.project.root, self.project.project, pattern)
+            os.path.join(self.ref.root, self.ref.project, pattern)
         )
-        results = []
-        for hit in hits:
-            bits = os.path.split(
-                hit.replace(os.path.join(self.project.root, self.project.project), "")
+        results = [
+            (obj, path)
+            for obj, path in filter_records(
+                *hits, root=self.ref.root, key=key, value=value
             )
-            #path = Path(self.project.root, self.project.project, file=bits[-1])
-            with open(hit, 'r') as data:
-                obj = typ(**yaml_loads(data.read()))
-                if obj is None:
-                    continue
-                if not key: 
-                    results.append((obj, split_to_path(hit, self.project.root)))
-                    continue
-                else:
-                    data = dict(
-                        [(k, getattr(item, k))
-                        for seq in [
-                            i for i in vars(obj).values() if isinstance(i, list)
-                        ]
-                        for item in seq
-                        for k in getattr(item, "_fields", [])],
-                        **vars(obj))
-                    match = data.get(key.strip(), "")
-                    if value.strip() in str(match):
-                        results.append((obj, split_to_path(hit, self.project.root)))
-                        continue
+            if path.file.startswith(name)
+        ]
 
         if len(results) > 1:
             if index is not None:
@@ -310,24 +310,18 @@ class Console(cmd.Cmd):
 
 
 def create_console(operations, results, options, path, loop=None):
+    n = max(16, len(Broker.tasks) + len(Console.tasks) + len(path))
+    broker = create_broker(operations, results, max_workers=n, loop=loop)
+
     creds = Credentials(options.url, options.user, None)
-    console = Console(operations, results, creds, path, loop=loop)
-    executor = concurrent.futures.ThreadPoolExecutor(
-        max(4, len(Broker.tasks) + len(console.tasks) + 2 * len(path))
-    )
-    broker = Broker(operations, results, executor=executor, loop=loop)
+    console = Console(operations, results, creds, path, options.output, loop=loop)
     if loop is not None:
         # launch asyncio coroutines
         for coro in console.routines:
             loop.create_task(coro(executor, loop=loop))
     else:
-        # launch looping threads
-        for task in broker.tasks:
-            func = getattr(broker, task)
-            broker.tasks[task] = executor.submit(func)
-            
         for task in console.tasks:
             func = getattr(console, task)
-            console.tasks[task] = executor.submit(func)
-            
+            console.tasks[task] = broker.session.executor.submit(func)
+
     return console

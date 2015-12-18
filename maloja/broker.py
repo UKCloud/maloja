@@ -15,8 +15,10 @@ import warnings
 import requests
 from requests_futures.sessions import FuturesSession
 
+from maloja.builder import Builder
 from maloja.surveyor import Surveyor
 from maloja.types import Credentials
+from maloja.types import Design
 from maloja.types import Plugin
 from maloja.types import Status
 from maloja.types import Stop
@@ -46,6 +48,26 @@ def credentials_handler(msg, session, results=None, status=None, **kwargs):
     future = session.post(url)
     return (future,)
     
+@handler.register(Design)
+def design_handler(
+    msg, session, token,
+    callback=None, results=None, status=None,
+    **kwargs
+):
+    log = logging.getLogger("maloja.broker.design_handler")
+    try:
+        builder = Builder(msg.objects, results, session.executor)
+    except Exception as e:
+        log.error(str(getattr(e, "args", e) or e))
+        return tuple()
+    else:
+        headers = {
+            "Accept": "application/*+xml;version=5.5",
+            token.key: token.value,
+        }
+        session.headers.update(headers)
+        return (session.executor.submit(builder, session, token, callback, status),)
+
 @handler.register(Stop)
 def stop_handler(msg, session, token, **kwargs):
     log = logging.getLogger("maloja.broker.stop_handler")
@@ -163,3 +185,12 @@ class Broker:
                 self.results.put((status, reply))
         else:
             return n
+
+def create_broker(operations, results, max_workers=None, loop=None):
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers)
+    broker = Broker(operations, results, executor=executor, loop=loop)
+    for task in broker.tasks:
+        func = getattr(broker, task)
+        broker.tasks[task] = executor.submit(func)
+
+    return broker

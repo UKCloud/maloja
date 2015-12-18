@@ -291,6 +291,7 @@ vm_yaml = """
 --- !!omap
 - name: Test data
 - href:
+- type: application/vnd.vmware.vcloud.vm+xml
 - dateCreated: 2015-08-25 20:37:28.940000
 - guestOs: Ubuntu 12.04 LTS
 - hardwareVersion: 8

@@ -4,6 +4,7 @@
 import argparse
 import logging
 import os.path
+import sys
 
 __doc__ = """
 CLI Interface to Maloja toolkit.
@@ -22,8 +23,8 @@ def add_api_options(parser):
 
 def add_builder_options(parser):
     parser.add_argument(
-        "--input", required=False, default="",
-        help="path to input directory")
+        "--input", required=True,
+        help="path to design file")
     return parser
 
 def add_cache_options(parser):
@@ -46,16 +47,29 @@ def add_common_options(parser):
         help="Set a file path for log output")
     return parser
 
-def parsers(description=__doc__):
-    parser =  argparse.ArgumentParser(
+def add_planner_options(parser):
+    parser.add_argument(
+        "design", nargs="?", type=argparse.FileType("r"),
+        default=sys.stdin,
+        help="Send a design to the planner"
+    )
+    return parser
+
+def parser(description=__doc__):
+    return argparse.ArgumentParser(
         description,
         fromfile_prefix_chars="@"
     )
-    parser = add_common_options(parser)
-    parser = add_api_options(parser)
-    parser = add_cache_options(parser)
-    subparsers = parser.add_subparsers(
+
+def parsers(description=__doc__):
+    rv =  parser(description)
+    rv = add_common_options(rv)
+    rv = add_api_options(rv)
+    rv = add_cache_options(rv)
+    subparsers = rv.add_subparsers(
         dest="command",
         help="Commands:",
     )
-    return (parser, subparsers)
+    p = subparsers.add_parser("build")
+    p = add_builder_options(p)
+    return (rv, subparsers)

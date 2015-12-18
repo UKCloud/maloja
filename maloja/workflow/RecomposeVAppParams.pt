@@ -1,0 +1,59 @@
+<RecomposeVAppParams xmlns="http://www.vmware.com/vcloud/v1.5"
+xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1"
+tal:attributes="
+name appliance.name;
+deploy 'false';
+powerOn 'false';">
+<Description tal:content="appliance.description"></Description>
+<InstantiationParams>
+<NetworkConfigSection>
+    <ovf:Info>Configuration parameters for logical networks</ovf:Info>
+    <NetworkConfig tal:repeat="(n, network) enumerate(networks)"
+tal:attributes="
+networkName network.name;">
+    <Configuration>
+        <ParentNetwork
+tal:attributes="
+name network.name;
+href network.href;"/>
+        <FenceMode>bridged</FenceMode>
+    </Configuration>
+    </NetworkConfig>
+</NetworkConfigSection>
+</InstantiationParams>
+
+<SourcedItem tal:repeat="vm appliance.vms" >
+<Source tal:attributes="href vm.href;" />
+  <InstantiationParams>
+     <NetworkConnectionSection
+     xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1"
+     type="application/vnd.vmware.vcloud.networkConnectionSection+xml"
+     ovf:required="false">
+        <ovf:Info />
+        <PrimaryNetworkConnectionIndex>0</PrimaryNetworkConnectionIndex>
+        <NetworkConnection tal:repeat="(n, net) enumerate(vm.networkconnections)"
+tal:attributes="
+network networks[n].name;">
+           <NetworkConnectionIndex tal:content="n"></NetworkConnectionIndex>
+           <IsConnected tal:content="'true' if net.isConnected else 'false'"></IsConnected>
+           <IpAddressAllocationMode>POOL</IpAddressAllocationMode>
+        </NetworkConnection>
+     </NetworkConnectionSection>
+<GuestCustomizationSection
+tal:attributes="
+xmlns:ovf 'http://schemas.dmtf.org/ovf/envelope/1';
+xmlns:vcloud 'http://www.vmware.com/vcloud/v1.5';
+ovf:required 'false';
+type 'application/vnd.vmware.vcloud.guestCustomizationSection+xml'">
+    <ovf:Info>Specifies Guest OS Customization Settings</ovf:Info>
+    <Enabled>true</Enabled>
+    <AdminPasswordEnabled>false</AdminPasswordEnabled>
+    <AdminAutoLogonEnabled>false</AdminAutoLogonEnabled>
+    <AdminAutoLogonCount>0</AdminAutoLogonCount>
+    <CustomizationScript tal:content="vm.guestcustomization"></CustomizationScript>
+<ComputerName
+tal:content="vm.name"></ComputerName>
+</GuestCustomizationSection>
+  </InstantiationParams>
+</SourcedItem>
+</RecomposeVAppParams>

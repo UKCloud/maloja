@@ -55,8 +55,8 @@ class Builder:
             "appliance": {
                 "name": prototypes[0].name,
                 "description": "Created by Maloja builder",
-                #"vms": self.plans[Vm],
-                "vms": [],
+                "vms": self.plans[Vm],
+                #"vms": [],
             },
             "networks": self.plans[Network],
             "template": self.plans[Template][0]
@@ -64,18 +64,21 @@ class Builder:
 
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
-                "maloja.workflow", "ComposeVAppParams.pt"
+                "maloja.workflow", "RecomposeVAppParams.pt"
             )
         )
 
         url = "{vdc.href}/{endpoint}".format(
             vdc=self.plans[Vdc][0],
-            endpoint="action/composeVApp"
+            endpoint="action/recomposeVApp"
         )
         xml = macro(**data)
         op = session.post(url, data=xml)
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.composeVAppParams+xml"}
+        )
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
         )
 
         done, not_done = concurrent.futures.wait(
@@ -88,6 +91,10 @@ class Builder:
             if response.status_code == 400:
                 if "DUPLICATE_NAME" in response.text:
                     log.warning("Request refused: duplicate name.")
+                else:
+                    log.warning(response.text)
+            else:
+                log.info(response.text)
         except Exception as e:
             log.error(e)
 

@@ -40,51 +40,82 @@ class Builder:
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
 
-        # Debug
-        op = session.get(self.plans[Template][0].href)
-        done, not_done = concurrent.futures.wait(
-            [op], timeout=6,
-            return_when=concurrent.futures.FIRST_EXCEPTION
-        )
-        response = done.pop().result()
-        log.debug(response.text)
-        # End debug
+        # Step 1: Instantiate empty VApp
 
         prototypes = self.plans[VApp] + self.plans[Template]
-        data = {
-            "appliance": {
-                "name": prototypes[0].name,
-                "description": "Created by Maloja builder",
-                "vms": self.plans[Vm],
-                #"vms": [],
-            },
-            "networks": self.plans[Network],
-            "template": self.plans[Template][0]
-        }
-
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
-                "maloja.workflow", "RecomposeVAppParams.pt"
+                "maloja.workflow", "InstantiateVAppTemplateParams.pt"
             )
         )
-
+        data = {
+            "appliance": {
+                "name": uuid.uuid4().hex,
+                "description": "Created by Maloja builder",
+                "vms": [],
+            },
+            "networks": [],
+            "template": prototypes[0]
+        }
         url = "{vdc.href}/{endpoint}".format(
             vdc=self.plans[Vdc][0],
-            endpoint="action/recomposeVApp"
+            endpoint="action/instantiateVAppTemplate"
         )
         xml = macro(**data)
         op = session.post(url, data=xml)
         session.headers.update(
-            {"Content-Type": "application/vnd.vmware.vcloud.composeVAppParams+xml"}
-        )
-        session.headers.update(
-            {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
-        )
+            {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
 
         done, not_done = concurrent.futures.wait(
             [op], timeout=6,
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
+
+        ## Step 2: Get Recompose Link
+        #op = session.get(self.plans[Template][0].href)
+        #done, not_done = concurrent.futures.wait(
+        #    [op], timeout=6,
+        #    return_when=concurrent.futures.FIRST_EXCEPTION
+        #)
+        #response = done.pop().result()
+        #log.debug(response.text)
+        # End debug
+
+        #prototypes = self.plans[VApp] + self.plans[Template]
+        #data = {
+        #    "appliance": {
+        #        "name": prototypes[0].name,
+        #        "description": "Created by Maloja builder",
+        #        "vms": self.plans[Vm],
+        #        #"vms": [],
+        #    },
+        #    "networks": self.plans[Network],
+        #    "template": self.plans[Template][0]
+        #}
+
+        #macro = PageTemplateFile(
+        #    pkg_resources.resource_filename(
+        #        "maloja.workflow", "RecomposeVAppParams.pt"
+        #    )
+        #)
+
+        #url = "{vdc.href}/{endpoint}".format(
+        #    vdc=self.plans[Vdc][0],
+        #    endpoint="action/recomposeVApp"
+        #)
+        #xml = macro(**data)
+        #op = session.post(url, data=xml)
+        #session.headers.update(
+        #    {"Content-Type": "application/vnd.vmware.vcloud.composeVAppParams+xml"}
+        #)
+        #session.headers.update(
+        #    {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
+        #)
+
+        #done, not_done = concurrent.futures.wait(
+        #    [op], timeout=6,
+        #    return_when=concurrent.futures.FIRST_EXCEPTION
+        #)
 
         try:
             response = done.pop().result()

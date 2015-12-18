@@ -42,10 +42,10 @@
       - 10.124.15.3
       - 10.124.15.3
 - &VAPP !!omap
-    - name: use-case01
-    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-ec0314d0-22e2-4c32-aa73-df7e8edc92b6
+    - name: use-case01 # skeleton_template has no VMs
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-d0576ba5-0b3a-4019-88f5-a69f078a9ae9
     - type: application/vnd.vmware.vcloud.vAppTemplate+xml
-    - dateCreated: 2015-02-20T10:30:49.210Z
+    - dateCreated: 2015-12-03T15:07:57.580Z
 - &VM !!omap
     - name: node-001
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-7113a6c2-9bbd-40e8-bef6-ded6bb5a5e10

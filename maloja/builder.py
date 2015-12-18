@@ -40,12 +40,23 @@ class Builder:
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder")
 
+        # Debug
+        op = session.get(self.plans[Template][0].href)
+        done, not_done = concurrent.futures.wait(
+            [op], timeout=6,
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+        response = done.pop().result()
+        log.debug(response.text)
+        # End debug
+
         prototypes = self.plans[VApp] + self.plans[Template]
         data = {
             "appliance": {
                 "name": prototypes[0].name,
                 "description": "Created by Maloja builder",
-                "vms": self.plans[Vm],
+                #"vms": self.plans[Vm],
+                "vms": [],
             },
             "networks": self.plans[Network],
             "template": self.plans[Template][0]
@@ -71,10 +82,14 @@ class Builder:
             [op], timeout=6,
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
-        response = done.pop().result()
-        log.debug(xml)
-        log.debug(response.status_code)
-        log.debug(response.text)
+
+        try:
+            response = done.pop().result()
+            if response.status_code == 400:
+                if "DUPLICATE_NAME" in response.text:
+                    log.warning("Request refused: duplicate name.")
+        except Exception as e:
+            log.error(e)
 
         if status:
             self.results.put((status, Stop()))

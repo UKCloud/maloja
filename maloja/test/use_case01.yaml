@@ -33,7 +33,7 @@
         ext_port:
 - &NET !!omap
     - name: USER_NET
-    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/9191a38b-e244-40b2-a3bb-46079fa46bab
     - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
     - defaultGateway: 10.124.24.1
     - netmask: 255.255.255.192

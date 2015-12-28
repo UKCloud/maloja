@@ -31,16 +31,8 @@ from maloja.model import yaml_loads
 import maloja.types
 from maloja.types import Status
 
+from maloja.workflow.utils import find_xpath
 from maloja.workflow.utils import split_to_path
-
-
-def find_xpath(xpath, tree, namespaces={}, **kwargs):
-    elements = tree.iterfind(xpath, namespaces=namespaces)
-    if not kwargs:
-        return elements
-    else:
-        query = set(kwargs.items())
-        return (i for i in elements if query.issubset(set(i.attrib.items())))
 
 
 def filter_records(*args, root="", key="", value=""):

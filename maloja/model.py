@@ -188,10 +188,14 @@ class Task(DataObject):
         ("name", None),
         ("href", None),
         ("type", None),
+        ("operationName", None),
+        ("startTime", None),
+        ("status", None),
     ]
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         log = logging.getLogger("maloja.model.Task")
+        #TODO: Owner, Organization
         super().feed_xml(tree, ns=ns)
         return self
 

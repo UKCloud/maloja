@@ -19,6 +19,7 @@ from maloja.model import yaml_loads
 import maloja.surveyor
 import maloja.types
 
+from maloja.workflow.utils import find_xpath
 
 template_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <VAppTemplate xmlns="http://www.vmware.com/vcloud/v1.5" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" goldMaster="false" status="8" name="Windows_2008_R2_STD_50GB_MediumHighMem_v1.0.2" id="urn:vcloud:vm:359b91ab-bdd1-4091-a30f-da18e264d311" href="https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-359b91ab-bdd1-4091-a30f-da18e264d311" type="application/vnd.vmware.vcloud.vm+xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.dmtf.org/ovf/envelope/1 http://schemas.dmtf.org/ovf/envelope/1/dsp8023_1.1.0.xsd http://www.vmware.com/vcloud/v1.5 http://10.10.6.11/api/v1.5/schema/master.xsd">
@@ -357,16 +358,21 @@ class TaskTests(unittest.TestCase):
     def test_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(TaskTests.xml)
+        task = next(find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree))
         obj = maloja.model.Task()
-        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Task)
-        self.assertEqual("Default vDC", obj.name)
-        self.assertEqual("Default vDC", obj.description)
+        self.assertIsInstance(obj.feed_xml(task, ns=ns), maloja.model.Task)
+        self.assertEqual("vdcInstantiateVapp", obj.operationName)
+        self.assertEqual("2015-12-28T11:33:19.414Z", obj.startTime)
+        self.assertEqual("running", obj.status)
         self.assertEqual(
-            "https://vcloud.example.com/api/vdc/afaafb99-228c-4838-ad07-5bf3aa649d42",
+            "https://api.vcd.portal.skyscapecloud.com/api/task/3f20ec16-3780-43ca-840a-0e2b727b24a4",
             obj.href)
         self.assertEqual(
-            "application/vnd.vmware.vcloud.vdc+xml",
+            "application/vnd.vmware.vcloud.task+xml",
             obj.type)
+        self.assertIsInstance(obj.organisation, maloja.model.Org)
+        self.assertIsInstance(obj.owner, maloja.model.VApp)
 
 
 class VmTests(unittest.TestCase):

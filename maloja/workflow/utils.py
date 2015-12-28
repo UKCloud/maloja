@@ -12,8 +12,17 @@ import os.path
 import pkg_resources
 
 Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node", "file"])
-
  
+
+def find_xpath(xpath, tree, namespaces={}, **kwargs):
+    elements = tree.iterfind(xpath, namespaces=namespaces)
+    if not kwargs:
+        return elements
+    else:
+        query = set(kwargs.items())
+        return (i for i in elements if query.issubset(set(i.attrib.items())))
+
+
 def group_by_type(items):
     return defaultdict(list,
         {k: list(v) for k, v in itertools.groupby(items, key=type)}

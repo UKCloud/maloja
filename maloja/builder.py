@@ -7,9 +7,11 @@ import logging
 import sys
 import uuid
 import warnings
+import xml.etree.ElementTree as ET
 
 from maloja.model import Gateway
 from maloja.model import Network
+from maloja.model import Task
 from maloja.model import Template
 from maloja.model import VApp
 from maloja.model import Vdc
@@ -18,6 +20,7 @@ from maloja.planner import check_objects
 from maloja.planner import read_objects
 from maloja.types import Credentials
 from maloja.types import Stop
+from maloja.workflow.utils import find_xpath
 from maloja.workflow.utils import group_by_type
 
 from chameleon import PageTemplateFile
@@ -71,6 +74,16 @@ class Builder:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
+        response = done.pop().result()
+        tree = ET.fromstring(response.text)
+        try:
+            task = Task().feed_xml(next(find_xpath(
+                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
+        except Exception as e:
+            log.error(e)
+        else:
+            log.info(task)
+
         ## Step 2: Get Recompose Link
         #op = session.get(self.plans[Template][0].href)
         #done, not_done = concurrent.futures.wait(
@@ -117,6 +130,7 @@ class Builder:
         #    return_when=concurrent.futures.FIRST_EXCEPTION
         #)
 
+        done = None
         try:
             response = done.pop().result()
             if response.status_code == 400:

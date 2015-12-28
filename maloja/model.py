@@ -182,6 +182,19 @@ class Org(DataObject):
         ("fullName", None),
     ]
 
+class Task(DataObject):
+
+    _defaults = [
+        ("name", None),
+        ("href", None),
+        ("type", None),
+    ]
+
+    def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        log = logging.getLogger("maloja.model.Task")
+        super().feed_xml(tree, ns=ns)
+        return self
+
 class Template(DataObject):
 
     _defaults = [

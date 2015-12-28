@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from collections import namedtuple
+import textwrap
 import unittest
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
@@ -325,6 +326,47 @@ vm_yaml = """
 - guestcustomization:
   - enabled:
 """.lstrip()
+
+class TaskTests(unittest.TestCase):
+    xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><VApp
+    xmlns="http://www.vmware.com/vcloud/v1.5" ovfDescriptorUploaded="true" deployed="false" status="0" name="f52ec6bedae4491c8ab21fb58f89b003" id="urn:vcloud:vapp:b5f878a3-6e20-4f92-b39d-671ae8455ba4" href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4" type="application/vnd.vmware.vcloud.vApp+xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vmware.com/vcloud/v1.5 http://10.10.6.13/api/v1.5/schema/master.xsd">
+        <Link rel="down" href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4/controlAccess/" type="application/vnd.vmware.vcloud.controlAccess+xml"/>
+        <Link rel="up" href="https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1" type="application/vnd.vmware.vcloud.vdc+xml"/>
+        <Link rel="down" href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4/owner" type="application/vnd.vmware.vcloud.owner+xml"/>
+        <Link rel="down" href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4/metadata" type="application/vnd.vmware.vcloud.metadata+xml"/>
+        <Link rel="ovf" href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4/ovf" type="text/xml"/>
+        <Link rel="down" href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4/productSections/" type="application/vnd.vmware.vcloud.productSections+xml"/>
+        <Description>Created by Maloja builder</Description>
+        <Tasks>
+            <Task cancelRequested="false" expiryTime="2016-03-27T11:33:19.414+01:00" operation="Creating Virtual Application f52ec6bedae4491c8ab21fb58f89b003(b5f878a3-6e20-4f92-b39d-671ae8455ba4)" operationName="vdcInstantiateVapp" serviceNamespace="com.vmware.vcloud" startTime="2015-12-28T11:33:19.414Z" status="running" name="task" id="urn:vcloud:task:3f20ec16-3780-43ca-840a-0e2b727b24a4" href="https://api.vcd.portal.skyscapecloud.com/api/task/3f20ec16-3780-43ca-840a-0e2b727b24a4" type="application/vnd.vmware.vcloud.task+xml">
+                <Link rel="task:cancel" href="https://api.vcd.portal.skyscapecloud.com/api/task/3f20ec16-3780-43ca-840a-0e2b727b24a4/action/cancel"/>
+                <Owner href="https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4" name="f52ec6bedae4491c8ab21fb58f89b003" type="application/vnd.vmware.vcloud.vApp+xml"/>
+                <User href="https://api.vcd.portal.skyscapecloud.com/api/admin/user/13f0783d-4f0b-456e-bcd8-fb591f072552" name="4936.572.853fe2" type="application/vnd.vmware.admin.user+xml"/>
+                <Organization href="https://api.vcd.portal.skyscapecloud.com/api/org/1fa3fcf9-72a6-4464-8a5f-e00e4f60cd3a" name="1-572-2-ff369f" type="application/vnd.vmware.vcloud.org+xml"/>
+                <Progress>1</Progress>
+                <Details/>
+            </Task>
+        </Tasks>
+        <DateCreated>2015-12-28T11:33:18.923Z</DateCreated>
+        <Owner type="application/vnd.vmware.vcloud.owner+xml">
+            <User href="https://api.vcd.portal.skyscapecloud.com/api/admin/user/13f0783d-4f0b-456e-bcd8-fb591f072552" name="4936.572.853fe2" type="application/vnd.vmware.admin.user+xml"/>
+        </Owner>
+        <InMaintenanceMode>false</InMaintenanceMode>
+    </VApp>""")
+
+    def test_xml(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(TaskTests.xml)
+        obj = maloja.model.Task()
+        self.assertIsInstance(obj.feed_xml(tree, ns=ns), maloja.model.Task)
+        self.assertEqual("Default vDC", obj.name)
+        self.assertEqual("Default vDC", obj.description)
+        self.assertEqual(
+            "https://vcloud.example.com/api/vdc/afaafb99-228c-4838-ad07-5bf3aa649d42",
+            obj.href)
+        self.assertEqual(
+            "application/vnd.vmware.vcloud.vdc+xml",
+            obj.type)
 
 
 class VmTests(unittest.TestCase):

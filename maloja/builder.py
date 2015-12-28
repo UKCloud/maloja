@@ -5,6 +5,7 @@ import concurrent.futures
 import itertools
 import logging
 import sys
+import time
 import uuid
 import warnings
 import xml.etree.ElementTree as ET
@@ -81,9 +82,18 @@ class Builder:
                 "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
         except Exception as e:
             log.error(e)
-        else:
-            log.info(task)
 
+        # TODO: Timeout/Backoff
+        while task.status == "running":
+            time.sleep(1)
+            done, not_done = concurrent.futures.wait(
+                [session.get(task.href)], timeout=6,
+                return_when=concurrent.futures.FIRST_EXCEPTION
+            )
+            response = done.pop().result()
+            task.feed_xml(ET.fromstring(response.text))
+
+        log.debug(vars(task))
         ## Step 2: Get Recompose Link
         #op = session.get(self.plans[Template][0].href)
         #done, not_done = concurrent.futures.wait(

@@ -189,14 +189,20 @@ class Task(DataObject):
         ("href", None),
         ("type", None),
         ("operationName", None),
+        ("organization", None),
         ("startTime", None),
         ("status", None),
     ]
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         log = logging.getLogger("maloja.model.Task")
-        #TODO: Owner, Organization
         super().feed_xml(tree, ns=ns)
+        org = tree.find(ns + "Organization")
+        self.organization = Org().feed_xml(org, ns=ns)
+        owner = tree.find(ns + "Owner")
+        self.owner = {
+            "application/vnd.vmware.vcloud.vApp+xml": VApp
+        }.get(owner.attrib.get("type"))().feed_xml(owner, ns=ns)
         return self
 
 class Template(DataObject):

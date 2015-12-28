@@ -371,8 +371,22 @@ class TaskTests(unittest.TestCase):
         self.assertEqual(
             "application/vnd.vmware.vcloud.task+xml",
             obj.type)
-        self.assertIsInstance(obj.organisation, maloja.model.Org)
+
+        self.assertIsInstance(obj.organization, maloja.model.Org)
+        self.assertEqual(
+            "https://api.vcd.portal.skyscapecloud.com/api/org/1fa3fcf9-72a6-4464-8a5f-e00e4f60cd3a",
+            obj.organization.href
+        )
+        self.assertEqual("1-572-2-ff369f", obj.organization.name)
+        self.assertEqual("application/vnd.vmware.vcloud.org+xml", obj.organization.type)
+
         self.assertIsInstance(obj.owner, maloja.model.VApp)
+        self.assertEqual(
+            "https://api.vcd.portal.skyscapecloud.com/api/vApp/vapp-b5f878a3-6e20-4f92-b39d-671ae8455ba4",
+            obj.owner.href
+        )
+        self.assertEqual("f52ec6bedae4491c8ab21fb58f89b003", obj.owner.name)
+        self.assertEqual("application/vnd.vmware.vcloud.vApp+xml", obj.owner.type)
 
 
 class VmTests(unittest.TestCase):

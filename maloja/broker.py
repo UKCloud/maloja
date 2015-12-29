@@ -173,7 +173,7 @@ class Broker:
                         msg, self.session, self.token,
                         results=self.results, status=status)
                     tasks = concurrent.futures.wait(
-                        ops, timeout=6,
+                        ops, timeout=None,
                         return_when=concurrent.futures.FIRST_EXCEPTION
                     )
                     response = next(iter(tasks.done)).result(timeout=0)

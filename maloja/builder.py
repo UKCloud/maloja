@@ -35,17 +35,6 @@ The builder module modifies cloud assets according to a design file.
 class Builder:
 
     @staticmethod
-    def get_task(response):
-        tree = ET.fromstring(response.text)
-        try:
-            task = Task().feed_xml(next(find_xpath(
-                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
-        except Exception as e:
-            return None
-        else:
-            return task
-
-    @staticmethod
     def check_response(done, not_done):
         log = logging.getLogger("maloja.builder.check_response")
         response = None
@@ -57,11 +46,30 @@ class Builder:
                 else:
                     log.warning(response.text)
             else:
-                log.info(response.text)
+                log.debug(response.text)
         except Exception as e:
             log.error(e)
         finally:
             return response
+
+    @staticmethod
+    def get_task(response):
+        tree = ET.fromstring(response.text)
+        try:
+            task = Task().feed_xml(next(find_xpath(
+                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
+        except Exception as e:
+            return None
+        else:
+            return task
+
+    @staticmethod
+    def wait_for(*args, timeout=6):
+        done, not_done = concurrent.futures.wait(
+            args, timeout=timeout,
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+        return (done, not_done)
 
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
         log = logging.getLogger("maloja.builder.Builder")
@@ -101,19 +109,17 @@ class Builder:
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
 
-        done, not_done = concurrent.futures.wait(
-            [op], timeout=6,
-            return_when=concurrent.futures.FIRST_EXCEPTION
-        )
+        done, not_done = self.wait_for(op)
 
         try:
             response = self.check_response(done, not_done)
             task = self.get_task(response)
-            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task)
+            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
         except TypeError:
             self.send_status(status)
             return
 
+        done, not_done = self.wait_for(*self.tasks.values(), timeout=300)
         log.debug(self.tasks)
         ## Step 2: Get Recompose Link
         #op = session.get(self.plans[Template][0].href)
@@ -161,7 +167,7 @@ class Builder:
         #    return_when=concurrent.futures.FIRST_EXCEPTION
         #)
 
-    def monitor(self, task):
+    def monitor(self, task, session):
         log = logging.getLogger("maloja.builder.monitor")
         # TODO: Timeout/Backoff
         while task.status == "running":
@@ -179,4 +185,3 @@ class Builder:
     def send_status(self, status):
         if status:
             self.results.put((status, Stop()))
-

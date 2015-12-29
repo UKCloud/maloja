@@ -162,13 +162,8 @@ class Console(cmd.Cmd):
 
     def do_survey(self, arg):
         """
-        'Survey' lists the VApps you can see. Add a number from
-        that menu to survey a specific item, eg::
-            
-            > survey
-            (a list will be shown)
+        'Survey' launches a survey over your cloud assets.
 
-            > survey 3
         """
         log = logging.getLogger("maloja.console.do_survey")
         line = arg.strip()

@@ -172,13 +172,12 @@ class Broker:
                     ops = handler(
                         msg, self.session, self.token,
                         results=self.results, status=status)
-                    tasks = concurrent.futures.wait(
-                        ops, timeout=None,
-                        return_when=concurrent.futures.FIRST_EXCEPTION
-                    )
-                    response = next(iter(tasks.done)).result(timeout=0)
-                    # reply = response.text
-                    # TODO: Handle failure modes and results.not_done
+                    if ops:
+                        tasks = concurrent.futures.wait(
+                            ops, timeout=None,
+                            return_when=concurrent.futures.FIRST_EXCEPTION
+                        )
+                        response = next(iter(tasks.done)).result(timeout=0)
             except Exception as e:
                 log.error(str(getattr(e, "args", e) or e))
             finally:

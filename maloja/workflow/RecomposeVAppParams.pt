@@ -24,6 +24,9 @@ href network.href;"/>
 
 <SourcedItem tal:repeat="vm appliance.vms" >
 <Source tal:attributes="href vm.href;" />
+  <VmGeneralParams>
+    <Name tal:content="vm.name"></Name>
+  </VmGeneralParams>
   <InstantiationParams>
      <NetworkConnectionSection
      xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1"

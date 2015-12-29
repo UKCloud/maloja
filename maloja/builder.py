@@ -53,15 +53,15 @@ class Builder:
             return response
 
     @staticmethod
-    def get_task(response):
+    def get_tasks(response):
         tree = ET.fromstring(response.text)
-        try:
-            task = Task().feed_xml(next(find_xpath(
-                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
-        except Exception as e:
-            return None
-        else:
-            return task
+        return (
+            Task().feed_xml(elem)
+            for elem in find_xpath(
+                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']",
+                tree
+            )
+        )
 
     @staticmethod
     def wait_for(*args, timeout=6):
@@ -113,9 +113,9 @@ class Builder:
 
         try:
             response = self.check_response(done, not_done)
-            task = self.get_task(response)
+            task = next(self.get_tasks(response))
             self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-        except TypeError:
+        except (StopIteration, TypeError):
             self.send_status(status, stop=True)
             return
 
@@ -137,16 +137,14 @@ class Builder:
         response = self.check_response(done, not_done)
         log.debug(response.text)
 
-        # Step 3: Send Recompose form
+        # Step 3: Add Vms
         data = {
             "appliance": {
-                "name": prototypes[0].name,
+                "name": task.owner.name,
                 "description": "Created by Maloja builder",
-                #"vms": self.plans[Vm],
-                "vms": [],
+                "vms": self.plans[Vm],
             },
             "networks": self.plans[Network],
-            "template": self.plans[Template][0]
         }
 
         macro = PageTemplateFile(
@@ -160,6 +158,27 @@ class Builder:
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
         )
+        op = session.post(url, data=xml)
+
+        response = self.check_response(done, not_done)
+        for task in self.get_tasks(response):
+            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
+
+        self.wait_for(*self.tasks.values(), timeout=300)
+        log.debug(xml)
+        log.debug(response.text)
+
+        # Step 4: Rename VApp
+        data = {
+            "appliance": {
+                "name": prototypes[0].name,
+                "description": "Created by Maloja builder",
+                "vms": [],
+            },
+            "networks": [],
+        }
+
+        xml = macro(**data)
         op = session.post(url, data=xml)
 
         done, not_done = self.wait_for(op)

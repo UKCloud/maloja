@@ -31,6 +31,7 @@ from maloja.types import Workflow
 def handler(msg, path=None, queue=None, **kwargs):
     warnings.warn("No handler registered for {0}.".format(type(msg)))
 
+
 @handler.register(Credentials)
 def credentials_handler(msg, session, results=None, status=None, **kwargs):
     log = logging.getLogger("maloja.broker.credentials_handler")
@@ -47,6 +48,7 @@ def credentials_handler(msg, session, results=None, status=None, **kwargs):
     session.auth = (msg.user, msg.password)
     future = session.post(url)
     return (future,)
+
     
 @handler.register(Design)
 def design_handler(
@@ -68,12 +70,14 @@ def design_handler(
         session.headers.update(headers)
         return (session.executor.submit(builder, session, token, callback, status),)
 
+
 @handler.register(Stop)
 def stop_handler(msg, session, token, **kwargs):
     log = logging.getLogger("maloja.broker.stop_handler")
     log.debug("Handling a stop.")
     return tuple()
-    
+
+ 
 @handler.register(Survey)
 def survey_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
     log = logging.getLogger("maloja.broker.survey_handler")

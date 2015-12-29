@@ -105,9 +105,9 @@ class Builder:
             endpoint="action/instantiateVAppTemplate"
         )
         xml = macro(**data)
-        op = session.post(url, data=xml)
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
+        op = session.post(url, data=xml)
 
         done, not_done = self.wait_for(op)
 
@@ -131,46 +131,42 @@ class Builder:
             rel="recompose"
         ), None)
 
-        # Step 3: Send Recompose form
-        op = session.post(link.attrib.get("href"))
+        # Step 2a: Get Vm details
+        op = session.get(self.plans[Vm][0].href)
         done, not_done = self.wait_for(op)
         response = self.check_response(done, not_done)
-        log.debug(link.text)
+        log.debug(response.text)
 
-        #data = {
-        #    "appliance": {
-        #        "name": prototypes[0].name,
-        #        "description": "Created by Maloja builder",
-        #        "vms": self.plans[Vm],
-        #        #"vms": [],
-        #    },
-        #    "networks": self.plans[Network],
-        #    "template": self.plans[Template][0]
-        #}
+        # Step 3: Send Recompose form
+        data = {
+            "appliance": {
+                "name": prototypes[0].name,
+                "description": "Created by Maloja builder",
+                #"vms": self.plans[Vm],
+                "vms": [],
+            },
+            "networks": self.plans[Network],
+            "template": self.plans[Template][0]
+        }
 
-        #macro = PageTemplateFile(
-        #    pkg_resources.resource_filename(
-        #        "maloja.workflow", "RecomposeVAppParams.pt"
-        #    )
-        #)
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "RecomposeVAppParams.pt"
+            )
+        )
 
-        #url = "{vdc.href}/{endpoint}".format(
-        #    vdc=self.plans[Vdc][0],
-        #    endpoint="action/recomposeVApp"
-        #)
-        #xml = macro(**data)
-        #op = session.post(url, data=xml)
-        #session.headers.update(
-        #    {"Content-Type": "application/vnd.vmware.vcloud.composeVAppParams+xml"}
-        #)
-        #session.headers.update(
-        #    {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
-        #)
+        url = link.attrib.get("href")
+        xml = macro(**data)
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
+        )
+        op = session.post(url, data=xml)
 
-        #done, not_done = concurrent.futures.wait(
-        #    [op], timeout=6,
-        #    return_when=concurrent.futures.FIRST_EXCEPTION
-        #)
+        done, not_done = self.wait_for(op)
+        response = self.check_response(done, not_done)
+        log.debug(xml)
+        log.debug(response.text)
+
         self.send_status(status, stop=True)
 
     def monitor(self, task, session):

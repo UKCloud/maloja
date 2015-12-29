@@ -83,6 +83,6 @@
   networkconnections:
     - name: USER_NET
       ip: 10.124.24.62
-      isConnected: true
+      isConnected: false  # FIXME
       macAddress:
       ipAddressAllocationMode: STATIC

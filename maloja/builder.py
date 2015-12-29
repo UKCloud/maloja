@@ -107,12 +107,13 @@ class Builder:
         xml = macro(**data)
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
-        op = session.post(url, data=xml)
-
-        done, not_done = self.wait_for(op)
 
         try:
-            response = self.check_response(done, not_done)
+            response = self.check_response(
+                *self.wait_for(
+                    session.post(url, data=xml)
+                )
+            )
             task = next(self.get_tasks(response))
             self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
         except (StopIteration, TypeError):
@@ -122,6 +123,7 @@ class Builder:
         self.wait_for(*self.tasks.values(), timeout=300)
 
         # Step 2: Get Recompose Link
+
         op = session.get(task.owner.href)
         done, not_done = self.wait_for(op)
         response = self.check_response(done, not_done)
@@ -131,18 +133,13 @@ class Builder:
             rel="recompose"
         ), None)
 
-        # Step 2a: Get Vm details
-        op = session.get(self.plans[Vm][0].href)
-        done, not_done = self.wait_for(op)
-        response = self.check_response(done, not_done)
-        log.debug(response.text)
-
         # Step 3: Add Vms
+        # TODO: All VMs at once
         data = {
             "appliance": {
                 "name": task.owner.name,
                 "description": "Created by Maloja builder",
-                "vms": self.plans[Vm],
+                "vms": [self.plans[Vm][1]],
             },
             "networks": self.plans[Network],
         }
@@ -159,14 +156,14 @@ class Builder:
             {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
         )
         op = session.post(url, data=xml)
+        log.debug(xml)
+        done, not_done = self.wait_for(op)
 
         response = self.check_response(done, not_done)
         for task in self.get_tasks(response):
             self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
 
         self.wait_for(*self.tasks.values(), timeout=300)
-        log.debug(xml)
-        log.debug(response.text)
 
         # Step 4: Rename VApp
         data = {
@@ -183,8 +180,6 @@ class Builder:
 
         done, not_done = self.wait_for(op)
         response = self.check_response(done, not_done)
-        log.debug(xml)
-        log.debug(response.text)
 
         self.send_status(status, stop=True)
 
@@ -201,7 +196,7 @@ class Builder:
             response = done.pop().result()
             task.feed_xml(ET.fromstring(response.text))
 
-        log.debug(backoff)
+        log.debug("Backoff: {0}s".format(backoff))
         return task
 
     def send_status(self, status, stop=False):

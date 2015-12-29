@@ -94,7 +94,6 @@ def survey_handler(msg, session, token, callback=None, results=None, status=None
         ]
     rv = []
     for endpoint, callback in endpoints:
-        #future = session.get(url, background_callback=bg_cb)
         log.debug("Scheduling  GET to {0}".format(endpoint))
         url = "{url}:{port}/{endpoint}".format(
             url=token.url,

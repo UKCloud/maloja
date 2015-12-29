@@ -119,19 +119,24 @@ class Builder:
             self.send_status(status, stop=True)
             return
 
-        done, not_done = self.wait_for(*self.tasks.values(), timeout=300)
-        log.debug(self.tasks)
-        ## Step 2: Get Recompose Link
-        #op = session.get(self.plans[Template][0].href)
-        #done, not_done = concurrent.futures.wait(
-        #    [op], timeout=6,
-        #    return_when=concurrent.futures.FIRST_EXCEPTION
-        #)
-        #response = done.pop().result()
-        #log.debug(response.text)
-        # End debug
+        self.wait_for(*self.tasks.values(), timeout=300)
 
-        #prototypes = self.plans[VApp] + self.plans[Template]
+        # Step 2: Get Recompose Link
+        op = session.get(task.owner.href)
+        done, not_done = self.wait_for(op)
+        response = self.check_response(done, not_done)
+        link = next(find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.recomposeVAppParams+xml']",
+            ET.fromstring(response.text),
+            rel="recompose"
+        ), None)
+
+        # Step 3: Send Recompose form
+        op = session.post(link.attrib.get("href"))
+        done, not_done = self.wait_for(op)
+        response = self.check_response(done, not_done)
+        log.debug(link.text)
+
         #data = {
         #    "appliance": {
         #        "name": prototypes[0].name,

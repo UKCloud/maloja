@@ -34,11 +34,42 @@ The builder module modifies cloud assets according to a design file.
 
 class Builder:
 
+    @staticmethod
+    def get_task(response):
+        tree = ET.fromstring(response.text)
+        try:
+            task = Task().feed_xml(next(find_xpath(
+                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
+        except Exception as e:
+            return None
+        else:
+            return task
+
+    @staticmethod
+    def check_response(done, not_done):
+        log = logging.getLogger("maloja.builder.check_response")
+        response = None
+        try:
+            response = done.pop().result()
+            if response.status_code == 400:
+                if "DUPLICATE_NAME" in response.text:
+                    log.warning("Request refused: duplicate name.")
+                else:
+                    log.warning(response.text)
+            else:
+                log.info(response.text)
+        except Exception as e:
+            log.error(e)
+        finally:
+            return response
+
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
         log = logging.getLogger("maloja.builder.Builder")
         self.plans = group_by_type(objs)
         self.results = results
+        self.executor = executor
         self.token = None
+        self.tasks = {}
         self.seq = itertools.count(1)
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
@@ -75,25 +106,15 @@ class Builder:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
 
-        response = done.pop().result()
-        tree = ET.fromstring(response.text)
         try:
-            task = Task().feed_xml(next(find_xpath(
-                "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree)))
-        except Exception as e:
-            log.error(e)
+            response = self.check_response(done, not_done)
+            task = self.get_task(response)
+            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task)
+        except TypeError:
+            self.send_status(status)
+            return
 
-        # TODO: Timeout/Backoff
-        while task.status == "running":
-            time.sleep(1)
-            done, not_done = concurrent.futures.wait(
-                [session.get(task.href)], timeout=6,
-                return_when=concurrent.futures.FIRST_EXCEPTION
-            )
-            response = done.pop().result()
-            task.feed_xml(ET.fromstring(response.text))
-
-        log.debug(vars(task))
+        log.debug(self.tasks)
         ## Step 2: Get Recompose Link
         #op = session.get(self.plans[Template][0].href)
         #done, not_done = concurrent.futures.wait(
@@ -140,19 +161,22 @@ class Builder:
         #    return_when=concurrent.futures.FIRST_EXCEPTION
         #)
 
-        done = None
-        try:
+    def monitor(self, task):
+        log = logging.getLogger("maloja.builder.monitor")
+        # TODO: Timeout/Backoff
+        while task.status == "running":
+            time.sleep(1)
+            done, not_done = concurrent.futures.wait(
+                [session.get(task.href)], timeout=6,
+                return_when=concurrent.futures.FIRST_EXCEPTION
+            )
             response = done.pop().result()
-            if response.status_code == 400:
-                if "DUPLICATE_NAME" in response.text:
-                    log.warning("Request refused: duplicate name.")
-                else:
-                    log.warning(response.text)
-            else:
-                log.info(response.text)
-        except Exception as e:
-            log.error(e)
+            task.feed_xml(ET.fromstring(response.text))
 
+        log.debug(vars(task))
+        log.debug(self.tasks)
+
+    def send_status(self, status):
         if status:
             self.results.put((status, Stop()))
 

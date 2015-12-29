@@ -116,7 +116,7 @@ class Builder:
             task = self.get_task(response)
             self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
         except TypeError:
-            self.send_status(status)
+            self.send_status(status, stop=True)
             return
 
         done, not_done = self.wait_for(*self.tasks.values(), timeout=300)
@@ -166,12 +166,14 @@ class Builder:
         #    [op], timeout=6,
         #    return_when=concurrent.futures.FIRST_EXCEPTION
         #)
+        self.send_status(status, stop=True)
 
     def monitor(self, task, session):
         log = logging.getLogger("maloja.builder.monitor")
-        # TODO: Timeout/Backoff
+        backoff = 0
         while task.status == "running":
-            time.sleep(1)
+            backoff += 1
+            time.sleep(backoff)
             done, not_done = concurrent.futures.wait(
                 [session.get(task.href)], timeout=6,
                 return_when=concurrent.futures.FIRST_EXCEPTION
@@ -179,9 +181,11 @@ class Builder:
             response = done.pop().result()
             task.feed_xml(ET.fromstring(response.text))
 
-        log.debug(vars(task))
-        log.debug(self.tasks)
+        log.debug(backoff)
+        return task
 
-    def send_status(self, status):
-        if status:
-            self.results.put((status, Stop()))
+    def send_status(self, status, stop=False):
+        reply = Stop() if stop else None
+        seq = next(self.seq)
+        status = status or Status(1, seq, seq)
+        self.results.put((status, reply))

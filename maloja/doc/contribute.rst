@@ -1,7 +1,10 @@
 ..  Titling
     ##++::==~~--''``
 
-Git Workflow
+Notes for developers
+::::::::::::::::::::
+
+Git workflow
 ============
 
 Challenges
@@ -57,6 +60,45 @@ Summary of workflow
     master and has features merged into it.
 *   QA team tests the `qa` branch in Reference environment.
 *   When `qa` branch is good it is merged into master and deployed to Production.
+
+Building documentation
+======================
+
+Maloja's documentation is best when compiled to HTML on your local machine.
+
+On Ubuntu Linux 14.04::
+
+    $ ~/py3.4/bin/sphinx-build maloja/doc maloja/doc/html
+
+On Windows 8.1::
+
+    > %HOME%\py3.5\Scripts\sphinx-build maloja\doc maloja\doc\html
+
+Read the documentation::
+
+    firefox maloja/doc/html/index.html
+
+Running PEP8
+============
+
+On Ubuntu Linux 14.04::
+
+    $ ~/py3.4/bin/pep8 .
+
+On Windows 8.1::
+
+    > %HOME%\py3.5\Scripts\pep8 .
+
+Uninstalling Maloja
+===================
+
+On Ubuntu Linux 14.04::
+
+    $ ~/py3.4/bin/pip uninstall -y maloja
+
+On Windows 8.1::
+
+    > %HOME%\py3.5\Scripts\pip uninstall -y maloja
 
 .. _BPF explained here: https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow
 .. _read this description of the workflow: https://www.acquia.com/blog/pragmatic-guide-branch-feature-git-branching-strategy

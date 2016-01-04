@@ -4,23 +4,27 @@
 Installation
 ::::::::::::
 
-Maloja is currently available only as a preview. During this phase, we
-recommend running it from the working directory of your git repository.
+Maloja can be installed from either;
 
-It is necessary however to install dependencies. These instructions show you
-how.
+    * a self-contained package or, 
+    * :ref:`from a working directory <install Maloja>` of our git repository.
+
+At this early stage of the project we recommend the second option. These instructions show you how.
 
 The version of Python you use depends on your Operating System. You should
 run Maloja in the most recent Python available for your OS. Two examples
 are shown below:
 
-* Operation under `Ubuntu Linux 14.04 LTS`_ with Python version 3.4
-  from the package repository.
-* Operation under `Microsoft Windows 8.1`_ with Python version 3.5.1
-  downloaded from the Python website.
+* Virtual environment on `Ubuntu Linux 14.04 LTS`_ with Python version
+  3.4 from the package repository.
+* Virtual environment on `Microsoft Windows 8.1`_ with Python version
+  3.5.1 downloaded from the Python website.
+
+Create a Python virtual environment
+===================================
 
 Ubuntu Linux 14.04 LTS
-======================
+~~~~~~~~~~~~~~~~~~~~~~
 
 #. Install `python3-dev` from the package repository of your OS::
 
@@ -38,24 +42,8 @@ Ubuntu Linux 14.04 LTS
 
     $ ~/py3.4/bin/pip install --upgrade pip
 
-#. Install Maloja dependencies::
-
-    $ ~/py3.4/bin/pip install chameleon
-    Running setup.py install for chameleon
-    Successfully installed chameleon-2.24
-
-    $ ~/py3.4/bin/pip install requests-futures
-    Installing collected packages: requests, requests-futures
-    Running setup.py install for requests-futures
-    Successfully installed requests-2.8.1 requests-futures-0.9.5
-
-    $ ~/py3.4/bin/pip install ruamel.yaml
-    Installing collected packages: ruamel.base, ruamel.yaml
-    Running setup.py install for ruamel.yaml
-    Successfully installed ruamel.base-1.0.0 ruamel.yaml-0.10.12
-
 Microsoft Windows 8.1
-=====================
+~~~~~~~~~~~~~~~~~~~~~
 
 #.  Ensure the environment variable '`%HOME%`' points to your user directory.
 #.  Download and install `Python 3.5.1 for Windows`_.
@@ -67,39 +55,26 @@ Microsoft Windows 8.1
 
     > %HOME%\py3.5\Scripts\pip install --upgrade pip
 
-#. Use `pip` to install the following packages:
+.. _install Maloja:
 
-    * chameleon
-    * requests-futures
-    * ruamel.yaml
+Check out the Maloja repository
+===============================
+
+::
+
+    git clone git@github.com:skyscape-cloud-services/maloja.git
+    cd maloja
 
 Install Maloja into the Python environment
 ==========================================
 
-On Linux::
+On Ubuntu Linux 14.04::
 
     $ ~/py3.4/bin/pip install .[dev,docbuild]
 
-On Windows::
+On Windows 8.1::
 
     > %HOME%\py3.5\Scripts\pip install .[dev,docbuild]
-
-Building documentation
-======================
-
-Maloja's documentation is best when compiled to HTML on your local machine.
-
-Install sphinx::
-
-    $ pip install sphinx
-
-Build the docs from source::
-
-    $ sphinx-build maloja/doc maloja/doc/html
-
-Read the documentation::
-
-    $ firefox maloja/doc/html/index.html
 
 .. #.  Install `Maloja`::
 ..

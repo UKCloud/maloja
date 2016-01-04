@@ -4,11 +4,6 @@
 Quickstart Guide
 ================
 
-Check out the Maloja repository::
-
-    > git clone git@github.com:skyscape-cloud-services/maloja.git
-    > cd maloja
-
 Create an options file
 ~~~~~~~~~~~~~~~~~~~~~~
 

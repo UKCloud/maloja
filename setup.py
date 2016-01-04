@@ -37,10 +37,14 @@ try:
     from maloja import __version__ as version
 except ImportError:
     # For pip installations
-    version = str(ast.literal_eval(
-                open(os.path.join(os.path.dirname(__file__),
+    version = str(
+        ast.literal_eval(
+            open(os.path.join(
+                os.path.dirname(__file__),
                 "maloja", "__init__.py"),
-                'r').read().split("=")[-1].strip()))
+                'r').read().split("=")[-1].strip()
+        )
+    )
 
 __doc__ = open(os.path.join(os.path.dirname(__file__), "README.rst"),
                'r').read()

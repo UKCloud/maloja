@@ -33,6 +33,12 @@ and storing data.
 Broker module
 =============
 
+.. autoclass:: maloja.broker.Broker
+
+.. autofunction:: maloja.broker.create_broker
+
+.. autofunction:: maloja.broker.handler
+
 Surveyor module
 ===============
 

@@ -28,7 +28,21 @@ from maloja.types import Workflow
 
 
 @singledispatch
-def handler(msg, path=None, queue=None, **kwargs):
+def handler(msg, session, token, results=None, status=None, **kwargs):
+    """
+    You can define your own message types and register a handler
+    for each one.
+
+    Your handler will receive these positional arguments:
+
+    :param msg: the message object.
+    :param session: a *requests.futures* session object.
+    :param token: an authorization Token for the VMware API.
+    :param results: a queue object so your handler can send back
+        status messages.
+    :param status: the current status at the point your handler
+        is invoked.
+    """
     warnings.warn("No handler registered for {0}.".format(type(msg)))
 
 
@@ -49,7 +63,7 @@ def credentials_handler(msg, session, results=None, status=None, **kwargs):
     future = session.post(url)
     return (future,)
 
-    
+
 @handler.register(Design)
 def design_handler(
     msg, session, token,
@@ -77,14 +91,19 @@ def stop_handler(msg, session, token, **kwargs):
     log.debug("Handling a stop.")
     return tuple()
 
- 
+
 @handler.register(Survey)
 def survey_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
     log = logging.getLogger("maloja.broker.survey_handler")
     if msg.path.project and not any(msg.path[2:-1]):
         endpoints = [
-            ("api/org", functools.partial(
-                Surveyor.on_org_list, msg.path, results=results, status=status
+            (
+                "api/org",
+                functools.partial(
+                    Surveyor.on_org_list,
+                    msg.path,
+                    results=results,
+                    status=status
                 )
             )
         ]
@@ -130,6 +149,18 @@ def workflow_handler(
         return (session.executor.submit(worker, session, token, callback, status),)
 
 class Broker:
+    """
+    The Broker manages all Maloja's interactions with the VMware API.
+    It is responsible for taking messages from an *operations* queue
+    and initiating an action for each one.
+
+    The Broker caches your API authorization token. It also maintains
+    a *requests* session with the API.
+
+    The best way to create a Broker object is with the
+    :py:func:`maloja.broker.create_broker` function.
+
+    """
 
     tasks = {
         "operation_task": None,
@@ -189,6 +220,14 @@ class Broker:
             return n
 
 def create_broker(operations, results, max_workers=None, loop=None):
+    """
+    :param operations: a queue object. Push operations to this queue.
+    :param results: a queue object. Get results from this queue.
+    :param max_workers: the number of threads to use in the executor
+        pool. Leave this as `None` to get a sensible default value.
+    :param loop: an asyncio loop object. *Not implemented*.
+    :return: A new Broker object
+    """
     executor = concurrent.futures.ThreadPoolExecutor(max_workers)
     broker = Broker(operations, results, executor=executor, loop=loop)
     for task in broker.tasks:

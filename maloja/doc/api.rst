@@ -1,16 +1,34 @@
 ..  Titling
     ##++::==~~--''``
 
-API Guide
-:::::::::
+Implementation details
+::::::::::::::::::::::
 
 Common types
 ============
+
+Maloja defines lightweight types for many things, including
+user credentials:
+
+    .. autoclass:: maloja.types.Credentials
+
+Status messages:
+
+    .. autoclass:: maloja.types.Status
+
+There's also a class to represent user plugins.
 
 .. autoclass:: maloja.types.Plugin
 
 Common utilities
 ================
+
+A small number of functions are used frequently for parsing, sorting
+and storing data.
+
+.. autofunction:: maloja.workflow.utils.find_xpath
+
+.. autofunction:: maloja.workflow.utils.group_by_type
 
 Broker module
 =============

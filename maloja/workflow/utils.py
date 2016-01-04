@@ -12,9 +12,20 @@ import os.path
 import pkg_resources
 
 Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node", "file"])
- 
+
 
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
+    """
+    Find elements within an XML tree whose attributes match certain
+    values.
+
+    :param xpath: an xpath query string.
+    :param tree: `xml.etree.ElementTree` object.
+    :param namespaces: a dictionary of namespace prefixes.
+    :param kwargs: specifies attribute values to filter by.
+
+    :return: An iterator over valid elements.
+    """
     elements = tree.iterfind(xpath, namespaces=namespaces)
     if not kwargs:
         return elements
@@ -24,12 +35,18 @@ def find_xpath(xpath, tree, namespaces={}, **kwargs):
 
 
 def group_by_type(items):
-    return defaultdict(list,
+    """
+    Group a sequence of items by the type of item.
+
+    :return: A dictionary of lists. Keys in the dictionary are types.
+    """
+    return defaultdict(
+        list,
         {k: list(v) for k, v in itertools.groupby(items, key=type)}
     )
 
 
-def make_path(path:Path, prefix="proj_", suffix=""):
+def make_path(path: Path, prefix="proj_", suffix=""):
     os.makedirs(path.root, exist_ok=True)
 
     if path.project is None and path.file is not None:
@@ -40,9 +57,12 @@ def make_path(path:Path, prefix="proj_", suffix=""):
         return path
 
 
-def recent_project(path:Path):
-    projects = [i for i in os.listdir(path.root)
-             if os.path.isfile(os.path.join(path.root, i, "project.yaml"))]
+def recent_project(path: Path):
+    projects = [
+        i
+        for i in os.listdir(path.root)
+        if os.path.isfile(os.path.join(path.root, i, "project.yaml"))
+    ]
     stats = [(os.path.getmtime(os.path.join(path.root, fP)), fP)
              for fP in projects]
     stats.sort(key=operator.itemgetter(0), reverse=True)
@@ -62,7 +82,7 @@ def split_to_path(data, root=None):
     }
     drive, tail = os.path.splitdrive(data)
     bits = tail.split(os.sep)
-    index = lookup[bits[-1]] 
+    index = lookup[bits[-1]]
     data = list(itertools.chain(
         bits[index: -1],
         itertools.repeat(None, 7 + index),
@@ -74,7 +94,7 @@ def split_to_path(data, root=None):
     else:
         rv = rv._replace(root=root)
     return rv
-    
+
 
 def plugin_interface(key="maloja.plugin"):
     for i in pkg_resources.iter_entry_points(key):

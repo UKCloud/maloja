@@ -61,10 +61,40 @@ Summary of workflow
 *   QA team tests the `qa` branch in Reference environment.
 *   When `qa` branch is good it is merged into master and deployed to Production.
 
+Uninstalling Maloja
+===================
+
+To eliminate the install process from your development cycle,
+it's preferable to perform these tasks with maloja *uninstalled*:
+
+    * `Running unit tests`_
+    * `Building documentation`_
+    * `Running PEP8`_
+
+On Ubuntu Linux 14.04::
+
+    $ ~/py3.4/bin/pip uninstall -y maloja
+
+On Windows 8.1::
+
+    > %HOME%\py3.5\Scripts\pip uninstall -y maloja
+
+Running unit tests
+==================
+
+On Ubuntu Linux 14.04::
+
+    $ ~/py3.4/bin/python -m unittest discover maloja
+
+On Windows 8.1::
+
+    > %HOME%\py3.5\Scripts\python -m unittest discover maloja
+
 Building documentation
 ======================
 
-Maloja's documentation is best when compiled to HTML on your local machine.
+Maloja's documentation is maintained in reStructuredText_. You can
+compile it to HTML using the Sphinx tools.
 
 On Ubuntu Linux 14.04::
 
@@ -74,7 +104,7 @@ On Windows 8.1::
 
     > %HOME%\py3.5\Scripts\sphinx-build maloja\doc maloja\doc\html
 
-Read the documentation::
+Read the documentation in your browser::
 
     firefox maloja/doc/html/index.html
 
@@ -89,16 +119,6 @@ On Windows 8.1::
 
     > %HOME%\py3.5\Scripts\pep8 .
 
-Uninstalling Maloja
-===================
-
-On Ubuntu Linux 14.04::
-
-    $ ~/py3.4/bin/pip uninstall -y maloja
-
-On Windows 8.1::
-
-    > %HOME%\py3.5\Scripts\pip uninstall -y maloja
-
 .. _BPF explained here: https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow
 .. _read this description of the workflow: https://www.acquia.com/blog/pragmatic-guide-branch-feature-git-branching-strategy
+.. _reStructuredText: http://docutils.sourceforge.net/rst.html

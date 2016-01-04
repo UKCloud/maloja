@@ -9,6 +9,7 @@ from setuptools import setup
 
 deps = [
     "Chameleon>=2.24",
+    "requests-futures>=0.9.5",
     "ruamel.yaml>=0.10.12"
 ]
 maj, min_, micro, rl, ser = sys.version_info
@@ -21,7 +22,6 @@ if (maj, min_) < (2, 7):
 if (maj, min_) < (3, 3):
     deps += [
         "ipaddress>=1.0.15",
-        "requests-futures>=0.9.5"
     ]
 if (maj, min_) == (3, 3):
     deps += [
@@ -31,12 +31,6 @@ if (maj, min_) < (3, 4):
     deps += [
         "singledispatch>=3.4.0.3"
     ]
-# TODO: Remove; dev only
-if (maj, min_) == (3, 5):
-    deps += [
-        "requests-futures>=0.9.5"
-    ]
-
 
 try:
     # For setup.py install
@@ -62,6 +56,7 @@ setup(
     classifiers=[
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "License :: Other/Proprietary License",
     ],
     packages=[
@@ -95,8 +90,11 @@ setup(
     },
     install_requires=deps,
     extras_require={
+        "dev": [
+            "pep8>=1.6.2",
+        ],
         "docbuild": [
-            "babel<=1.3,>2.0",
+            "babel>=2.2.0",
             "sphinx-argparse>=0.1.15",
             "sphinxcontrib-seqdiag>=0.8.4",
         ],

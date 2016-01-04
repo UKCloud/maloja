@@ -6,29 +6,18 @@ Maloja
 
 A toolkit for use with a VMware cloud.
 
-Early adopters
-==============
+Early adopters/developers
+=========================
 
-#. Read and follow the `install notes`_.
+#. Read and follow the `Install notes`_.
 #. Consult the `Quick Start guide`_.
 
-Building documentation
-======================
+End users only
+==============
 
-Maloja's documentation is best when compiled to HTML on your local machine.
+Use `pip` to install Maloja from a distributed package::
 
-Install sphinx::
+    pip install maloja-0.2.0.zip
 
-    $ pip install sphinx
-
-Build the docs from source::
-
-    $ sphinx-build maloja/doc maloja/doc/html
-
-Read the documentation::
-
-    $ firefox maloja/doc/html/index.html
-
-
-.. _install notes: https://github.com/skyscape-cloud-services/vjobs/blob/master/maloja/doc/install.rst
+.. _Install notes: https://github.com/skyscape-cloud-services/vjobs/blob/master/maloja/doc/install.rst
 .. _Quick Start guide: https://github.com/skyscape-cloud-services/vjobs/blob/master/maloja/doc/quickstart.rst

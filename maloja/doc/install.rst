@@ -73,6 +73,34 @@ Microsoft Windows 8.1
     * requests-futures
     * ruamel.yaml
 
+Install Maloja into the Python environment
+==========================================
+
+On Linux::
+
+    $ ~/py3.4/bin/pip install .[dev,docbuild]
+
+On Windows::
+
+    > %HOME%\py3.5\Scripts\pip install .[dev,docbuild]
+
+Building documentation
+======================
+
+Maloja's documentation is best when compiled to HTML on your local machine.
+
+Install sphinx::
+
+    $ pip install sphinx
+
+Build the docs from source::
+
+    $ sphinx-build maloja/doc maloja/doc/html
+
+Read the documentation::
+
+    $ firefox maloja/doc/html/index.html
+
 .. #.  Install `Maloja`::
 ..
 ..        > %HOME%\py3.5\Scripts\pip install maloja-0.0.0.zip

@@ -21,11 +21,7 @@ __doc__ = """
 The planner module allows offline inspection of a design file.
 
 A design file conforms to YAML syntax. It is made up of items
-from a survey (also YAML).
-
-::
-
-    maloja @options.private plan --input=maloja/test/use_case01.yaml
+from a survey (also YAML) assembled in a hierarchical structure.
 
 """
 

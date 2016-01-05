@@ -16,6 +16,7 @@ Status messages:
 
     .. autoclass:: maloja.types.Status
 
+As well as other message types which we'll see later on.
 There's also a class to represent user plugins.
 
 .. autoclass:: maloja.types.Plugin
@@ -60,6 +61,19 @@ The Surveyor is launched by the Broker whenever a
 
 Planner module
 ==============
+
+.. automodule:: maloja.planner
+
+You can test the module using one of the example files which come with
+your Maloja installation.
+
+On Ubuntu 14.04::
+
+    $ ~/py3.4/bin/maloja @options.private plan --input=maloja/test/use_case01.yaml
+
+On Windows 8.1::
+
+    > %HOME%\py3.5\Scripts\maloja @options.private plan --input=maloja/test/use_case01.yaml
 
 Builder module
 ==============

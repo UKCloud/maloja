@@ -21,11 +21,11 @@ using the '`@`' syntax, eg:
 
 On Ubuntu 14.04::
 
-    $ ~/py3.4/bin/python -m maloja.main @options.private
+    $ ~/py3.4/bin/maloja @options.private
 
 On Windows 8.1::
 
-    > start %HOME%\py3.5\Scripts\python -m maloja.main @options.private
+    > start %HOME%\py3.5\Scripts\maloja @options.private
 
 The window will open and prompt you for your API password::
 

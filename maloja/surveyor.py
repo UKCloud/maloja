@@ -63,8 +63,8 @@ def filter_records(*args, root="", key="", value=""):
                 yield (obj, path)
                 continue
             else:
-                data = dict(
-                    [(k, getattr(item, k))
+                data = dict([
+                    (k, getattr(item, k))
                     for seq in [
                         i for i in vars(obj).values() if isinstance(i, list)
                     ]
@@ -206,11 +206,14 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         obj = Template().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="template.yaml")
-        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
+        os.makedirs(os.path.join(
+            path.root, path.project, path.org, path.dc, path.app
+        ), exist_ok=True)
         try:
             Surveyor.locks[path].acquire()
-            with open(
-                os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
+            with open(os.path.join(
+                path.root, path.project, path.org, path.dc, path.app, path.file
+            ), "w"
             ) as output:
                 try:
                     data = yaml_dumps(obj)
@@ -359,7 +362,9 @@ class Surveyor:
                         break
 
                 path = path._replace(file="network-{0.name}.yaml".format(obj))
-                os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
+                os.makedirs(os.path.join(
+                    path.root, path.project, path.org, path.dc
+                ), exist_ok=True)
                 try:
                     Surveyor.locks[path].acquire()
                     with open(
@@ -391,11 +396,13 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         obj = VApp().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="vapp.yaml")
-        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc, path.app), exist_ok=True)
+        os.makedirs(os.path.join(
+            path.root, path.project, path.org, path.dc, path.app
+        ), exist_ok=True)
         try:
             Surveyor.locks[path].acquire()
-            with open(
-                os.path.join(path.root, path.project, path.org, path.dc, path.app, path.file), "w"
+            with open(os.path.join(
+                path.root, path.project, path.org, path.dc, path.app, path.file), "w"
             ) as output:
                 try:
                     data = yaml_dumps(obj)
@@ -492,8 +499,7 @@ class Surveyor:
                 results=results,
                 status=child._replace(job=child.job + n)
             )
-        ) for n, edgeGW in enumerate(edgeGWs)] + [
-            session.get(
+        ) for n, edgeGW in enumerate(edgeGWs)] + [session.get(
             orgVdcNet.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_orgVdcNetwork,
@@ -501,8 +507,7 @@ class Surveyor:
                 results=results,
                 status=child._replace(job=child.job + n)
             )
-        ) for n, orgVdcNet in enumerate(orgVdcNets)] + [
-            session.get(
+        ) for n, orgVdcNet in enumerate(orgVdcNets)] + [session.get(
             vapp.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_vapp,
@@ -607,8 +612,7 @@ class Surveyor:
                 results=results,
                 status=child._replace(job=child.job + n)
             )
-        ) for n, vdc in enumerate(vdcs)] + [
-            session.get(
+        ) for n, vdc in enumerate(vdcs)] + [session.get(
             ctlg.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_catalog,

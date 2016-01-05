@@ -165,6 +165,14 @@ class Broker:
     tasks = {
         "operation_task": None,
     }
+    """
+    A Broker is an active object. The tasks it runs in the background
+    of your program are stored in this dictionary.
+
+    To wait for your Broker to finish, use code like this::
+
+        tasks = concurrent.futures.wait(set(broker.tasks.values()))
+    """
 
     def __init__(self, operations, results, *args, executor=None, loop=None, **kwargs):
         super().__init__(*args, **kwargs)

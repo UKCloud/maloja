@@ -7,7 +7,7 @@ Installation
 Maloja can be installed from either;
 
     * a self-contained package or, 
-    * :ref:`from a working directory <install Maloja>` of our git repository.
+    * from a working directory of our git repository.
 
 At this early stage of the project we recommend the second option. These instructions show you how.
 

@@ -8,9 +8,9 @@ Common types
 ============
 
 Maloja defines lightweight types for many things, including
-user credentials:
+API tokens:
 
-    .. autoclass:: maloja.types.Credentials
+    .. autoclass:: maloja.types.Token
 
 Status messages:
 
@@ -34,15 +34,29 @@ Broker module
 =============
 
 .. autoclass:: maloja.broker.Broker
+   :members:
 
 .. autofunction:: maloja.broker.create_broker
+
+Messages
+~~~~~~~~
+
+A broker object will respond to the following messages:
+
+    * :py:class:`maloja.types.Survey`
+    * :py:class:`maloja.types.Design`
+    * :py:class:`maloja.types.Stop`
 
 .. autofunction:: maloja.broker.handler
 
 Surveyor module
 ===============
 
-.. automodule:: maloja.surveyor
+The Surveyor is launched by the Broker whenever a
+:py:class:`maloja.types.Survey` message is received.
+
+.. autoclass:: maloja.surveyor.Surveyor
+   :members:
 
 Planner module
 ==============

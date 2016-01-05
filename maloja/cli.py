@@ -70,6 +70,9 @@ def parsers(description=__doc__):
         dest="command",
         help="Commands:",
     )
+    p = subparsers.add_parser("plan")
+    p = add_builder_options(p)
+
     p = subparsers.add_parser("build")
     p = add_builder_options(p)
     return (rv, subparsers)

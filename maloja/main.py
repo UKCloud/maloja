@@ -69,6 +69,10 @@ def main(args):
     except Exception as e:
         log.error(e)
 
+    if args.command == "plan":
+        with open(args.input, "r") as data:
+            return maloja.planner.report(data)
+
     if args.command == "build":
         objs = []
         broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)

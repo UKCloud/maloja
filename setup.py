@@ -107,7 +107,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "maloja = maloja.workflow.main:run",
+            "maloja = maloja.main:run",
         ],
         "maloja.plugin": [
             "vapplicator = maloja.plugin.vapplicator:plugin",

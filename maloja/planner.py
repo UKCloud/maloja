@@ -20,6 +20,13 @@ from maloja.model import yaml_loads
 __doc__ = """
 The planner module allows offline inspection of a design file.
 
+A design file conforms to YAML syntax. It is made up of items
+from a survey (also YAML).
+
+::
+
+    maloja @options.private plan --input=maloja/test/use_case01.yaml
+
 """
 
 types = {
@@ -61,6 +68,13 @@ def check_objects(seq):
     return seq
 
 
+def report(fObj):
+    objs = list(read_objects(fObj.read()))
+    objs = check_objects(objs)
+    print(*[vars(i) for i in objs], sep="\n")
+    return 0
+
+
 def main(args):
 
     log = logging.getLogger("maloja")
@@ -82,10 +96,7 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    objs = list(read_objects(args.design.read()))
-    objs = check_objects(objs)
-    print(*[vars(i) for i in objs], sep="\n")
-    return 0
+    return report(args.design)
 
 
 def run():

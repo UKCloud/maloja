@@ -84,7 +84,7 @@ class Surveyor:
     descends down through vDCs, via catalogs and vApps to Vms.
 
     The Surveyor is a singleton; only one survey may run at a time.
-    It is a stateless object; all necessary data is passed on from
+    It is stateless; all necessary data is passed on from
     one task to the next, or else saved into YAML files.
     """
 

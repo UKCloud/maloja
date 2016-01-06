@@ -11,6 +11,7 @@ Contents:
 
    install
    quickstart
+   model
    api
    contribute
 

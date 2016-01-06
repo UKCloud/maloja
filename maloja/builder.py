@@ -27,12 +27,12 @@ from maloja.workflow.utils import group_by_type
 from chameleon import PageTemplateFile
 import pkg_resources
 
-__doc__ = """
-The builder module modifies cloud assets according to a design file.
-
-"""
-
 class Builder:
+    """
+    The Builder accepts a sequence of objects from the data model
+    and uses them to construct new virtual infrastructure.
+
+    """
 
     @staticmethod
     def check_response(done, not_done):

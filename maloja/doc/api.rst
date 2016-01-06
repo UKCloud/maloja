@@ -78,7 +78,8 @@ On Windows 8.1::
 Builder module
 ==============
 
-.. automodule:: maloja.builder
+.. autoclass:: maloja.broker.Broker
+   :members:
 
 Plugins
 =======

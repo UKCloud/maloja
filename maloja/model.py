@@ -76,6 +76,15 @@ class Catalog(DataObject):
     ]
 
 class Gateway(DataObject):
+    """
+    The Gateway class represents a VMware Edge Gateway.
+    Here you can find the following:
+
+        * Firewall rules
+        * DNAT rules
+        * SNAT rules
+
+    """
 
     FW = namedtuple(
         "FW", ["description", "int_addr", "int_port", "ext_addr", "ext_port"]
@@ -96,6 +105,10 @@ class Gateway(DataObject):
         ("dnat", []),
         ("snat", []),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for 
+    a new Gateway object.
+    """
 
     @staticmethod
     def servicecast(val):
@@ -106,6 +119,11 @@ class Gateway(DataObject):
             return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
 
     def __init__(self, **kwargs):
+        """
+        Creates a fresh Gateway, or one with attributes set by
+        the `kwargs` dictionary.
+        """
+
         for seq, typ in [("fw", Gateway.FW), ("dnat", Gateway.DNAT), ("snat", Gateway.SNAT)]:
             if seq in kwargs:
                 kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
@@ -113,6 +131,11 @@ class Gateway(DataObject):
         super().__init__(**kwargs)
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        """
+        Updates the Gateway object by feeding it XML
+        from the VMware API.
+
+        """
         log = logging.getLogger("maloja.model.Gateway")
         super().feed_xml(tree, ns=ns)
 

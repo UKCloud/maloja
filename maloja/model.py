@@ -14,13 +14,21 @@ import ruamel.yaml
 
 import maloja.types
 
+__doc__ = """
+These classes define objects which Maloja uses internally. All of
+them can be saved to file in a YAML representation.
+
+"""
+
 yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoader)
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
 
 
 def dataobject_as_ordereddict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
-    return dumper.represent_ordereddict(OrderedDict([(k, getattr(data, k)) for k, v in data._defaults]))
+    return dumper.represent_ordereddict(
+        OrderedDict([(k, getattr(data, k)) for k, v in data._defaults])
+    )
 
 
 def namedtuple_as_dict(dumper, data, flow_style=False):
@@ -48,11 +56,21 @@ class DataObject:
             return val
 
     def __init__(self, **kwargs):
+        """
+        Creates a fresh object, or one with attributes set by
+        the `kwargs` dictionary.
+
+        """
         data = self._defaults + list(kwargs.items())
         for k, v in data:
             setattr(self, k, v)
 
     def feed_xml(self, tree, *args, **kwargs):
+        """
+        Updates the object by feeding it XML
+        from the VMware API.
+
+        """
         ns = kwargs.pop("ns", "")
         fields = [k for k, v in self._defaults]
         attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
@@ -67,6 +85,11 @@ class DataObject:
         return self
 
 class Catalog(DataObject):
+    """
+    The Catalog class represents a VMware public or private
+    catalog.
+
+    """
 
     _defaults = [
         ("name", None),
@@ -74,6 +97,11 @@ class Catalog(DataObject):
         ("type", None),
         ("dateCreated", None),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Catalog object.
+
+    """
 
 class Gateway(DataObject):
     """
@@ -106,8 +134,9 @@ class Gateway(DataObject):
         ("snat", []),
     ]
     """
-    A list of (key, value) pairs which define the defaults for 
+    A list of (key, value) pairs which define the defaults for
     a new Gateway object.
+
     """
 
     @staticmethod
@@ -120,19 +149,22 @@ class Gateway(DataObject):
 
     def __init__(self, **kwargs):
         """
-        Creates a fresh Gateway, or one with attributes set by
+        Creates a fresh object, or one with attributes set by
         the `kwargs` dictionary.
-        """
 
+        """
         for seq, typ in [("fw", Gateway.FW), ("dnat", Gateway.DNAT), ("snat", Gateway.SNAT)]:
             if seq in kwargs:
-                kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
+                kwargs[seq] = [
+                    typ(**{k: self.typecast(v) for k, v in i.items()})
+                    for i in kwargs[seq]
+                ]
 
         super().__init__(**kwargs)
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         """
-        Updates the Gateway object by feeding it XML
+        Updates the object by feeding it XML
         from the VMware API.
 
         """
@@ -179,6 +211,13 @@ class Gateway(DataObject):
         return self
 
 class Network(DataObject):
+    """
+    The Network class represents a VMware network.
+    Here you can find the following:
+
+        * DNS rules
+
+    """
 
     _defaults = [
         ("name", None),
@@ -189,14 +228,28 @@ class Network(DataObject):
         ("dnsSuffix", None),
         ("dns", []),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Network object.
+
+    """
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        """
+        Updates the object by feeding it XML
+        from the VMware API.
+
+        """
         log = logging.getLogger("maloja.model.Network")
         self.dns = [tree.attrib.get("dns1"), tree.attrib.get("dns2")]
         super().feed_xml(tree, ns=ns)
         return self
 
 class Org(DataObject):
+    """
+    The Org class represents a VMware organisation.
+
+    """
 
     _defaults = [
         ("name", None),
@@ -204,8 +257,18 @@ class Org(DataObject):
         ("type", None),
         ("fullName", None),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Org object.
+
+    """
 
 class Task(DataObject):
+    """
+    The Task class represents a task running against a VMware
+    resource.
+
+    """
 
     _defaults = [
         ("name", None),
@@ -216,8 +279,18 @@ class Task(DataObject):
         ("startTime", None),
         ("status", None),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Task object.
+
+    """
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        """
+        Updates the object by feeding it XML
+        from the VMware API.
+
+        """
         log = logging.getLogger("maloja.model.Task")
         super().feed_xml(tree, ns=ns)
         org = tree.find(ns + "Organization")
@@ -229,6 +302,10 @@ class Task(DataObject):
         return self
 
 class Template(DataObject):
+    """
+    The Template class represents a VMware VAppTemplate.
+
+    """
 
     _defaults = [
         ("name", None),
@@ -236,16 +313,34 @@ class Template(DataObject):
         ("type", None),
         ("dateCreated", None),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Template object.
+
+    """
 
 class VApp(DataObject):
+    """
+    The VApp class represents a VMware VApp.
+
+    """
 
     _defaults = [
         ("name", None),
         ("href", None),
         ("type", None),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Vapp object.
+
+    """
 
 class Vdc(DataObject):
+    """
+    The Vdc class represents a VMware Vdc.
+
+    """
 
     _defaults = [
         ("name", None),
@@ -253,11 +348,23 @@ class Vdc(DataObject):
         ("type", None),
         ("description", None),
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Vdc object.
+
+    """
 
 class Vm(DataObject):
+    """
+    The Vm class represents a VMware Vm.
+
+    """
 
     NetworkConnection = namedtuple(
-        "NetworkConnection", ["name", "ip", "isConnected", "macAddress", "ipAddressAllocationMode"]
+        "NetworkConnection", [
+            "name", "ip", "isConnected", "macAddress",
+            "ipAddressAllocationMode"
+        ]
     )
 
     _defaults = [
@@ -284,15 +391,33 @@ class Vm(DataObject):
         ("networkconnections", []),
         ("guestcustomization", None)
     ]
+    """
+    A list of (key, value) pairs which define the defaults for
+    a new Vm object.
+
+    """
 
     def __init__(self, **kwargs):
+        """
+        Creates a fresh object, or one with attributes set by
+        the `kwargs` dictionary.
+
+        """
         seq, typ = ("networkconnections", Vm.NetworkConnection)
         if seq in kwargs:
-            kwargs[seq] = [typ(**{k: self.typecast(v) for k, v in i.items()}) for i in kwargs[seq]]
+            kwargs[seq] = [
+                typ(**{k: self.typecast(v) for k, v in i.items()})
+                for i in kwargs[seq]
+            ]
 
         super().__init__(**kwargs)
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
+        """
+        Updates the object by feeding it XML
+        from the VMware API.
+
+        """
 
         if tree.tag in (ns + "VAppTemplate", ns + "Vm", ns + "VMRecord"):
             super().feed_xml(tree, ns=ns)

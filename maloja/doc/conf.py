@@ -42,9 +42,12 @@ import maloja
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.graphviz",
+    "sphinxarg.ext",
+    "sphinxcontrib.seqdiag"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

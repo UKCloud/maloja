@@ -76,3 +76,6 @@ def parsers(description=__doc__):
     p = subparsers.add_parser("build")
     p = add_builder_options(p)
     return (rv, subparsers)
+
+def cli():
+    return parsers()[0]

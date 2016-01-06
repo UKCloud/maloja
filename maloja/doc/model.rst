@@ -1,6 +1,8 @@
 ..  Titling
     ##++::==~~--''``
 
+.. _data model:
+
 Data model
 ::::::::::
 

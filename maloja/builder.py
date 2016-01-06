@@ -29,8 +29,9 @@ import pkg_resources
 
 class Builder:
     """
-    The Builder accepts a sequence of objects from the data model
-    and uses them to construct new virtual infrastructure.
+    The Builder accepts a sequence of objects from the
+    :ref:`data model <data model>` and uses them to construct
+    new virtual infrastructure.
 
     """
 
@@ -72,6 +73,12 @@ class Builder:
         return (done, not_done)
 
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
+        """
+        :param objs: a sequence of Maloja objects
+        :param results: a queue to which status reports will be pushed
+        :param executor: a `concurrent.futures.Executor` object
+
+        """
         log = logging.getLogger("maloja.builder.Builder")
         self.plans = group_by_type(objs)
         self.results = results
@@ -81,6 +88,21 @@ class Builder:
         self.seq = itertools.count(1)
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
+        """
+        A Builder is a callable object which runs in its own thread.
+
+        Start it up like this::
+
+            executor.submit(builder, session, token, callback, status)
+
+        :param session: a *requests.futures* session object.
+        :param token: an authorization Token for the VMware API.
+        :param callback: a function to be called when
+            the builder is done.
+        :param status: the current status at the point the builder
+            is invoked.
+
+        """
         log = logging.getLogger("maloja.builder")
 
         # Step 1: Instantiate empty VApp
@@ -184,6 +206,12 @@ class Builder:
         self.send_status(status, stop=True)
 
     def monitor(self, task, session):
+        """
+        The builder launches this method in a new thread whenever
+        a VMware task is initiated. The method tracks the progress
+        of the task.
+
+        """
         log = logging.getLogger("maloja.builder.monitor")
         backoff = 0
         while task.status == "running":

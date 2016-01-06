@@ -7,7 +7,13 @@ import os.path
 import sys
 
 __doc__ = """
-CLI Interface to Maloja toolkit.
+CLI Interface to the Maloja toolkit.
+
+Operation via CLI requires a set of common options.
+Each subcommand may have extra options, like this::
+
+    maloja <common options> SUBCOMMAND <subcommand options>
+
 """
 
 DFLT_LOCN = os.path.expanduser(os.path.join("~", ".maloja"))
@@ -62,7 +68,7 @@ def parser(description=__doc__):
     )
 
 def parsers(description=__doc__):
-    rv =  parser(description)
+    rv = parser(description)
     rv = add_common_options(rv)
     rv = add_api_options(rv)
     rv = add_cache_options(rv)
@@ -70,10 +76,18 @@ def parsers(description=__doc__):
         dest="command",
         help="Commands:",
     )
-    p = subparsers.add_parser("plan")
+    p = subparsers.add_parser(
+        "plan",
+        help="Maloja 'plan' command.",
+        description="Invokes the planner module to check a design file."
+    )
     p = add_builder_options(p)
 
-    p = subparsers.add_parser("build")
+    p = subparsers.add_parser(
+        "build",
+        help="Maloja 'build' command.",
+        description="Invokes the builder module to create virtual infrastructure."
+    )
     p = add_builder_options(p)
     return (rv, subparsers)
 

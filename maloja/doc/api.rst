@@ -58,7 +58,8 @@ Broker module
 Messages
 ~~~~~~~~
 
-A broker object will respond to the following messages:
+A broker object dispatches messages it finds in its `operations` queue.
+Examples of these are:
 
     * :py:class:`maloja.types.Survey`
     * :py:class:`maloja.types.Design`
@@ -69,8 +70,8 @@ A broker object will respond to the following messages:
 Surveyor module
 ===============
 
-The Surveyor is launched by the Broker whenever a
-:py:class:`maloja.types.Survey` message is received.
+The Surveyor is registered to run whenever a
+:py:class:`maloja.types.Survey` message is received by the Broker.
 
 .. autoclass:: maloja.surveyor.Surveyor
    :members:
@@ -94,20 +95,10 @@ On Windows 8.1::
 Builder module
 ==============
 
+The Builder is registered to run whenever a
+:py:class:`maloja.types.Design` message is received by the Broker.
+
 .. autoclass:: maloja.broker.Builder
    :members: __init__, __call__, monitor
    :member-order: bysource
 
-Plugins
-=======
-
-.. autofunction:: maloja.plugin.vapplicator.selector
-
-.. autoclass:: maloja.plugin.vapplicator.Workflow
-   :members: __init__, __call__
-   :special-members:
-
-Maloja uses python `entry points`_ to define an interface for third party plugins.
-
-.. _entry points: http://pythonhosted.org/distribute/setuptools.html#dynamic-discovery-of-services-and-plugins
-.. _function objects: http://docs.python.org/3/reference/datamodel.html?highlight=__call__#emulating-callable-objects

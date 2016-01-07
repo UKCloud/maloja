@@ -34,9 +34,16 @@ It starts with an empty VApp and adds VMs to it.
 
 def selector(*objs):
     """
-    Returns Paths while any are required to satisfy selection.
+    Your selector function accepts one or more objects from
+    the Maloja :ref:`data model <data model>`.
 
-    Returns Workflow class if objs satisfy selection criteria.
+    If these are not sufficient for the operation of your workflow,
+    the function should return
+    :py:class:`maloja.workflow.utils.Path` objects to indicate
+    what is required to satisfy selection.
+
+    Your function returns a Workflow class if the objects satisfy
+    your selection criteria.
     """
     rv = []
     if not any(obj for obj in objs if isinstance(obj, Vdc)):
@@ -51,6 +58,10 @@ def selector(*objs):
 class Workflow:
 
     def __init__(self, paths, results, executor=None, loop=None, **kwargs):
+        """
+        Initialise the workflow.
+
+        """
         self.context = defaultdict(OrderedDict)
         self.results = results
         self.executor = executor
@@ -66,6 +77,10 @@ class Workflow:
                     self.context[typ][obj] = path
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
+        """
+        Perform the workflow.
+
+        """
         log = logging.getLogger("maloja.plugin.vapplicator")
         log.debug(self.context)
 
@@ -119,3 +134,8 @@ plugin = Plugin(
     selector,
     Workflow
 )
+"""
+This module-level variable provides the entry point to your plugin
+script.
+
+"""

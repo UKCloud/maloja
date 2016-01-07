@@ -172,21 +172,6 @@ class Console(cmd.Cmd):
         packet = (next(self.seq), msg)
         self.operations.put(packet)
 
-    def do_build(self, arg):
-        """
-        Starts building from entry
-
-        """
-        for dirPath, dirNames, fileNames in os.walk(self.entry):
-            for fN in fileNames:
-                fP = os.path.join(dirPath, fN)
-                try:
-                    obj, path = next(filter_records(fP))
-                except StopIteration:
-                    continue
-                else:
-                    print(obj)
-
     def do_clear(self, arg):
         """
         Clears the search results.

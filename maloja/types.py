@@ -10,6 +10,11 @@ Plugin = namedtuple(
     "Plugin",
     ["name", "description", "selector", "workflow"]
 )
+"""
+This data structure describes a Maloja plugin. It is the type
+expected by the `maloja.plugin` interface.
+
+"""
 
 Status = namedtuple("Status", ["id", "job", "level"])
 Stop = namedtuple("Stop", [])

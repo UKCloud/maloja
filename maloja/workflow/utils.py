@@ -11,8 +11,15 @@ import os.path
 
 import pkg_resources
 
-Path = namedtuple("Path", ["root", "project", "org", "dc", "app", "node", "file"])
+Path = namedtuple(
+    "Path",
+    ["root", "project", "org", "dc", "app", "node", "file"]
+)
+"""
+This structure contains the file path components necessary to
+identify resource stored as YAML data in the Maloja survey tree. 
 
+"""
 
 def find_xpath(xpath, tree, namespaces={}, **kwargs):
     """

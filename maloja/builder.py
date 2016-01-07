@@ -91,7 +91,7 @@ class Builder:
         """
         A Builder is a callable object which runs in its own thread.
 
-        Start it up like this::
+        It gets started up like this::
 
             executor.submit(builder, session, token, callback, status)
 

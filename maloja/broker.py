@@ -30,10 +30,13 @@ from maloja.types import Workflow
 @singledispatch
 def handler(msg, session, token, results=None, status=None, **kwargs):
     """
-    You can define your own message types and register a handler
-    for each one.
+    The Broker provides this handler to dispatch messages it
+    receives to functions which know how to execute them.
+ 
+    This design allows new modules to be implemented and to register
+    functions for receipt of specific message types.
 
-    Your handler will receive these positional arguments:
+    Every handler function receives these positional arguments:
 
     :param msg: the message object.
     :param session: a *requests.futures* session object.
@@ -64,6 +67,7 @@ def credentials_handler(msg, session, results=None, status=None, **kwargs):
     return (future,)
 
 
+# TODO: Move to builder module
 @handler.register(Design)
 def design_handler(
     msg, session, token,
@@ -92,6 +96,7 @@ def stop_handler(msg, session, token, **kwargs):
     return tuple()
 
 
+# TODO: Move to surveyor module
 @handler.register(Survey)
 def survey_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
     log = logging.getLogger("maloja.broker.survey_handler")
@@ -169,7 +174,7 @@ class Broker:
     A Broker is an active object. The tasks it runs in the background
     of your program are stored in this dictionary.
 
-    To wait for your Broker to finish, use code like this::
+    To wait for a Broker to finish takes code like this::
 
         tasks = concurrent.futures.wait(set(broker.tasks.values()))
     """

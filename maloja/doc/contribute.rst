@@ -65,7 +65,7 @@ Uninstalling Maloja
 ===================
 
 To eliminate the install process from your development cycle,
-it's preferable to perform these tasks with maloja *uninstalled*:
+it's preferable to perform these tasks with Maloja *uninstalled*:
 
     * `Running unit tests`_
     * `Building documentation`_

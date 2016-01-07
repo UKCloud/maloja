@@ -27,7 +27,8 @@ from maloja.workflow.utils import make_path
 from maloja.workflow.utils import recent_project
 
 __doc__ = """
-start %HOME%\\maloja-py3.5\\scripts\\python -m maloja.main @options.private build --input=maloja\\test\\use_case01.yaml
+start %HOME%\\maloja-py3.5\\scripts\\python -m maloja.main
+@options.private build --input=maloja\\test\\use_case01.yaml
 """
 
 def main(args):

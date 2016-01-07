@@ -26,11 +26,11 @@ from a survey (also YAML) assembled in a hierarchical structure.
 """
 
 types = {
-"application/vnd.vmware.admin.edgeGateway+xml": Gateway,
-"application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
-"application/vnd.vmware.vcloud.vAppTemplate+xml": Template,
-"application/vnd.vmware.vcloud.vdc+xml": Vdc,
-"application/vnd.vmware.vcloud.vm+xml": Vm,
+    "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
+    "application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
+    "application/vnd.vmware.vcloud.vAppTemplate+xml": Template,
+    "application/vnd.vmware.vcloud.vdc+xml": Vdc,
+    "application/vnd.vmware.vcloud.vm+xml": Vm,
 }
 
 

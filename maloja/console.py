@@ -94,7 +94,7 @@ class Console(cmd.Cmd):
         else:
             log.debug("Closing console input.")
             return n
- 
+
     def command_task(self):
         log = logging.getLogger("maloja.console.command_task")
         n = 0
@@ -141,12 +141,16 @@ class Console(cmd.Cmd):
                     sys.stdout.write("\n[{0.id}] {0.level}:{0.job} complete.\n".format(status))
                 elif isinstance(msg, Token):
                     self.token = msg
-                    sys.stdout.write("\n[{0.id}] {0.level}:{0.job} Token received.\n".format(status))
+                    sys.stdout.write(
+                        "\n[{0.id}] {0.level}:{0.job} Token received.\n".format(status)
+                    )
                     self.prompt = "Type 'help' for commands > "
                 elif isinstance(msg, str):
                     sys.stdout.write("\n[{0.id}] {1}\n".format(status, msg))
                 else:
-                    sys.stdout.write("\n[{0.id}] {1.__name__} received.\n".format(status, type(msg)))
+                    sys.stdout.write(
+                        "\n[{0.id}] {1.__name__} received.\n".format(status, type(msg))
+                    )
                 sys.stdout.flush()
                 sys.stdout.write(self.prompt)
                 sys.stdout.flush()
@@ -269,9 +273,13 @@ class Console(cmd.Cmd):
                 self.search[obj] = path
             else:
                 print("Your options:")
-                print(*["{0:01}: {1}".format(n, getattr(obj, "name", obj))
-                        for n, (obj, path) in enumerate(results)],
-                        sep="\n")
+                print(
+                    *[
+                        "{0:01}: {1}".format(n, getattr(obj, "name", obj))
+                        for n, (obj, path) in enumerate(results)
+                    ],
+                    sep="\n"
+                )
                 sys.stdout.write("\n")
         elif results:
             self.search[results[0][0]] = results[0][1]

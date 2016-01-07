@@ -17,7 +17,7 @@ Path = namedtuple(
 )
 """
 This structure contains the file path components necessary to
-identify resource stored as YAML data in the Maloja survey tree. 
+identify resource stored as YAML data in the Maloja survey tree.
 
 """
 

@@ -53,7 +53,7 @@ def selector(*objs):
     if not len([obj for obj in objs if isinstance(obj, Template)]):
         rv.append(Path(None, None, None, None, None, None, "template.yaml"))
     return rv or Workflow
-        
+
 
 class Workflow:
 
@@ -68,7 +68,7 @@ class Workflow:
 
         for path in paths:
             typ = Surveyor.patterns[os.path.splitext(path.file)[0]][0]
-            fP = os.path.join(*(i for i in path if not i is None))
+            fP = os.path.join(*(i for i in path if i is not None))
             with open(fP, "r") as data:
                 obj = typ(**yaml_loads(data.read()))
                 if obj is None:

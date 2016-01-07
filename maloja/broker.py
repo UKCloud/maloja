@@ -32,7 +32,7 @@ def handler(msg, session, token, results=None, status=None, **kwargs):
     """
     The Broker provides this handler to dispatch messages it
     receives to functions which know how to execute them.
- 
+
     This design allows new modules to be implemented and to register
     functions for receipt of specific message types.
 

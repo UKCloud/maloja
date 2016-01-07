@@ -44,13 +44,16 @@ Use the help command
 * Type '`help`' to see what commands are available.
 * Type '`help <command>`' to see command-specific information.
 
-Survey and search
-~~~~~~~~~~~~~~~~~
+Survey
+~~~~~~
 
 Issue a '`survey`' command to get information on the structure of your
 cloud. This is achieved recursively and asynchronously to the console. Each
 task reports when it has finished. When no more tasks are active, the survey is
 complete.
+
+Search
+~~~~~~
 
 Use the '`search`' command to view assets at every level, filter by attribute and
 pick from a list of results, eg:
@@ -68,3 +71,8 @@ Clear the buffer
 
 The console stores in memory each object you have identified by search. Refresh
 this buffer with the '`clear`' command.
+
+.. note::
+
+   That concludes a quick tour of Maloja. Read the :ref:`commands` section for
+   full details on how to operate the toolkit.

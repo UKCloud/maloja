@@ -4,6 +4,22 @@
 Implementation details
 ::::::::::::::::::::::
 
+Architecture
+============
+
+The Architecture of Maloja tries to ensure:
+
+    * Each distinct Use Case has a command to achieve it
+    * Commands are invoked from the CLI, the Console or both
+      as fits the Use Case
+    * Each command is implemented in a separate module
+    * Common operations against the API are the
+      responsibility of a `Broker module`_
+
+.. figure:: _static/architecture.png
+
+   Components of the Maloja toolkit
+
 Common types
 ============
 

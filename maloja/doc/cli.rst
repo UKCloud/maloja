@@ -1,6 +1,8 @@
 ..  Titling
     ##++::==~~--''``
 
+.. _commands:
+
 Commands
 ::::::::
 

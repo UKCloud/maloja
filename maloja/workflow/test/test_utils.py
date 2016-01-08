@@ -18,12 +18,8 @@ import ruamel.yaml
 
 import maloja.plugin.vapplicator
 
-from maloja.workflow.utils import Path
-from maloja.workflow.utils import make_path
 from maloja.workflow.utils import plugin_interface
-from maloja.workflow.utils import recent_project
 from maloja.workflow.utils import record
-from maloja.workflow.utils import split_to_path
 
 
 class DiscoveryTester(unittest.TestCase):
@@ -43,130 +39,6 @@ class NeedsTempDirectory:
             self.drcty.cleanup()
         self.assertFalse(os.path.isdir(self.drcty.name))
         self.drcty = None
-
-class PathTests(NeedsTempDirectory, unittest.TestCase):
-
-    def test_nodirectory_recent(self):
-        try:
-            FileNotFoundError
-        except NameError:
-            FileNotFoundError = OSError
-
-        drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None, None
-        )
-        drcty.cleanup()
-        self.assertFalse(os.path.isdir(drcty.name))
-        self.assertRaises(FileNotFoundError, recent_project, path)
-
-    def test_nodirectory_make_path(self):
-        drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None, None
-        )
-        drcty.cleanup()
-        self.assertFalse(os.path.isdir(drcty.name))
-        path = make_path(path)
-        self.assertTrue(os.path.isdir(drcty.name))
-        self.assertEqual(drcty.name, path.root)
-
-    def test_nodirectory_make_project(self):
-        drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None,
-            "project.yaml"
-        )
-        drcty.cleanup()
-        self.assertFalse(os.path.isdir(drcty.name))
-        path = make_path(path)
-        self.assertTrue(os.path.isdir(drcty.name))
-        self.assertEqual(drcty.name, path.root)
-
-    def test_nodirectory_recent_project(self):
-        drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None,
-            "project.yaml"
-        )
-        drcty.cleanup()
-        self.assertFalse(os.path.isdir(drcty.name))
-        path = make_path(recent_project(make_path(path)))
-        self.assertTrue(os.path.isdir(drcty.name))
-        self.assertEqual(drcty.name, path.root)
-        self.assertTrue(path.project)
-
-    def test_noproject_recent_project(self):
-        path = Path(
-            self.drcty.name,
-            None, None, None, None, None,
-            "project.yaml"
-        )
-        path = make_path(recent_project(make_path(path)))
-        self.assertTrue(os.path.isdir(self.drcty.name))
-        self.assertEqual(self.drcty.name, path.root)
-        self.assertTrue(path.project)
-
-class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
-
-    def test_org(self):
-        expect = Path(
-            self.drcty.name,
-            "project", "org", None, None, None,
-            "org.yaml"
-        )
-        data = os.path.join(*(i for i in expect if not i is None))
-        rv = split_to_path(data, expect.root)
-        self.assertEqual(expect[1:], rv[1:])
-        self.assertTrue(os.path.samefile(expect[0], rv[0]))
-
-    def test_vdc(self):
-        expect = Path(
-            self.drcty.name,
-            "project", "org", "vdc", None, None,
-            "vdc.yaml"
-        )
-        data = os.path.join(*(i for i in expect if not i is None))
-        rv = split_to_path(data, expect.root)
-        self.assertEqual(expect[1:], rv[1:])
-        self.assertTrue(os.path.samefile(expect[0], rv[0]))
-
-    def test_template(self):
-        expect = Path(
-            self.drcty.name,
-            "project", "org", "vdc", "template", None,
-            "template.yaml"
-        )
-        data = os.path.join(*(i for i in expect if not i is None))
-        rv = split_to_path(data, expect.root)
-        self.assertEqual(expect[1:], rv[1:])
-        self.assertTrue(os.path.samefile(expect[0], rv[0]))
-
-    def test_vapp(self):
-        expect = Path(
-            self.drcty.name,
-            "project", "org", "vdc", "vapp", None,
-            "vapp.yaml"
-        )
-        data = os.path.join(*(i for i in expect if not i is None))
-        rv = split_to_path(data, expect.root)
-        self.assertEqual(expect[1:], rv[1:])
-        self.assertTrue(os.path.samefile(expect[0], rv[0]))
-
-    def test_vm(self):
-        expect = Path(
-            self.drcty.name,
-            "project", "org", "vdc", "template", "vm",
-            "vm.yaml"
-        )
-        data = os.path.join(*(i for i in expect if not i is None))
-        rv = split_to_path(data, expect.root)
-        self.assertEqual(expect[1:], rv[1:])
-        self.assertTrue(os.path.samefile(expect[0], rv[0]))
 
 class RecordTests(NeedsTempDirectory, unittest.TestCase):
 

@@ -31,7 +31,7 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
         return [
             (Project(), Path(
                 root, "testproj", None, None, None, None, None, "project.yaml")),
-            (Org(), Path(
+            (Org(name="0-123-4-567890"), Path(
                 root, "testproj", "0-123-4-567890", None, None, None, None, "org.yaml")),
             (Catalog(),
              Path(root, "testproj", "0-123-4-567890", "catalogs",

@@ -155,7 +155,6 @@ class Gateway(DataObject):
     def typecast(val):
         rv = DataObject.typecast(val)
         if isinstance(rv, str):
-            print(rv)
             try:
                 rv = Gateway.servicecast(rv)
             except ValueError:

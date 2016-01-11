@@ -3,6 +3,7 @@
 
 from collections import namedtuple
 from collections import OrderedDict
+import copy
 import functools
 import logging
 import ipaddress
@@ -61,7 +62,7 @@ class DataObject:
         the `kwargs` dictionary.
 
         """
-        data = self._defaults + list(kwargs.items())
+        data = copy.deepcopy(self._defaults) + list(kwargs.items())
         for k, v in data:
             setattr(self, k, v)
 
@@ -149,6 +150,17 @@ class Gateway(DataObject):
             return None
         else:
             return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
+
+    @staticmethod
+    def typecast(val):
+        rv = DataObject.typecast(val)
+        if isinstance(rv, str):
+            print(rv)
+            try:
+                rv = Gateway.servicecast(rv)
+            except ValueError:
+                pass
+        return rv
 
     def __init__(self, **kwargs):
         """

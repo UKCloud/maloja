@@ -16,22 +16,13 @@ from maloja.model import Project
 from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
-from maloja.model import yaml_dumps
+from maloja.model import yaml_loads
 
 from maloja.workflow.path import Path
+from maloja.workflow.path import cache
 from maloja.workflow.path import split_to_path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
-def cache(path, obj=None):
-    parent = os.path.join(*(i for i in path[:-1] if i is not None))
-    os.makedirs(parent, exist_ok=True)
-    fP = os.path.join(parent, path.file)
-    if obj is not None:
-        with open(fP, "w") as output:
-            data = yaml_dumps(obj)
-            output.write(data)
-            output.flush()
-    return fP
 
 class PathTests(NeedsTempDirectory, unittest.TestCase):
 
@@ -78,11 +69,22 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
                  "Skyscape", "CentOS_FTP", "server", "vm.yaml")),
         ]
 
-    def test_each_field(self):
+    def test_cache_path(self):
         for obj, path in self.fixture:
             with self.subTest(path=path):
                 rv = cache(path, obj)
                 self.assertEqual(path, split_to_path(rv, root=self.drcty.name))
+                self.assertTrue(os.path.isfile(rv))
+
+    def test_object_cache(self):
+        self.maxDiff = 1200
+        for obj, path in self.fixture:
+            with self.subTest(path=path):
+                fP = cache(path, obj)
+                with open(fP, 'r') as data:
+                    text = data.read()
+                    rv = type(obj)(**yaml_loads(text))
+                    self.assertEqual(vars(obj), vars(rv))
 
 @unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):

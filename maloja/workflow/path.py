@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
+from collections import defaultdict
 from collections import namedtuple
 import itertools
 import os.path
+import threading
+
+from maloja.model import yaml_dumps
+
+locks = defaultdict(threading.Lock)
 
 Path = namedtuple(
     "Path",
@@ -14,6 +20,21 @@ This structure contains the file path components necessary to
 identify resource stored as YAML data in the Maloja survey tree.
 
 """
+
+def cache(path, obj=None):
+    parent = os.path.join(*(i for i in path[:-1] if i is not None))
+    os.makedirs(parent, exist_ok=True)
+    fP = os.path.join(parent, path.file)
+    if obj is not None:
+        try:
+            locks[path].acquire()
+            with open(fP, "w") as output:
+                data = yaml_dumps(obj)
+                output.write(data)
+                output.flush()
+        finally:
+            locks[path].release()
+    return fP
 
 """
 def find_ypath(....):

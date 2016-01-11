@@ -14,14 +14,20 @@ from maloja.model import Org
 from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
+from maloja.model import yaml_dumps
 
 from maloja.workflow.path import Path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
 class Project: pass
 
-def populate(seq):
-    yield from seq
+def populate(obj, path=None):
+    fP = os.path.join(*(i for i in path if i is not None))
+    with open(fP, "w") as output:
+        data = yaml_dumps(obj)
+        output.write(data)
+        output.flush()
+    return fP
 
 class PathTests(NeedsTempDirectory, unittest.TestCase):
 
@@ -48,29 +54,29 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
             (Vm(name="master"),
              Path(root, "testproj", "0-123-4-567890", "catalogs",
                  "Skyscape", "RedHat_MySQL", "master", "vm.yaml")),
-            (Vm(),
+            (Vm(name="slave"),
              Path(root, "testproj", "0-123-4-567890", "catalogs",
                  "Skyscape", "RedHat_MySQL", "slave", "vm.yaml")),
-            (Gateway(),
+            (Gateway(name="0-123-4-567890-edge"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
                  None, None, None, "edge.yaml")),
-            (Vdc(),
+            (Vdc(name="PROD"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
                  None, None, None, "vdc.yaml")),
-            (Network(),
+            (Network(name="USER_NET"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
                  "networks", "USER_NET", None, "net.yaml")),
-            (VApp(),
+            (VApp(name="CentOS_FTP"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
                  "Skyscape", "CentOS_FTP", None, "vapp.yaml")),
-            (Vm(),
+            (Vm(name="server"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
                  "Skyscape", "CentOS_FTP", "server", "vm.yaml")),
         ]
 
     def test_each_field(self):
-        for i in populate(self.fixture):
-            print(i)
+        for obj, path in self.fixture:
+            print(populate(obj, path))
 
 @unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):

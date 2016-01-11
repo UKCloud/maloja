@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #   -*- encoding: UTF-8 -*-
 
+import os
 import os.path
 from io import StringIO
 import tempfile
@@ -17,12 +18,15 @@ from maloja.model import Vm
 from maloja.model import yaml_dumps
 
 from maloja.workflow.path import Path
+from maloja.workflow.path import split_to_path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
 class Project: pass
 
-def populate(obj, path=None):
-    fP = os.path.join(*(i for i in path if i is not None))
+def populate(obj, path):
+    parent = os.path.join(*(i for i in path[:-1] if i is not None))
+    os.makedirs(parent, exist_ok=True)
+    fP = os.path.join(parent, path.file)
     with open(fP, "w") as output:
         data = yaml_dumps(obj)
         output.write(data)
@@ -76,7 +80,9 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
 
     def test_each_field(self):
         for obj, path in self.fixture:
-            print(populate(obj, path))
+            with self.subTest(path=path):
+                rv = populate(obj, path)
+                self.assertEqual(path, split_to_path(rv))
 
 @unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):

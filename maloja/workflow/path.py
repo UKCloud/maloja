@@ -2,6 +2,8 @@
 #   -*- encoding: UTF-8 -*-
 
 from collections import namedtuple
+import itertools
+import os.path
 
 Path = namedtuple(
     "Path",
@@ -70,4 +72,27 @@ def filter_records(*args, root="", key="", value=""):
                 if value.strip() in str(match):
                     yield (obj, path)
 
-
+def split_to_path(data, root=None):
+    lookup = {
+        "project.yaml": -3,
+        "org.yaml": -4,
+        "vdc.yaml": -5,
+        "catalog.yaml": -5,
+        "vapp.yaml": -6,
+        "template.yaml": -6,
+        "vm.yaml": -7,
+    }
+    drive, tail = os.path.splitdrive(data)
+    bits = tail.split(os.sep)
+    index = lookup[bits[-1]]
+    data = list(itertools.chain(
+        bits[index: -1],
+        itertools.repeat(None, 7 + index),
+        itertools.repeat(bits[-1], 1)
+    ))
+    rv = Path(*data)
+    if root is None:
+        rv = rv._replace(root=drive + os.path.join(*bits[:index]))
+    else:
+        rv = rv._replace(root=root)
+    return rv

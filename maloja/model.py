@@ -84,6 +84,9 @@ class DataObject:
             setattr(self, k[0].lower() + k[1:], self.typecast(v))
         return self
 
+class Project(DataObject):
+    pass
+
 class Catalog(DataObject):
     """
     The Catalog class represents a VMware public or private
@@ -441,6 +444,7 @@ ruamel.yaml.RoundTripDumper.add_representer(Gateway.DNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.SNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Network, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Project, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(VApp, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vdc, dataobject_as_ordereddict)

@@ -12,6 +12,7 @@ from maloja.model import Gateway
 from maloja.model import Network
 from maloja.model import Template
 from maloja.model import Org
+from maloja.model import Project
 from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
@@ -21,16 +22,15 @@ from maloja.workflow.path import Path
 from maloja.workflow.path import split_to_path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
-class Project: pass
-
-def populate(obj, path):
+def cache(path, obj=None):
     parent = os.path.join(*(i for i in path[:-1] if i is not None))
     os.makedirs(parent, exist_ok=True)
     fP = os.path.join(parent, path.file)
-    with open(fP, "w") as output:
-        data = yaml_dumps(obj)
-        output.write(data)
-        output.flush()
+    if obj is not None:
+        with open(fP, "w") as output:
+            data = yaml_dumps(obj)
+            output.write(data)
+            output.flush()
     return fP
 
 class PathTests(NeedsTempDirectory, unittest.TestCase):
@@ -81,8 +81,8 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
     def test_each_field(self):
         for obj, path in self.fixture:
             with self.subTest(path=path):
-                rv = populate(obj, path)
-                self.assertEqual(path, split_to_path(rv))
+                rv = cache(path, obj)
+                self.assertEqual(path, split_to_path(rv, root=self.drcty.name))
 
 @unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):

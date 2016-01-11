@@ -16,13 +16,14 @@ identify resource stored as YAML data in the Maloja survey tree.
 """
 
 """
+def find_ypath(....):
     patterns = {
-        "org": (Org, "*/org.yaml"),
-        "catalog": (Catalog, "*/*/catalog.yaml"),
-        "vdc": (Vdc, "*/*/vdc.yaml"),
-        "vapp": (VApp, "*/*/*/vapp.yaml"),
-        "template": (Template, "*/*/*/template.yaml"),
-        "vm": (Vm, "*/*/*/*/vm.yaml"),
+        Org: ("*/org.yaml",),
+        Catalog: ("*/*/catalog.yaml",),
+        Vdc: ("*/*/vdc.yaml",),
+        VApp: ("*/*/*/vapp.yaml",),
+        Template: ("*/*/*/template.yaml",),
+        Vm: ("*/*/*/*/vm.yaml",),
     }
 """
 
@@ -73,21 +74,23 @@ def filter_records(*args, root="", key="", value=""):
                     yield (obj, path)
 
 def split_to_path(data, root=None):
+    drive, tail = os.path.splitdrive(data)
+    bits = tail.split(os.sep)
     lookup = {
         "project.yaml": -3,
         "org.yaml": -4,
+        "edge.yaml": -5,
         "vdc.yaml": -5,
-        "catalog.yaml": -5,
-        "vapp.yaml": -6,
-        "template.yaml": -6,
-        "vm.yaml": -7,
+        "catalog.yaml": -6,
+        "net.yaml": -7,
+        "vapp.yaml": -7,
+        "template.yaml": -7,
+        "vm.yaml": -8,
     }
-    drive, tail = os.path.splitdrive(data)
-    bits = tail.split(os.sep)
-    index = lookup[bits[-1]]
+    index = lookup[bits[-1]] #  The index of the project field
     data = list(itertools.chain(
         bits[index: -1],
-        itertools.repeat(None, 7 + index),
+        itertools.repeat(None, 8 + index),
         itertools.repeat(bits[-1], 1)
     ))
     rv = Path(*data)

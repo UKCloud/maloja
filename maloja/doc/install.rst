@@ -26,9 +26,9 @@ Create a Python virtual environment
 Ubuntu Linux 14.04 LTS
 ~~~~~~~~~~~~~~~~~~~~~~
 
-#. Install `python3-dev` from the package repository of your OS::
+#. Install any necessary development libraries from the package repository of your OS::
 
-    $ sudo apt-get install -y python3-dev
+    $ sudo apt-get install -y zlib1g-dev libjpeg8-dev python3-dev
 
 #. Install `python-virtualenv` from the package repository of your OS::
 

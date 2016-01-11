@@ -6,9 +6,19 @@ from io import StringIO
 import tempfile
 import unittest
 
-from maloja.workflow.test.test_utils import NeedsTempDirectory
+from maloja.model import Catalog
+from maloja.model import Gateway
+from maloja.model import Network
+from maloja.model import Template
+from maloja.model import Org
+from maloja.model import VApp
+from maloja.model import Vdc
+from maloja.model import Vm
 
 from maloja.workflow.path import Path
+from maloja.workflow.test.test_utils import NeedsTempDirectory
+
+class Project: pass
 
 def populate(seq):
     yield from seq
@@ -19,30 +29,43 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
     def fixture(self):
         root = self.drcty.name
         return [
-            Path(root, "testproj", None, None, None, None, None, "project.yaml"),
-            Path(root, "testproj", "0-123-4-567890", None, None, None, None, "org.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "catalogs",
-                 "Skyscape", None, None, "catalog.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "catalogs",
-                 "Skyscape", "CentOS_FTP", None, "template.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "catalogs",
-                 "Skyscape", "CentOS_FTP", "server", "vm.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "catalogs",
-                 "Skyscape", "RedHat_MySQL", None, "template.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "catalogs",
-                 "Skyscape", "RedHat_MySQL", "master", "vm.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "catalogs",
-                 "Skyscape", "RedHat_MySQL", "slave", "vm.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "PROD",
-                 None, None, None, "edge.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "PROD",
-                 None, None, None, "vdc.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "PROD",
-                 "networks", "USER_NET", None, "net.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "PROD",
-                 "Skyscape", "CentOS_FTP", None, "vapp.yaml"),
-            Path(root, "testproj", "0-123-4-567890", "PROD",
-                 "Skyscape", "CentOS_FTP", "server", "vm.yaml"),
+            (Project(), Path(
+                root, "testproj", None, None, None, None, None, "project.yaml")),
+            (Org(), Path(
+                root, "testproj", "0-123-4-567890", None, None, None, None, "org.yaml")),
+            (Catalog(),
+             Path(root, "testproj", "0-123-4-567890", "catalogs",
+                  "Skyscape", None, None, "catalog.yaml")),
+            (Template(),
+             Path(root, "testproj", "0-123-4-567890", "catalogs",
+                 "Skyscape", "CentOS_FTP", None, "template.yaml")),
+            (Vm(),
+             Path(root, "testproj", "0-123-4-567890", "catalogs",
+                 "Skyscape", "CentOS_FTP", "server", "vm.yaml")),
+            (Template(),
+             Path(root, "testproj", "0-123-4-567890", "catalogs",
+                 "Skyscape", "RedHat_MySQL", None, "template.yaml")),
+            (Vm(),
+             Path(root, "testproj", "0-123-4-567890", "catalogs",
+                 "Skyscape", "RedHat_MySQL", "master", "vm.yaml")),
+            (Vm(),
+             Path(root, "testproj", "0-123-4-567890", "catalogs",
+                 "Skyscape", "RedHat_MySQL", "slave", "vm.yaml")),
+            (Gateway(),
+             Path(root, "testproj", "0-123-4-567890", "PROD",
+                 None, None, None, "edge.yaml")),
+            (Vdc(),
+             Path(root, "testproj", "0-123-4-567890", "PROD",
+                 None, None, None, "vdc.yaml")),
+            (Network(),
+             Path(root, "testproj", "0-123-4-567890", "PROD",
+                 "networks", "USER_NET", None, "net.yaml")),
+            (VApp(),
+             Path(root, "testproj", "0-123-4-567890", "PROD",
+                 "Skyscape", "CentOS_FTP", None, "vapp.yaml")),
+            (Vm(),
+             Path(root, "testproj", "0-123-4-567890", "PROD",
+                 "Skyscape", "CentOS_FTP", "server", "vm.yaml")),
         ]
 
     def test_each_field(self):

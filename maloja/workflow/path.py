@@ -36,8 +36,17 @@ def cache(path, obj=None):
             locks[path].release()
     return fP
 
-"""
-def find_ypath(....):
+def find_ypath(path: Path, obj):
+    """
+    Find elements within the cache tree whose attributes match certain
+    values.
+
+    :param path: search location in cache.
+    :param obj: object to look for.
+     Any attributes on the object evaluating as True will serve as criteria to be matched.
+
+    :return: An iterator over matching path objects.
+    """
     patterns = {
         Org: ("*/org.yaml",),
         Catalog: ("*/*/catalog.yaml",),
@@ -46,7 +55,6 @@ def find_ypath(....):
         Template: ("*/*/*/template.yaml",),
         Vm: ("*/*/*/*/vm.yaml",),
     }
-"""
 
 # TODO: Surveyor.patterns go here
 # TODO: Factories for empty Paths

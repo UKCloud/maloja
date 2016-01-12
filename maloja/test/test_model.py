@@ -356,7 +356,7 @@ class TaskTests(unittest.TestCase):
         <InMaintenanceMode>false</InMaintenanceMode>
     </VApp>""")
 
-    def test_flatten(self):
+    def test_elements(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(TaskTests.xml)
         task = next(find_xpath(

@@ -95,14 +95,25 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
         results = list(find_ypath(proj, Vm()))
         self.assertEqual(4, len(results))
         self.assertTrue(all(len(i) == 2 for i in results), results)
+        self.assertTrue(all(isinstance(i[0], Path) for i in results), results)
         self.assertTrue(all(isinstance(i[1], Vm) for i in results), results)
+        self.assertIn(self.fixture[-1][1], [i[0] for i in results], results)
 
     def test_ypath_with_attributes(self):
+        proj = self.fixture[0][1]
+        for obj, path in self.fixture:
+            cache(path, obj)
+
+        results = list(find_ypath(proj, Vm(name="server")))
+        self.assertEqual(2, len(results))
+        self.assertTrue(all(len(i) == 2 for i in results), results)
+        self.assertTrue(all(isinstance(i[0], Path) for i in results), results)
+        self.assertTrue(all(isinstance(i[1], Vm) for i in results), results)
+        self.assertIn(self.fixture[-1][1], [i[0] for i in results], results)
+
+    def test_ypath_with_keywords(self):
         self.fail()
 
-    def test_ypath_with_nested_attributes(self):
-        self.fail()
-        
 @unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):
 

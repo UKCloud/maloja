@@ -77,7 +77,8 @@ def find_ypath(path: Path, query, **kwargs):
             with open(fP, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))
                 if criteria.issubset(set(obj.elements)):
-                    yield (fP, obj)
+                    hit = Path(*fP.split(os.sep)[-len(path):])
+                    yield (hit._replace(root=path.root), obj)
 
 # TODO: Surveyor.patterns go here
 # TODO: Factories for empty Paths

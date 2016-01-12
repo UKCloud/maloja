@@ -66,19 +66,34 @@ class DataObject:
         for k, v in data:
             setattr(self, k, v)
 
+    def __eq__(self, other):
+        tgt = getattr(other, "__dict__", None)
+        return self.__dict__ == tgt
+
+    def __hash__(self):
+        return id(self)
+
     @property
     def elements(self):
-        def grouper(val):
-            return (
-                list if isinstance(val, list) else
-                tuple if hasattr(val, "_fields") else
-                str
-            )
 
-        forms = {typ: list(elems) for typ, elems in itertools.groupby(self._defaults, grouper)}
-        for k, v in forms[str]:
-            print(k)
-            yield (k, getattr(self, k))
+        def visitor(obj):
+            try:
+                yield from obj.elements
+            except AttributeError:
+                if isinstance(obj, str):
+                    yield (k, obj)
+                    return
+
+            try:
+                yield from obj._asdict().items()
+            except AttributeError:
+                if isinstance(obj, list):
+                    for item in obj:
+                        yield from visitor(item)
+
+        for k, _ in self._defaults:
+            obj = getattr(self, k)
+            yield from visitor(obj)
  
     def feed_xml(self, tree, *args, **kwargs):
         """

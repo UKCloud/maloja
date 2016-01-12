@@ -11,6 +11,7 @@ import unittest
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
+from maloja.model import Org
 from maloja.model import Template
 from maloja.model import Vm
 from maloja.model import yaml_dumps
@@ -371,9 +372,16 @@ class TaskTests(unittest.TestCase):
                 ),
                 ("type", "application/vnd.vmware.vcloud.task+xml"),
                 ("operationName", "vdcInstantiateVapp"),
-                ("organization", None),
                 ("startTime", "2015-12-28T11:33:19.414Z"),
-                ("status", "running")
+                ("status", "running"),
+                #  Organization
+                ("name", "1-572-2-ff369f"),
+                ("href", (
+                    "https://api.vcd.portal.skyscapecloud.com/api/org/"
+                    "1fa3fcf9-72a6-4464-8a5f-e00e4f60cd3a"
+                    )
+                ),
+                ("type", "application/vnd.vmware.vcloud.org+xml"),
             ]),
             set(obj.elements)
         )

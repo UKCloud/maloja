@@ -67,14 +67,15 @@ def find_ypath(path: Path, query, **kwargs):
         Org: (wildcards[:3] + ["org.yaml"],),
         Catalog: (wildcards[:5] + ["catalog.yaml"],),
         Vdc: (wildcards[:4] + ["vdc.yaml"],),
-        VApp: (wildcards[:5] + ["vapp.yaml"],),
+        VApp: (wildcards[:6] + ["vapp.yaml"],),
         Template: (wildcards[:5] + ["template.yaml"],),
-        Vm: (wildcards[:6] + ["vm.yaml"], wildcards[:7] + ["vm.yaml"]),
+        Vm: (wildcards[:7] + ["vm.yaml"],),
     }
     typ = type(query)
     criteria = set(kwargs.items()) or set(query.elements)
     patterns = [os.path.join(*i) for i in locations[typ]]
     for pattern in patterns:
+        print(pattern)
         for fP in glob.glob(pattern):
             with open(fP, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))

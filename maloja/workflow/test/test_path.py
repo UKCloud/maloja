@@ -64,17 +64,19 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
                  "networks", "USER_NET", None, "net.yaml")),
             (VApp(name="CentOS_FTP"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
-                 "Skyscape", "CentOS_FTP", None, "vapp.yaml")),
+                 "vapps", "CentOS_FTP", None, "vapp.yaml")),
             (Vm(name="server"),
              Path(root, "testproj", "0-123-4-567890", "PROD",
-                 "Skyscape", "CentOS_FTP", "server", "vm.yaml")),
+                 "vapps", "CentOS_FTP", "server", "vm.yaml")),
         ]
 
     def test_cache_path(self):
+        self.maxDiff = 1200
         for obj, path in self.fixture:
             with self.subTest(path=path):
                 rv = cache(path, obj)
-                self.assertEqual(path, split_to_path(rv, root=self.drcty.name))
+                check = split_to_path(rv, root=self.drcty.name)
+                self.assertEqual(path, check, check)
                 self.assertTrue(os.path.isfile(rv))
 
     def test_object_cache(self):
@@ -191,13 +193,12 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         self.assertEqual(self.drcty.name, path.root)
         self.assertTrue(path.project)
 
-@unittest.skip("Heavy development")
 class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
 
     def test_org(self):
         expect = Path(
             self.drcty.name,
-            "project", "org", None, None, None,
+            "project", "org", None, None, None, None,
             "org.yaml"
         )
         data = os.path.join(*(i for i in expect if not i is None))
@@ -208,7 +209,7 @@ class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
     def test_vdc(self):
         expect = Path(
             self.drcty.name,
-            "project", "org", "vdc", None, None,
+            "project", "org", "vdc", None, None, None,
             "vdc.yaml"
         )
         data = os.path.join(*(i for i in expect if not i is None))
@@ -219,7 +220,7 @@ class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
     def test_template(self):
         expect = Path(
             self.drcty.name,
-            "project", "org", "vdc", "template", None,
+            "project", "org", "catalogs", "catalog", "template", None,
             "template.yaml"
         )
         data = os.path.join(*(i for i in expect if not i is None))
@@ -230,7 +231,7 @@ class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
     def test_vapp(self):
         expect = Path(
             self.drcty.name,
-            "project", "org", "vdc", "vapp", None,
+            "project", "org", "vdc", "vapps", "vapp", None,
             "vapp.yaml"
         )
         data = os.path.join(*(i for i in expect if not i is None))
@@ -241,31 +242,10 @@ class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
     def test_vm(self):
         expect = Path(
             self.drcty.name,
-            "project", "org", "vdc", "template", "vm",
+            "project", "org", "catalogs", "catalog", "template", "vm",
             "vm.yaml"
         )
         data = os.path.join(*(i for i in expect if not i is None))
         rv = split_to_path(data, expect.root)
         self.assertEqual(expect[1:], rv[1:])
         self.assertTrue(os.path.samefile(expect[0], rv[0]))
-
-@unittest.skip("Heavy development")
-class RecordTests(NeedsTempDirectory, unittest.TestCase):
-
-    def test_content_goes_to_named_file(self):
-        fN = "node.yaml"
-        fP = os.path.join(self.drcty.name, fN)
-        self.assertFalse(os.path.isfile(fP))
-        with record(fN, parent=self.drcty.name) as output:
-            output.write(ruamel.yaml.dump("Test string"))
-
-        self.assertTrue(os.path.isfile(fP))
-        with open(fP, 'r') as check:
-            self.assertEqual("Test string\n...", check.read().strip())
-
-    def test_content_goes_to_file_object(self):
-        fObj = StringIO()
-        with record(fObj, parent=self.drcty.name) as output:
-            output.write(ruamel.yaml.dump("Test string"))
-
-        self.assertEqual("Test string\n...", fObj.getvalue().strip())

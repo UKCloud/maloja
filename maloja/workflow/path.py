@@ -47,14 +47,16 @@ def cache(path, obj=None):
             locks[path].release()
     return fP
 
-def find_ypath(path: Path, obj):
+def find_ypath(path: Path, query, **kwargs):
     """
     Find elements within the cache tree whose attributes match certain
     values.
 
     :param path: search location in cache.
-    :param obj: object to look for.
-     Any attributes on the object evaluating as True will serve as criteria to be matched.
+    :param query: an archetype of the object to look for.
+    :param kwargs: specifies attribute values to filter by.
+     If no keyword arguments are supplied, then attributes
+     on the query object serve as criteria to be matched.
 
     :return: An iterator over matching (path, object) tuples.
     """
@@ -67,15 +69,14 @@ def find_ypath(path: Path, obj):
         Template: (wildcards[:5] + ["template.yaml"],),
         Vm: (wildcards[:6] + ["vm.yaml"], wildcards[:7] + ["vm.yaml"]),
     }
-    typ = type(obj)
+    typ = type(query)
+    criteria = set(kwargs.items()) or set(query.elements)
     patterns = [os.path.join(*i) for i in locations[typ]]
     for pattern in patterns:
         for fP in glob.glob(pattern):
             with open(fP, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))
-                query = set()
-                data = set()
-                if query.issubset(data):
+                if criteria.issubset(set(obj.elements)):
                     yield (fP, obj)
 
 # TODO: Surveyor.patterns go here

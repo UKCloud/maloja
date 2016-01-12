@@ -5,6 +5,7 @@ import os
 import os.path
 from io import StringIO
 import tempfile
+import time
 import unittest
 
 from maloja.model import Catalog
@@ -20,7 +21,9 @@ from maloja.model import yaml_loads
 
 from maloja.workflow.path import Path
 from maloja.workflow.path import cache
+from maloja.workflow.path import find_project
 from maloja.workflow.path import find_ypath
+from maloja.workflow.path import project
 from maloja.workflow.path import split_to_path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
@@ -133,70 +136,48 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
 
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):
 
-    def test_nodirectory_recent(self):
-        try:
-            FileNotFoundError
-        except NameError:
-            FileNotFoundError = OSError
-
+    def test_nodirectory_find_project(self):
         drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None, None, None
-        )
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
-        self.assertRaises(FileNotFoundError, recent_project, path)
-
-    def test_nodirectory_make_path(self):
-        drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None, None, None 
-        )
-        drcty.cleanup()
-        self.assertFalse(os.path.isdir(drcty.name))
-        path = make_path(path)
-        self.assertTrue(os.path.isdir(drcty.name))
-        self.assertEqual(drcty.name, path.root)
+        self.assertRaises(StopIteration, find_project, drcty.name)
 
     def test_nodirectory_make_project(self):
         drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None, None, 
-            "project.yaml"
-        )
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
-        path = make_path(path)
+        path, proj = project(drcty.name)
         self.assertTrue(os.path.isdir(drcty.name))
         self.assertEqual(drcty.name, path.root)
 
-    def test_nodirectory_recent_project(self):
+    def test_nodirectory_project_found(self):
         drcty = tempfile.TemporaryDirectory()
-        path = Path(
-            drcty.name,
-            None, None, None, None, None, None, 
-            "project.yaml"
-        )
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
-        path = make_path(recent_project(make_path(path)))
-        self.assertTrue(os.path.isdir(drcty.name))
-        self.assertEqual(drcty.name, path.root)
-        self.assertTrue(path.project)
+        locn, proj = project(drcty.name)
+        path, rv = find_project(drcty.name)
+        self.assertEqual(locn.root, path.root)
+        self.assertEqual(locn.project, path.project)
 
-    def test_noproject_recent_project(self):
-        path = Path(
-            self.drcty.name,
-            None, None, None, None, None, None, 
-            "project.yaml"
-        )
-        path = make_path(recent_project(make_path(path)))
-        self.assertTrue(os.path.isdir(self.drcty.name))
-        self.assertEqual(self.drcty.name, path.root)
-        self.assertTrue(path.project)
+    def test_find_most_recently_modified_project(self):
+        assets = [project(self.drcty.name)]
+        time.sleep(1)
+        assets.append(project(self.drcty.name))
+
+        path, proj = find_project(self.drcty.name)
+        self.assertEqual(assets[1][0], path)
+
+        # Modify first project
+        time.sleep(1)
+        fP = os.path.join(*(i for i in assets[0][0] if i is not None))
+        with open(fP, "r") as data:
+            text = data.read()
+            with open(fP, "w") as output:
+                output.write(text)
+                output.flush()
+
+        path, proj = find_project(self.drcty.name)
+        self.assertEqual(assets[0][0], path)
 
 class SplitToPathTests(NeedsTempDirectory, unittest.TestCase):
 

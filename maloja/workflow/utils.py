@@ -8,6 +8,7 @@ import itertools
 import tempfile
 import operator
 import os.path
+import warnings
 
 import pkg_resources
 
@@ -65,6 +66,7 @@ def make_path(path: Path, prefix="proj_", suffix=""):
 
 
 def recent_project(path: Path):
+    warnings.warn("Use find_project instead", DeprecationWarning, stacklevel=2)
     projects = [
         i
         for i in os.listdir(path.root)

@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections import namedtuple
 import glob
 import itertools
+import operator
 import os.path
 import tempfile
 import threading
@@ -55,7 +56,18 @@ def project(root, prefix="proj_", suffix=""):
     drcty = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=root)
     path = Path(root, os.path.basename(drcty), None, None, None, None, None, "project.yaml")
     proj = Project()
-    return cache(path, proj)
+    cache(path, proj)
+    return path, proj
+
+
+def find_project(root, query=None, **kwargs):
+    query = query or Project()
+    path = Path(root, None, None, None, None, None, None, "project.yaml")
+
+    hits = [(os.path.getmtime(os.path.join(*(i for i in p if i is not None))),
+             p, obj) for p, obj in find_ypath(path, query, **kwargs)]
+    hits.sort(key=operator.itemgetter(0), reverse=True)
+    return next(iter(hits))[1:]
 
 
 def find_ypath(path: Path, query, **kwargs):
@@ -73,6 +85,7 @@ def find_ypath(path: Path, query, **kwargs):
     """
     wildcards = [i if i is not None else '*' for i in path[:-1]]
     locations = {
+        Project: wildcards[:2] + ["project.yaml"],
         Org: wildcards[:3] + ["org.yaml"],
         Catalog: wildcards[:5] + ["catalog.yaml"],
         Gateway: wildcards[:4] + ["edge.yaml"],
@@ -89,8 +102,10 @@ def find_ypath(path: Path, query, **kwargs):
         with open(fP, 'r') as data:
             obj = typ(**yaml_loads(data.read()))
             if criteria.issubset(set(obj.elements)):
-                hit = Path(*fP.split(os.sep)[-len(path):])
-                yield (hit._replace(root=path.root), obj)
+                tail = fP[len(path.root):].split(os.sep)
+                pack = 8 - len(locations[typ])
+                hit = [path.root] + tail[1:-1] + [None] * pack + tail[-1:]
+                yield (Path(*hit), obj)
 
 
 def split_to_path(data, root=None):

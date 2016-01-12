@@ -64,8 +64,10 @@ def main(args):
         results = queue.Queue()
 
     os.makedirs(args.output, exist_ok=True)
+    #TODO: Check listdir(args.output) else workflow.path.project(args.output)
     path = Path(args.output, None, None, None, None, None, "project.yaml")
     try:
+        # TODO: path, proj = recent_project(args.output)
         path = make_path(recent_project(path))
     except Exception as e:
         log.error(e)

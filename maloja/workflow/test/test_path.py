@@ -131,7 +131,6 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
         self.assertTrue(all(isinstance(i[1], Vm) for i in results), results)
         self.assertIn(self.fixture[-1][1], [i[0] for i in results], results)
 
-@unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):
 
     def test_nodirectory_recent(self):
@@ -143,7 +142,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         drcty = tempfile.TemporaryDirectory()
         path = Path(
             drcty.name,
-            None, None, None, None, None, None
+            None, None, None, None, None, None, None
         )
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
@@ -153,7 +152,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         drcty = tempfile.TemporaryDirectory()
         path = Path(
             drcty.name,
-            None, None, None, None, None, None
+            None, None, None, None, None, None, None 
         )
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
@@ -165,7 +164,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         drcty = tempfile.TemporaryDirectory()
         path = Path(
             drcty.name,
-            None, None, None, None, None,
+            None, None, None, None, None, None, 
             "project.yaml"
         )
         drcty.cleanup()
@@ -178,7 +177,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         drcty = tempfile.TemporaryDirectory()
         path = Path(
             drcty.name,
-            None, None, None, None, None,
+            None, None, None, None, None, None, 
             "project.yaml"
         )
         drcty.cleanup()
@@ -191,7 +190,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
     def test_noproject_recent_project(self):
         path = Path(
             self.drcty.name,
-            None, None, None, None, None,
+            None, None, None, None, None, None, 
             "project.yaml"
         )
         path = make_path(recent_project(make_path(path)))

@@ -6,6 +6,7 @@ from collections import namedtuple
 import glob
 import itertools
 import os.path
+import tempfile
 import threading
 
 from maloja.model import Catalog
@@ -47,6 +48,14 @@ def cache(path, obj=None):
         finally:
             locks[path].release()
     return fP
+
+
+def project(root, prefix="proj_", suffix=""):
+    os.makedirs(root, exist_ok=True)
+    drcty = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=root)
+    path = Path(root, os.path.basename(drcty), None, None, None, None, None, "project.yaml")
+    proj = Project()
+    return cache(path, proj)
 
 
 def find_ypath(path: Path, query, **kwargs):

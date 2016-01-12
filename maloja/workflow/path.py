@@ -3,11 +3,22 @@
 
 from collections import defaultdict
 from collections import namedtuple
+import glob
 import itertools
 import os.path
 import threading
 
+from maloja.model import Catalog
+from maloja.model import Gateway
+from maloja.model import Network
+from maloja.model import Template
+from maloja.model import Org
+from maloja.model import Project
+from maloja.model import VApp
+from maloja.model import Vdc
+from maloja.model import Vm
 from maloja.model import yaml_dumps
+from maloja.model import yaml_loads
 
 locks = defaultdict(threading.Lock)
 
@@ -45,16 +56,24 @@ def find_ypath(path: Path, obj):
     :param obj: object to look for.
      Any attributes on the object evaluating as True will serve as criteria to be matched.
 
-    :return: An iterator over matching path objects.
+    :return: An iterator over matching (path, object) tuples.
     """
-    patterns = {
-        Org: ("*/org.yaml",),
-        Catalog: ("*/*/catalog.yaml",),
-        Vdc: ("*/*/vdc.yaml",),
-        VApp: ("*/*/*/vapp.yaml",),
-        Template: ("*/*/*/template.yaml",),
-        Vm: ("*/*/*/*/vm.yaml",),
+    wildcards = [i if i is not None else '*' for i in path[:-1]]
+    locations = {
+        Org: (wildcards[:3] + ["org.yaml"],),
+        Catalog: (wildcards[:5] + ["catalog.yaml"],),
+        Vdc: (wildcards[:4] + ["vdc.yaml"],),
+        VApp: (wildcards[:5] + ["vapp.yaml"],),
+        Template: (wildcards[:5] + ["template.yaml"],),
+        Vm: (wildcards[:6] + ["vm.yaml"], wildcards[:7] + ["vm.yaml"]),
     }
+    typ = type(obj)
+    patterns = [os.path.join(*i) for i in locations[typ]]
+    for pattern in patterns:
+        for fP in glob.glob(pattern):
+            with open(fP, 'r') as data:
+                obj = typ(**yaml_loads(data.read()))
+                yield (fP, obj)
 
 # TODO: Surveyor.patterns go here
 # TODO: Factories for empty Paths

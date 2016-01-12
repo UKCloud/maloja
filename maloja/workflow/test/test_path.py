@@ -20,6 +20,7 @@ from maloja.model import yaml_loads
 
 from maloja.workflow.path import Path
 from maloja.workflow.path import cache
+from maloja.workflow.path import find_ypath
 from maloja.workflow.path import split_to_path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
@@ -86,6 +87,22 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
                     rv = type(obj)(**yaml_loads(text))
                     self.assertEqual(vars(obj), vars(rv))
 
+    def test_ypath_by_type(self):
+        proj = self.fixture[0][1]
+        for obj, path in self.fixture:
+            cache(path, obj)
+
+        results = list(find_ypath(proj, Vm()))
+        self.assertEqual(4, len(results))
+        self.assertTrue(all(len(i) == 2 for i in results), results)
+        self.assertTrue(all(isinstance(i[1], Vm) for i in results), results)
+
+    def test_ypath_with_attributes(self):
+        self.fail()
+
+    def test_ypath_with_nested_attributes(self):
+        self.fail()
+        
 @unittest.skip("Heavy development")
 class ProjectTests(NeedsTempDirectory, unittest.TestCase):
 

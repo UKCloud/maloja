@@ -64,24 +64,24 @@ def find_ypath(path: Path, query, **kwargs):
     """
     wildcards = [i if i is not None else '*' for i in path[:-1]]
     locations = {
-        Org: (wildcards[:3] + ["org.yaml"],),
-        Catalog: (wildcards[:5] + ["catalog.yaml"],),
-        Vdc: (wildcards[:4] + ["vdc.yaml"],),
-        VApp: (wildcards[:6] + ["vapp.yaml"],),
-        Template: (wildcards[:5] + ["template.yaml"],),
-        Vm: (wildcards[:7] + ["vm.yaml"],),
+        Org: wildcards[:3] + ["org.yaml"],
+        Catalog: wildcards[:5] + ["catalog.yaml"],
+        Gateway: wildcards[:4] + ["edge.yaml"],
+        Vdc: wildcards[:4] + ["vdc.yaml"],
+        Network: wildcards[:6] + ["net.yaml"],
+        VApp: wildcards[:6] + ["vapp.yaml"],
+        Template: wildcards[:5] + ["template.yaml"],
+        Vm: wildcards[:7] + ["vm.yaml"],
     }
     typ = type(query)
     criteria = set(kwargs.items()) or set(query.elements)
-    patterns = [os.path.join(*i) for i in locations[typ]]
-    for pattern in patterns:
-        print(pattern)
-        for fP in glob.glob(pattern):
-            with open(fP, 'r') as data:
-                obj = typ(**yaml_loads(data.read()))
-                if criteria.issubset(set(obj.elements)):
-                    hit = Path(*fP.split(os.sep)[-len(path):])
-                    yield (hit._replace(root=path.root), obj)
+    pattern = os.path.join(*locations[typ])
+    for fP in glob.glob(pattern):
+        with open(fP, 'r') as data:
+            obj = typ(**yaml_loads(data.read()))
+            if criteria.issubset(set(obj.elements)):
+                hit = Path(*fP.split(os.sep)[-len(path):])
+                yield (hit._replace(root=path.root), obj)
 
 
 def split_to_path(data, root=None):

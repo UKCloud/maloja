@@ -113,6 +113,12 @@ class PathTests(NeedsTempDirectory, unittest.TestCase):
         self.assertTrue(all(isinstance(i[1], Vm) for i in results), results)
         self.assertIn(self.fixture[-1][1], [i[0] for i in results], results)
 
+        results = list(find_ypath(proj, Gateway(name="0-123-4-567890-edge")))
+        self.assertTrue(results)
+
+        results = list(find_ypath(proj, Network(name="USER_NET")))
+        self.assertTrue(results)
+
     def test_ypath_with_keywords(self):
         proj = self.fixture[0][1]
         for obj, path in self.fixture:

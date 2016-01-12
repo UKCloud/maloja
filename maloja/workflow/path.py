@@ -73,7 +73,10 @@ def find_ypath(path: Path, obj):
         for fP in glob.glob(pattern):
             with open(fP, 'r') as data:
                 obj = typ(**yaml_loads(data.read()))
-                yield (fP, obj)
+                query = set()
+                data = set()
+                if query.issubset(data):
+                    yield (fP, obj)
 
 # TODO: Surveyor.patterns go here
 # TODO: Factories for empty Paths

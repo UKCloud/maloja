@@ -66,6 +66,20 @@ class DataObject:
         for k, v in data:
             setattr(self, k, v)
 
+    @property
+    def elements(self):
+        def grouper(val):
+            return (
+                list if isinstance(val, list) else
+                tuple if hasattr(val, "_fields") else
+                str
+            )
+
+        forms = {typ: list(elems) for typ, elems in itertools.groupby(self._defaults, grouper)}
+        for k, v in forms[str]:
+            print(k)
+            yield (k, getattr(self, k))
+ 
     def feed_xml(self, tree, *args, **kwargs):
         """
         Updates the object by feeding it XML

@@ -355,6 +355,29 @@ class TaskTests(unittest.TestCase):
         <InMaintenanceMode>false</InMaintenanceMode>
     </VApp>""")
 
+    def test_flatten(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(TaskTests.xml)
+        task = next(find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.task+xml']", tree))
+        obj = maloja.model.Task()
+        obj.feed_xml(task, ns=ns)
+        self.assertEqual(
+            set([
+                ("name", "task"),
+                ("href", (
+                    "https://api.vcd.portal.skyscapecloud.com/api/task/"
+                    "3f20ec16-3780-43ca-840a-0e2b727b24a4")
+                ),
+                ("type", "application/vnd.vmware.vcloud.task+xml"),
+                ("operationName", "vdcInstantiateVapp"),
+                ("organization", None),
+                ("startTime", "2015-12-28T11:33:19.414Z"),
+                ("status", "running")
+            ]),
+            set(obj.elements)
+        )
+
     def test_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(TaskTests.xml)

@@ -366,6 +366,7 @@ class Surveyor:
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
         backoff = 5
+        obj = None
         try:
             for elem in tree.iter(ns + "OrgVdcNetworkRecord"):
                 while True:
@@ -386,23 +387,8 @@ class Surveyor:
                         obj = Network().feed_xml(tree, ns=ns)
                         break
 
-                path = path._replace(file="network-{0.name}.yaml".format(obj))
-                os.makedirs(os.path.join(
-                    path.root, path.project, path.org, path.dc
-                ), exist_ok=True)
-                try:
-                    Surveyor.locks[path].acquire()
-                    with open(
-                        os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
-                    ) as output:
-                        try:
-                            data = yaml_dumps(obj)
-                        except Exception as e:
-                            log.error(e)
-                        output.write(data)
-                        output.flush()
-                finally:
-                    Surveyor.locks[path].release()
+                path = path._replace(file="network.yaml")
+                fP = cache(path, obj)
 
         except Exception as e:
             log.error(e)

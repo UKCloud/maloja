@@ -33,6 +33,7 @@ from maloja.types import Status
 from maloja.types import Survey
 
 from maloja.workflow.utils import find_xpath
+from maloja.workflow.path import cache
 from maloja.workflow.path import split_to_path
 
 
@@ -614,23 +615,13 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
+        log.debug(child)
         tree = ET.fromstring(response.text)
         obj = Org().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="org.yaml")
-        os.makedirs(os.path.join(path.root, path.project, path.org), exist_ok=True)
-        try:
-            Surveyor.locks[path].acquire()
-            with open(
-                os.path.join(path.root, path.project, path.org, path.file), "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
-                output.write(data)
-                output.flush()
-        finally:
-            Surveyor.locks[path].release()
+        fP = cache(path, obj)
+        log.debug(path)
+        log.debug(fP)
 
         ctlgs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.catalog+xml']",

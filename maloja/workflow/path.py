@@ -51,7 +51,7 @@ def cache(path, obj=None):
     return fP
 
 
-def project(root, prefix="proj_", suffix=""):
+def make_project(root, prefix="proj_", suffix=""):
     os.makedirs(root, exist_ok=True)
     drcty = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=root)
     path = Path(root, os.path.basename(drcty), None, None, None, None, None, "project.yaml")

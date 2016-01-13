@@ -22,9 +22,9 @@ from maloja.types import Credentials
 from maloja.types import Design
 from maloja.types import Stop
 from maloja.types import Token
-from maloja.workflow.utils import Path
-from maloja.workflow.utils import make_path
-from maloja.workflow.utils import recent_project
+from maloja.workflow.path import Path
+from maloja.workflow.path import make_project
+from maloja.workflow.path import find_project
 
 __doc__ = """
 start %HOME%\\maloja-py3.5\\scripts\\python -m maloja.main
@@ -64,13 +64,13 @@ def main(args):
         results = queue.Queue()
 
     os.makedirs(args.output, exist_ok=True)
-    #TODO: Check listdir(args.output) else workflow.path.project(args.output)
-    path = Path(args.output, None, None, None, None, None, "project.yaml")
-    try:
-        # TODO: path, proj = recent_project(args.output)
-        path = make_path(recent_project(path))
-    except Exception as e:
-        log.error(e)
+    if not os.listdir(args.output):
+        log.info("No projects detected.")
+        path, proj = make_project(args.output)
+        log.info("Created {0}.".format(path.project))
+
+    path, proj = find_project(args.output)
+    log.info("Using project {0}.".format(path.project))
 
     if args.command == "plan":
         with open(args.input, "r") as data:

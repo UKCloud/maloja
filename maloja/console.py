@@ -33,8 +33,8 @@ from maloja.types import Credentials
 from maloja.types import Stop
 from maloja.types import Survey
 from maloja.types import Workflow
-from maloja.workflow.utils import Path
-from maloja.workflow.utils import split_to_path
+from maloja.workflow.path import Path
+from maloja.workflow.path import split_to_path
 from maloja.workflow.utils import plugin_interface
 
 

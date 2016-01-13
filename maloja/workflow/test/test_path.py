@@ -23,7 +23,7 @@ from maloja.workflow.path import Path
 from maloja.workflow.path import cache
 from maloja.workflow.path import find_project
 from maloja.workflow.path import find_ypath
-from maloja.workflow.path import project
+from maloja.workflow.path import make_project
 from maloja.workflow.path import split_to_path
 from maloja.workflow.test.test_utils import NeedsTempDirectory
 
@@ -146,7 +146,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         drcty = tempfile.TemporaryDirectory()
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
-        path, proj = project(drcty.name)
+        path, proj = make_project(drcty.name)
         self.assertTrue(os.path.isdir(drcty.name))
         self.assertEqual(drcty.name, path.root)
 
@@ -154,15 +154,15 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         drcty = tempfile.TemporaryDirectory()
         drcty.cleanup()
         self.assertFalse(os.path.isdir(drcty.name))
-        locn, proj = project(drcty.name)
+        locn, proj = make_project(drcty.name)
         path, rv = find_project(drcty.name)
         self.assertEqual(locn.root, path.root)
         self.assertEqual(locn.project, path.project)
 
     def test_find_most_recently_modified_project(self):
-        assets = [project(self.drcty.name)]
+        assets = [make_project(self.drcty.name)]
         time.sleep(1)
-        assets.append(project(self.drcty.name))
+        assets.append(make_project(self.drcty.name))
 
         path, proj = find_project(self.drcty.name)
         self.assertEqual(assets[1][0], path)

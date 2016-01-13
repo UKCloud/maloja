@@ -498,20 +498,7 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         obj = Vdc().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="vdc.yaml")
-        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
-        try:
-            Surveyor.locks[path].acquire()
-            with open(
-                os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
-                output.write(data)
-                output.flush()
-        finally:
-            Surveyor.locks[path].release()
+        cache(path, obj)
 
         edgeGWs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
@@ -541,7 +528,10 @@ class Surveyor:
             orgVdcNet.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_orgVdcNetwork,
-                path,
+                path._replace(
+                    category="networks",
+                    container=orgVdcNet.attrib.get("name")
+                ),
                 results=results,
                 status=child._replace(job=child.job + n)
             )
@@ -549,7 +539,10 @@ class Surveyor:
             vapp.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_vapp,
-                path._replace(app=vapp.attrib.get("name")),
+                path._replace(
+                    category="vapps",
+                    container=vapp.attrib.get("name")
+                ),
                 results=results,
                 status=child._replace(job=child.job + n)
             )
@@ -615,13 +608,10 @@ class Surveyor:
         else:
             child = Status(1, 1, 1)
 
-        log.debug(child)
         tree = ET.fromstring(response.text)
         obj = Org().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="org.yaml")
         fP = cache(path, obj)
-        log.debug(path)
-        log.debug(fP)
 
         ctlgs = find_xpath(
             "./*/[@type='application/vnd.vmware.vcloud.catalog+xml']",
@@ -636,7 +626,7 @@ class Surveyor:
             vdc.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_vdc,
-                path._replace(dc=vdc.attrib.get("name")),
+                path._replace(service=vdc.attrib.get("name")),
                 results=results,
                 status=child._replace(job=child.job + n)
             )
@@ -644,7 +634,10 @@ class Surveyor:
             ctlg.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_catalog,
-                path._replace(dc=ctlg.attrib.get("name")),
+                path._replace(
+                    service="catalogs",
+                    category=ctlg.attrib.get("name")
+                ),
                 results=results,
                 status=child._replace(job=child.job + n)
             )

@@ -32,7 +32,7 @@ import maloja.types
 from maloja.types import Status
 
 from maloja.workflow.utils import find_xpath
-from maloja.workflow.utils import split_to_path
+from maloja.workflow.path import split_to_path
 
 
 def filter_records(*args, root="", key="", value=""):

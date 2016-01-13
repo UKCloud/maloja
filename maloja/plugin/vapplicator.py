@@ -19,7 +19,7 @@ from maloja.surveyor import yaml_loads
 
 from maloja.types import Plugin
 
-from maloja.workflow.utils import Path
+from maloja.workflow.path import Path
 
 from chameleon import PageTemplateFile
 import pkg_resources
@@ -47,11 +47,11 @@ def selector(*objs):
     """
     rv = []
     if not any(obj for obj in objs if isinstance(obj, Vdc)):
-        rv.append(Path(None, None, None, None, None, None, "vdc.yaml"))
+        rv.append(Path(None, None, None, None, None, None, None, "vdc.yaml"))
     if not any(obj for obj in objs if isinstance(obj, Vm)):
-        rv.append(Path(None, None, None, None, None, None, "vm.yaml"))
+        rv.append(Path(None, None, None, None, None, None, None, "vm.yaml"))
     if not len([obj for obj in objs if isinstance(obj, Template)]):
-        rv.append(Path(None, None, None, None, None, None, "template.yaml"))
+        rv.append(Path(None, None, None, None, None, None, None, "template.yaml"))
     return rv or Workflow
 
 

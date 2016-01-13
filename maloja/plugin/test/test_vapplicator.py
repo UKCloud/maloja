@@ -7,7 +7,7 @@ from maloja.model import Template
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.plugin.vapplicator import plugin
-from maloja.workflow.utils import Path
+from maloja.workflow.path import Path
 
 class SelectorTester(unittest.TestCase):
 

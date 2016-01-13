@@ -19,6 +19,7 @@ import ruamel.yaml
 
 from maloja.broker import Broker
 from maloja.broker import create_broker
+from maloja.broker import handler
 from maloja.model import Catalog
 from maloja.model import Org
 from maloja.model import Template
@@ -37,6 +38,7 @@ from maloja.workflow.path import Path
 from maloja.workflow.path import split_to_path
 from maloja.workflow.utils import plugin_interface
 
+handler.register(Survey, Surveyor.survey_handler)
 
 class Console(cmd.Cmd):
 

@@ -30,6 +30,7 @@ from maloja.model import yaml_loads
 
 import maloja.types
 from maloja.types import Status
+from maloja.types import Survey
 
 from maloja.workflow.utils import find_xpath
 from maloja.workflow.path import split_to_path
@@ -104,6 +105,42 @@ class Surveyor:
     file. This dictionary stores those locks against the `href` of
     each VMware resource.
     """
+
+    @staticmethod
+    def survey_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.survey.handler")
+        if msg.path.project and not any(msg.path[2:-1]):
+            endpoints = [
+                (
+                    "api/org",
+                    functools.partial(
+                        Surveyor.on_org_list,
+                        msg.path,
+                        results=results,
+                        status=status
+                    )
+                )
+            ]
+        else:
+            endpoints = [
+                ("api/catalogs/query", None)
+            ]
+        rv = []
+        for endpoint, callback in endpoints:
+            log.debug("Scheduling  GET to {0}".format(endpoint))
+            url = "{url}:{port}/{endpoint}".format(
+                url=token.url,
+                port=443,
+                endpoint=endpoint)
+
+            headers = {
+                "Accept": "application/*+xml;version=5.5",
+                token.key: token.value,
+            }
+            session.headers.update(headers)
+            rv.append(session.get(url, background_callback=callback))
+        return rv
+
 
     @staticmethod
     def on_vmrecords(path, session, response, results=None, status=None):

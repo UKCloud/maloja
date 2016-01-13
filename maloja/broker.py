@@ -16,13 +16,11 @@ import requests
 from requests_futures.sessions import FuturesSession
 
 from maloja.builder import Builder
-from maloja.surveyor import Surveyor
 from maloja.types import Credentials
 from maloja.types import Design
 from maloja.types import Plugin
 from maloja.types import Status
 from maloja.types import Stop
-from maloja.types import Survey
 from maloja.types import Token
 from maloja.types import Workflow
 
@@ -94,43 +92,6 @@ def stop_handler(msg, session, token, **kwargs):
     log = logging.getLogger("maloja.broker.stop_handler")
     log.debug("Handling a stop.")
     return tuple()
-
-
-# TODO: Move to surveyor module
-@handler.register(Survey)
-def survey_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
-    log = logging.getLogger("maloja.broker.survey_handler")
-    if msg.path.project and not any(msg.path[2:-1]):
-        endpoints = [
-            (
-                "api/org",
-                functools.partial(
-                    Surveyor.on_org_list,
-                    msg.path,
-                    results=results,
-                    status=status
-                )
-            )
-        ]
-    else:
-        endpoints = [
-            ("api/catalogs/query", None)
-        ]
-    rv = []
-    for endpoint, callback in endpoints:
-        log.debug("Scheduling  GET to {0}".format(endpoint))
-        url = "{url}:{port}/{endpoint}".format(
-            url=token.url,
-            port=443,
-            endpoint=endpoint)
-
-        headers = {
-            "Accept": "application/*+xml;version=5.5",
-            token.key: token.value,
-        }
-        session.headers.update(headers)
-        rv.append(session.get(url, background_callback=callback))
-    return rv
 
 
 @handler.register(Workflow)

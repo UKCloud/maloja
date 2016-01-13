@@ -34,6 +34,7 @@ from maloja.types import Survey
 
 from maloja.workflow.utils import find_xpath
 from maloja.workflow.path import cache
+from maloja.workflow.path import find_ypath
 from maloja.workflow.path import split_to_path
 
 
@@ -151,39 +152,15 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         for elem in tree.iter(ns + "VMRecord"):
             obj = Vm().feed_xml(elem, ns=ns)
-            try:
-                path = path._replace(node=obj.name, file="vm.yaml")
-                os.makedirs(
-                    os.path.join(
-                        path.root, path.project, path.org, path.dc,
-                        path.app, path.node
-                    ),
-                    exist_ok=True
-                )
-                fP = os.path.join(
-                    path.root, path.project, path.org,
-                    path.dc, path.app, path.node, path.file
-                )
-            except TypeError:
-                log.error("Insufficient data from {0}".format(elem.attrib.get("href", "?")))
-                continue
+            path = path._replace(node=obj.name, file="vm.yaml")
+            found, obj = next(find_ypath(path, obj), (None, obj))
 
-            try:
-                Surveyor.locks[path].acquire()
-                if os.path.isfile(fP):
-                    with open(fP, "r") as input_:
-                        data = yaml_loads(input_.read())
-                        obj = Vm(**data).feed_xml(elem, ns=ns)
-                        log.debug("Loaded existing object: {0}".format(vars(obj)))
+            if found is not None:
+                log.debug("Loaded existing object: {0}".format(vars(obj)))
 
-                with open(fP, "w") as output:
-                    data = yaml_dumps(obj)
-                    output.write(data)
-                    output.flush()
-            except Exception as e:
-                log.error(e)
-            finally:
-                Surveyor.locks[path].release()
+            # Update the existing object with attributes from the VMRecord
+            obj.feed_xml(elem, ns=ns)
+            cache(path, obj)
 
         if results and status:
             results.put((status, None))
@@ -387,8 +364,9 @@ class Surveyor:
                         obj = Network().feed_xml(tree, ns=ns)
                         break
 
-                path = path._replace(file="network.yaml")
-                fP = cache(path, obj)
+                if obj is not None:
+                    path = path._replace(container=obj.name, file="network.yaml")
+                    fP = cache(path, obj)
 
         except Exception as e:
             log.error(e)
@@ -407,22 +385,7 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         obj = VApp().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="vapp.yaml")
-        os.makedirs(os.path.join(
-            path.root, path.project, path.org, path.dc, path.app
-        ), exist_ok=True)
-        try:
-            Surveyor.locks[path].acquire()
-            with open(os.path.join(
-                path.root, path.project, path.org, path.dc, path.app, path.file), "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
-                output.write(data)
-                output.flush()
-        finally:
-            Surveyor.locks[path].release()
+        fP = cache(path, obj)
 
         url = urlparse(response.url)
         query = "/".join((

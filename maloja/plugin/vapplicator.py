@@ -8,6 +8,7 @@ import concurrent.futures
 import logging
 import os.path
 import uuid
+import warnings
 
 from maloja.model import Org
 from maloja.model import Template
@@ -66,6 +67,7 @@ class Workflow:
         self.results = results
         self.executor = executor
 
+        """
         for path in paths:
             typ = Surveyor.patterns[os.path.splitext(path.file)[0]][0]
             fP = os.path.join(*(i for i in path if i is not None))
@@ -75,6 +77,20 @@ class Workflow:
                     continue
                 else:
                     self.context[typ][obj] = path
+        """
+
+        # FIXME: Untested
+        for path in paths:
+            obj = found = None
+            try:
+                found, obj = next(find_ypath(path))
+            except StopIteration:
+                warnings.warn("Can't follow path {0}".format(path))
+            else:
+                if found != path:
+                    warnings.warn("Path {0} led to {1}".format(path, found))
+            finally:
+                self.context[type(obj)][obj] = found
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         """
@@ -83,6 +99,9 @@ class Workflow:
         """
         log = logging.getLogger("maloja.plugin.vapplicator")
         log.debug(self.context)
+
+        if type(None) in self.context:
+            log.error("Workflow is misconfigured.")
 
         macro = PageTemplateFile(
             pkg_resources.resource_filename(

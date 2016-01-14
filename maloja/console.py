@@ -35,6 +35,7 @@ from maloja.types import Stop
 from maloja.types import Survey
 from maloja.types import Workflow
 from maloja.workflow.path import Path
+from maloja.workflow.path import find_ypath
 from maloja.workflow.path import split_to_path
 from maloja.workflow.utils import plugin_interface
 
@@ -236,7 +237,7 @@ class Console(cmd.Cmd):
 
         """
         log = logging.getLogger("maloja.console.do_search")
-
+        lookup = {i.__name__.lower(): i for i in (Catalog, Org, Template, VApp, Vdc, Vm)}
         try:
             bits = arg.strip().split()
             if bits[-1].isdigit():
@@ -251,40 +252,43 @@ class Console(cmd.Cmd):
             name, spec = bits
         except ValueError:
             name, spec = bits[0], ""
+        finally:
+            if name not in lookup:
+                print("Type {} not recognised.".format(name))
+                return
+
+        typ = lookup[name]
 
         try:
-            key, value = spec.split("=")
-        except ValueError:
+            key, value = [i.strip() for i in spec.split("=")]
+            if key in ("name", "description", "fullName"):
+                results = [
+                    (path, obj)
+                    for path, obj in find_ypath(self.ref, typ())
+                    if value.lower() in getattr(obj, key, "").lower()
+                ]
+            else:
+                results = list(find_ypath(self.ref, typ(), **{key: value}))
+        except ValueError as e:
             key, value = "", ""
-
-        typ, pattern = Surveyor.patterns[name]
-        hits = glob.glob(
-            os.path.join(self.ref.root, self.ref.project, pattern)
-        )
-        results = [
-            (obj, path)
-            for obj, path in filter_records(
-                *hits, root=self.ref.root, key=key, value=value
-            )
-            if path.file.startswith(name)
-        ]
+            results = list(find_ypath(self.ref, typ()))
 
         if len(results) > 1:
             if index is not None:
-                obj, path = results[int(index)]
+                path, obj = results[int(index)]
                 self.search[obj] = path
             else:
                 print("Your options:")
                 print(
                     *[
                         "{0:01}: {1}".format(n, getattr(obj, "name", obj))
-                        for n, (obj, path) in enumerate(results)
+                        for n, (path, obj) in enumerate(results)
                     ],
                     sep="\n"
                 )
                 sys.stdout.write("\n")
         elif results:
-            self.search[results[0][0]] = results[0][1]
+            self.search[results[0][1]] = results[0][0]
         else:
             print("No matches for pattern {}".format(spec))
 

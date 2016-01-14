@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections import namedtuple
 import glob
 import itertools
+import logging
 import operator
 import os.path
 import tempfile
@@ -36,18 +37,19 @@ identify a resource stored as YAML data in the Maloja survey tree.
 
 
 def cache(path, obj=None):
+    log = logging.getLogger("maloja.path.cache")
     parent = os.path.join(*(i for i in path[:-1] if i is not None))
     os.makedirs(parent, exist_ok=True)
     fP = os.path.join(parent, path.file)
     if obj is not None:
         try:
-            locks[path].acquire()
+            locks[fP].acquire()
             with open(fP, "w") as output:
                 data = yaml_dumps(obj)
                 output.write(data)
                 output.flush()
         finally:
-            locks[path].release()
+            locks[fP].release()
     return fP
 
 
@@ -83,6 +85,7 @@ def find_ypath(path: Path, query, **kwargs):
 
     :return: An iterator over matching (path, object) tuples.
     """
+    log = logging.getLogger("maloja.path.find_ypath")
     wildcards = [i if i is not None else '*' for i in path[:-1]]
     locations = {
         Project: wildcards[:2] + ["project.yaml"],
@@ -99,13 +102,19 @@ def find_ypath(path: Path, query, **kwargs):
     criteria = set(kwargs.items()) or set(query.elements)
     pattern = os.path.join(*locations[typ])
     for fP in glob.glob(pattern):
-        with open(fP, 'r') as data:
-            obj = typ(**yaml_loads(data.read()))
-            if criteria.issubset(set(obj.elements)):
-                tail = fP[len(path.root):].split(os.sep)
-                pack = 8 - len(locations[typ])
-                hit = [path.root] + tail[1:-1] + [None] * pack + tail[-1:]
-                yield (Path(*hit), obj)
+        obj = None
+        try:
+            locks[fP].acquire()
+            with open(fP, 'r') as data:
+                obj = typ(**yaml_loads(data.read()))
+        finally:
+            locks[fP].release()
+
+        if obj is not None and criteria.issubset(set(obj.elements)):
+            tail = fP[len(path.root):].split(os.sep)
+            pack = 8 - len(locations[typ])
+            hit = [path.root] + tail[1:-1] + [None] * pack + tail[-1:]
+            yield (Path(*hit), obj)
 
 
 def split_to_path(data, root=None):

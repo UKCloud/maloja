@@ -199,23 +199,7 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         obj = Template().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="template.yaml")
-        os.makedirs(os.path.join(
-            path.root, path.project, path.org, path.dc, path.app
-        ), exist_ok=True)
-        try:
-            Surveyor.locks[path].acquire()
-            with open(os.path.join(
-                path.root, path.project, path.org, path.dc, path.app, path.file
-            ), "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
-                output.write(data)
-                output.flush()
-        finally:
-            Surveyor.locks[path].release()
+        cache(path, obj)
 
         vms = find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
@@ -254,7 +238,7 @@ class Surveyor:
             tmplt.attrib.get("href"),
             background_callback=functools.partial(
                 Surveyor.on_template,
-                path._replace(app=tmplt.attrib.get("name")),
+                path._replace(container=tmplt.attrib.get("name")),
                 results=results,
                 status=child._replace(job=child.job + n)
             )

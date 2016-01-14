@@ -17,10 +17,12 @@ import warnings
 import maloja.cli
 import maloja.broker
 import maloja.console
+import maloja.surveyor
 import maloja.planner
 from maloja.types import Credentials
 from maloja.types import Design
 from maloja.types import Stop
+from maloja.types import Survey
 from maloja.types import Token
 from maloja.workflow.path import Path
 from maloja.workflow.path import make_project
@@ -71,6 +73,10 @@ def main(args):
 
     path, proj = find_project(args.output)
     log.info("Using project {0}.".format(path.project))
+
+    maloja.broker.handler.register(
+        Survey, maloja.surveyor.Surveyor.survey_handler
+    )
 
     if args.command == "plan":
         with open(args.input, "r") as data:

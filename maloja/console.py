@@ -19,7 +19,6 @@ import ruamel.yaml
 
 from maloja.broker import Broker
 from maloja.broker import create_broker
-from maloja.broker import handler
 from maloja.model import Catalog
 from maloja.model import Org
 from maloja.model import Template
@@ -27,8 +26,6 @@ from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
 from maloja.surveyor import Surveyor
-from maloja.surveyor import filter_records
-from maloja.surveyor import yaml_loads
 from maloja.types import Token
 from maloja.types import Credentials
 from maloja.types import Stop
@@ -38,8 +35,6 @@ from maloja.workflow.path import Path
 from maloja.workflow.path import find_ypath
 from maloja.workflow.path import split_to_path
 from maloja.workflow.utils import plugin_interface
-
-handler.register(Survey, Surveyor.survey_handler)
 
 class Console(cmd.Cmd):
 

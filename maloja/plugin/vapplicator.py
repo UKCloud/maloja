@@ -67,18 +67,6 @@ class Workflow:
         self.results = results
         self.executor = executor
 
-        """
-        for path in paths:
-            typ = Surveyor.patterns[os.path.splitext(path.file)[0]][0]
-            fP = os.path.join(*(i for i in path if i is not None))
-            with open(fP, "r") as data:
-                obj = typ(**yaml_loads(data.read()))
-                if obj is None:
-                    continue
-                else:
-                    self.context[typ][obj] = path
-        """
-
         # FIXME: Untested
         for path in paths:
             obj = found = None

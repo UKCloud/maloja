@@ -176,36 +176,14 @@ class Surveyor:
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
         path = path._replace(file="vm.yaml")
-        os.makedirs(
-            os.path.join(
-                path.root, path.project, path.org, path.dc,
-                path.app, path.node
-            ),
-            exist_ok=True
-        )
-        fP = os.path.join(
-            path.root, path.project, path.org,
-            path.dc, path.app, path.node, path.file
-        )
-        try:
-            Surveyor.locks[path].acquire()
-            if os.path.isfile(fP):
-                with open(fP, "r") as input_:
-                    data = yaml_loads(input_.read())
-                    obj = Vm(**data)
-                    log.debug("Loaded existing object: {0}".format(vars(obj)))
-            else:
-                obj = Vm()
+        obj = Vm()
+        found, obj = next(find_ypath(path, obj), (None, obj))
+        if found is not None:
+            log.debug("Loaded existing object: {0}".format(vars(obj)))
 
-            obj.feed_xml(tree, ns=ns)
-            with open(fP, "w") as output:
-                data = yaml_dumps(obj)
-                output.write(data)
-                output.flush()
-        except Exception as e:
-            log.error(e)
-        finally:
-            Surveyor.locks[path].release()
+        # Update the existing object with attributes from the VM
+        obj.feed_xml(tree, ns=ns)
+        cache(path, obj)
 
         if results and status:
             results.put((status, None))

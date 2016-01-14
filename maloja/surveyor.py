@@ -480,20 +480,7 @@ class Surveyor:
         tree = ET.fromstring(response.text)
         obj = Catalog().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="catalog.yaml")
-        os.makedirs(os.path.join(path.root, path.project, path.org, path.dc), exist_ok=True)
-        try:
-            Surveyor.locks[path].acquire()
-            with open(
-                os.path.join(path.root, path.project, path.org, path.dc, path.file), "w"
-            ) as output:
-                try:
-                    data = yaml_dumps(obj)
-                except Exception as e:
-                    log.error(e)
-                output.write(data)
-                output.flush()
-        finally:
-            Surveyor.locks[path].release()
+        cache(path, obj)
 
         items = find_xpath(
             ".//*[@type='application/vnd.vmware.vcloud.catalogItem+xml']",

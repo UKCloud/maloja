@@ -16,7 +16,7 @@ expected by the `maloja.plugin` interface.
 
 """
 
-Status = namedtuple("Status", ["id", "job", "level"])
+Status = namedtuple("Status", ["id", "job", "path"])
 Stop = namedtuple("Stop", [])
 Survey = namedtuple("Survey", ["path"])
 Token = namedtuple("Token", ["t", "url", "key", "value"])

@@ -100,16 +100,12 @@ class Surveyor:
             obj.feed_xml(elem, ns=ns)
             cache(path, obj)
 
-        if results and status:
-            results.put((status, None))
+            if results and status:
+                results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_vm(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vm")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
@@ -124,15 +120,11 @@ class Surveyor:
         cache(path, obj)
 
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_template(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_template")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         tree = ET.fromstring(response.text)
         obj = Template().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
@@ -149,7 +141,7 @@ class Surveyor:
                 Surveyor.on_vm,
                 path._replace(node=vm.attrib.get("name")),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, vm in enumerate(vms)]
         tasks = concurrent.futures.wait(
@@ -157,15 +149,11 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_catalogitem(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_catalogitem")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         templates = find_xpath(
             ".//*[@type='application/vnd.vmware.vcloud.vAppTemplate+xml']",
@@ -178,7 +166,7 @@ class Surveyor:
                 Surveyor.on_template,
                 path._replace(container=tmplt.attrib.get("name")),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, tmplt in enumerate(templates)]
         tasks = concurrent.futures.wait(
@@ -186,15 +174,11 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_edgeGateway(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_edgeGateway")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         obj = None
         ns = "{http://www.vmware.com/vcloud/v1.5}"
@@ -225,20 +209,16 @@ class Surveyor:
 
         if obj is None:
             log.warning("Found no Edge Gateway.")
-
-        path = path._replace(file="edge.yaml")
-        fP = cache(path, obj)
+        else:
+            path = path._replace(file="edge.yaml")
+            fP = cache(path, obj)
 
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_orgVdcNetwork(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_orgVdcNetwork")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
@@ -272,15 +252,11 @@ class Surveyor:
             log.error(e)
 
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_vapp(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vapp")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         tree = ET.fromstring(response.text)
         obj = VApp().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
@@ -292,10 +268,10 @@ class Surveyor:
             url.scheme + "://" + url.netloc,
             "api/vms/query?filter=(container=={0})".format(urlquote(response.url))
         ))
-        vms = find_xpath(
+        vms = list(find_xpath(
             "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
             ET.fromstring(response.text)
-        )
+        ))
         try:
             ops = [session.get(
                 vm.attrib.get("href"),
@@ -303,7 +279,7 @@ class Surveyor:
                     Surveyor.on_vm,
                     path._replace(node=vm.attrib.get("name")),
                     results=results,
-                    status=child._replace(job=child.job + n)
+                    status=status._replace(job=status.job + n) if status else None
                 )
             ) for n, vm in enumerate(vms)] + [session.get(
                 query,
@@ -311,7 +287,7 @@ class Surveyor:
                     Surveyor.on_vmrecords,
                     path,
                     results=results,
-                    status=status._replace(id=status.id + 1, job=status.job + 1)
+                    status=status._replace(job=status.job + len(vms) + 1) if status else None
                 )
             )]
         except Exception as e:
@@ -321,15 +297,11 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_vdc(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_vdc")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         tree = ET.fromstring(response.text)
         obj = Vdc().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
@@ -358,7 +330,7 @@ class Surveyor:
                 Surveyor.on_edgeGateway,
                 path,
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, edgeGW in enumerate(edgeGWs)] + [session.get(
             orgVdcNet.attrib.get("href"),
@@ -369,7 +341,7 @@ class Surveyor:
                     container=orgVdcNet.attrib.get("name")
                 ),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, orgVdcNet in enumerate(orgVdcNets)] + [session.get(
             vapp.attrib.get("href"),
@@ -380,7 +352,7 @@ class Surveyor:
                     container=vapp.attrib.get("name")
                 ),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, vapp in enumerate(vapps)]
 
@@ -389,15 +361,11 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_catalog(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_catalog")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         tree = ET.fromstring(response.text)
         obj = Catalog().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
@@ -413,7 +381,7 @@ class Surveyor:
             background_callback=functools.partial(
                 Surveyor.on_catalogitem, path,
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, item in enumerate(items)]
         tasks = concurrent.futures.wait(
@@ -421,15 +389,11 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_org(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_org")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         tree = ET.fromstring(response.text)
         obj = Org().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
@@ -451,7 +415,7 @@ class Surveyor:
                 Surveyor.on_vdc,
                 path._replace(service=vdc.attrib.get("name")),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, vdc in enumerate(vdcs)] + [session.get(
             ctlg.attrib.get("href"),
@@ -462,7 +426,7 @@ class Surveyor:
                     category=ctlg.attrib.get("name")
                 ),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, ctlg in enumerate(ctlgs)]
 
@@ -471,15 +435,11 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))
 
     @staticmethod
     def on_org_list(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_org_list")
-        if status:
-            child = status._replace(level=status.level + 1)
-        else:
-            child = Status(1, 1, 1)
 
         tree = ET.fromstring(response.text)
         orgs = find_xpath(
@@ -490,7 +450,7 @@ class Surveyor:
                 Surveyor.on_org,
                 path._replace(org=org.attrib.get("name")),
                 results=results,
-                status=child._replace(job=child.job + n)
+                status=status._replace(job=status.job + n) if status else None
             )
         ) for n, org in enumerate(orgs)]
         tasks = concurrent.futures.wait(
@@ -498,4 +458,4 @@ class Surveyor:
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
         if results and status:
-            results.put((status, None))
+            results.put((status._replace(path=path), None))

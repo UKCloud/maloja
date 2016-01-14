@@ -160,7 +160,7 @@ class Broker:
                 packet = self.operations.get()
                 n += 1
                 id_, msg = packet
-                status = Status(id_, 1, 1)
+                status = Status(id_, 1, None)
                 reply = None
                 if isinstance(msg, Credentials):
                     ops = handler(msg, self.session)

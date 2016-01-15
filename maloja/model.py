@@ -282,6 +282,14 @@ class Network(DataObject):
 
     """
 
+    def __init__(self, **kwargs):
+        """
+        Creates a fresh object, or one with attributes set by
+        the `kwargs` dictionary.
+
+        """
+        super().__init__(**kwargs)
+
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         """
         Updates the object by feeding it XML
@@ -292,6 +300,15 @@ class Network(DataObject):
         log.debug(ET.tostring(tree, encoding="unicode"))
         self.dns = [tree.attrib.get("dns1"), tree.attrib.get("dns2")]
         super().feed_xml(tree, ns=ns)
+
+        config = tree.find(
+            "./*/{}GatewayDhcpService".format(ns)
+        )
+        elem = config.find(ns + "Pool")
+        self.dhcp = Network.DHCP(pool=[
+            next(iter(Gateway.servicecast(elem.find(ns + "LowIpAddress").text)), None),
+            next(iter(Gateway.servicecast(elem.find(ns + "HighIpAddress").text)), None),
+        ])
         return self
 
 class Org(DataObject):

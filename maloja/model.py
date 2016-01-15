@@ -447,7 +447,10 @@ class Vm(DataObject):
         4: namedtuple("Memory", ["instanceID", "virtualQuantity"]),
         5: namedtuple("IDEController", ["address", "description", "instanceID"]),
         6: namedtuple("SCSIController", ["address", "description", "instanceID"]),
-        10: namedtuple("EthernetAdapter", ["address", "connection", "instanceID"]),
+        10: namedtuple(
+                "EthernetAdapter",
+                ["address", "connection", "elementName", "instanceID"]
+            ),
         14: namedtuple("FloppyDrive", ["description", "instanceID"]),
         15: namedtuple("CDDrive", ["description", "instanceID"]),
         16: namedtuple("DVDDrive", ["description", "instanceID"]),
@@ -535,8 +538,16 @@ class Vm(DataObject):
                 obj = typ(*(i for i in list(item) if i.tag.lower() in fields))
                 if key == 3:
                     self.cpu = int(obj.virtualQuantity.text)
+                elif key == 4:
+                    self.memoryMB = int(obj.virtualQuantity.text)
+                elif key == 10:
+                    self.networkcards.append((obj.elementName.text, obj.address.text))
+                elif key == 17:
+                    self.harddisks.append((
+                        obj.description.text,
+                        int(obj.hostResource.attrib.get(ns + "capacity"))
+                    ))
 
-            #:vcloud:type="application/vnd.vmware.vcloud.rasdItem+xml"
             self.networkconnections = [
                 Vm.NetworkConnection(
                     i.attrib["network"],
@@ -545,6 +556,10 @@ class Vm(DataObject):
                     i.find(ns + "MACAddress").text,
                     getattr(i.find(ns + "IpAddressAllocationMode"), "text", None))
                 for i in tree.iter(ns + "NetworkConnection")]
+
+            section = tree.find(ns + "GuestCustomizationSection")
+            #TODO: Define customization storage
+
         return self
 
 ruamel.yaml.RoundTripDumper.add_representer(ipaddress.IPv4Address, object_as_str)

@@ -520,11 +520,11 @@ class VmTests(unittest.TestCase):
         self.assertEqual("00:50:56:01:aa:99", obj.networkconnections[0].macAddress)
 
         self.assertEqual(1, obj.cpu)
+        self.assertEqual(2048, obj.memoryMB)
         self.assertTrue(obj.networkcards)
 
         self.assertTrue(obj.harddisks)
-
-        self.assertTrue(obj.guestcustomisation)
+        self.assertEqual(51200, obj.harddisks[0][1])
 
     def test_feed_template_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"

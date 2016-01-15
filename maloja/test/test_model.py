@@ -470,6 +470,8 @@ class NetworkTests(unittest.TestCase):
         self.assertIsInstance(obj.dhcp, Network.DHCP)
         self.assertEqual("192.168.2.1", str(obj.dhcp.pool[0]))
         self.assertEqual("192.168.2.254", str(obj.dhcp.pool[-1]))
+        self.assertEqual("192.168.1.255", str(obj.defaultGateway))
+        self.assertEqual("255.255.0.0", str(obj.netmask))
 
 class VmTests(unittest.TestCase):
 

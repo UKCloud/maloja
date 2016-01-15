@@ -301,14 +301,28 @@ class Network(DataObject):
         self.dns = [tree.attrib.get("dns1"), tree.attrib.get("dns2")]
         super().feed_xml(tree, ns=ns)
 
+        scope = tree.find(
+            "./*/*/{}IpScope".format(ns)
+        )
+        self.defaultGateway = next(iter(Gateway.servicecast(
+            scope.find(ns + "Gateway").text
+        )), None)
+        self.netmask = next(iter(Gateway.servicecast(
+            scope.find(ns + "Netmask").text
+        )), None)
+
+
+        elem = None
         config = tree.find(
             "./*/{}GatewayDhcpService".format(ns)
         )
-        elem = config.find(ns + "Pool")
-        self.dhcp = Network.DHCP(pool=[
-            next(iter(Gateway.servicecast(elem.find(ns + "LowIpAddress").text)), None),
-            next(iter(Gateway.servicecast(elem.find(ns + "HighIpAddress").text)), None),
-        ])
+        if config is not None:
+            elem = config.find(ns + "Pool")
+        if elem is not None:
+            self.dhcp = Network.DHCP(pool=[
+                next(iter(Gateway.servicecast(elem.find(ns + "LowIpAddress").text)), None),
+                next(iter(Gateway.servicecast(elem.find(ns + "HighIpAddress").text)), None),
+            ])
         return self
 
 class Org(DataObject):

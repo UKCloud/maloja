@@ -131,7 +131,7 @@ def split_to_path(data, root=None):
         "template.yaml": -7,
         "vm.yaml": -8,
     }
-    index = lookup[bits[-1]] #  The index of the project field
+    index = lookup[bits[-1]]  # The index of the project field
     data = list(itertools.chain(
         bits[index: -1],
         itertools.repeat(None, 8 + index),

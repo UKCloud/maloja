@@ -95,7 +95,7 @@ class DataObject:
         for k, _ in self._defaults:
             obj = getattr(self, k)
             yield from visitor(obj)
- 
+
     def feed_xml(self, tree, *args, **kwargs):
         """
         Updates the object by feeding it XML
@@ -448,16 +448,16 @@ class Vm(DataObject):
         5: namedtuple("IDEController", ["address", "description", "instanceID"]),
         6: namedtuple("SCSIController", ["address", "description", "instanceID"]),
         10: namedtuple(
-                "EthernetAdapter",
-                ["address", "connection", "elementName", "instanceID"]
-            ),
+            "EthernetAdapter",
+            ["address", "connection", "elementName", "instanceID"]
+        ),
         14: namedtuple("FloppyDrive", ["description", "instanceID"]),
         15: namedtuple("CDDrive", ["description", "instanceID"]),
         16: namedtuple("DVDDrive", ["description", "instanceID"]),
         17: namedtuple(
-                "DiskDrive",
-                ["addressOnParent", "description", "hostResource", "instanceID"]
-            ),
+            "DiskDrive",
+            ["addressOnParent", "description", "hostResource", "instanceID"]
+        ),
         23: namedtuple("USBController", []),
     }
 
@@ -558,7 +558,7 @@ class Vm(DataObject):
                 for i in tree.iter(ns + "NetworkConnection")]
 
             section = tree.find(ns + "GuestCustomizationSection")
-            #TODO: Define customization storage
+            # TODO: Define customization storage
 
         return self
 

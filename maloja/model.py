@@ -260,6 +260,7 @@ class Network(DataObject):
     Here you can find the following:
 
         * DNS rules
+        * DHCP configuration
 
     """
 

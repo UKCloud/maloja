@@ -45,6 +45,8 @@ and storing data.
 
 .. autofunction:: maloja.workflow.utils.find_xpath
 
+.. autofunction:: maloja.workflow.path.find_ypath
+
 .. autofunction:: maloja.workflow.utils.group_by_type
 
 Broker module

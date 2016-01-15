@@ -74,7 +74,7 @@ def find_project(root, query=None, **kwargs):
 
 def find_ypath(path: Path, query, **kwargs):
     """
-    Find elements within the cache tree whose attributes match certain
+    Find objects within the Maloja cache tree whose attributes match certain
     values.
 
     :param path: search location in cache.

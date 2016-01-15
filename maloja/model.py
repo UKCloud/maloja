@@ -14,6 +14,7 @@ from xml.etree import ElementTree as ET
 import ruamel.yaml
 
 import maloja.types
+from maloja.workflow.utils import find_xpath
 
 __doc__ = """
 These classes define objects which Maloja uses internally. All of
@@ -440,6 +441,23 @@ class Vm(DataObject):
 
     """
 
+    rasd = {
+        0: namedtuple("Other", []),
+        3: namedtuple("Processor", ["instanceID", "virtualQuantity"]),
+        4: namedtuple("Memory", ["instanceID", "virtualQuantity"]),
+        5: namedtuple("IDEController", ["address", "description", "instanceID"]),
+        6: namedtuple("SCSIController", ["address", "description", "instanceID"]),
+        10: namedtuple("EthernetAdapter", ["address", "connection", "instanceID"]),
+        14: namedtuple("FloppyDrive", ["description", "instanceID"]),
+        15: namedtuple("CDDrive", ["description", "instanceID"]),
+        16: namedtuple("DVDDrive", ["description", "instanceID"]),
+        17: namedtuple(
+                "DiskDrive",
+                ["addressOnParent", "description", "hostResource", "instanceID"]
+            ),
+        23: namedtuple("USBController", []),
+    }
+
     NetworkConnection = namedtuple(
         "NetworkConnection", [
             "name", "ip", "isConnected", "macAddress",
@@ -503,6 +521,22 @@ class Vm(DataObject):
             super().feed_xml(tree, ns=ns)
 
         if tree.tag in (ns + "VAppTemplate", ns + "Vm"):
+            hardware = find_xpath(
+                "./*/{}Item".format("{http://schemas.dmtf.org/ovf/envelope/1}"), tree
+            )
+            rasdNs = (
+                "{http://schemas.dmtf.org/wbem/wscim/1/cim-schema/"
+                "2/CIM_ResourceAllocationSettingData}"
+            )
+            for item in hardware:
+                key = int(getattr(item.find(rasdNs + "ResourceType"), "text", "0"))
+                typ = Vm.rasd[key]
+                fields = [(rasdNs + i).lower() for i in typ._fields]
+                obj = typ(*(i for i in list(item) if i.tag.lower() in fields))
+                if key == 3:
+                    self.cpu = int(obj.virtualQuantity.text)
+
+            #:vcloud:type="application/vnd.vmware.vcloud.rasdItem+xml"
             self.networkconnections = [
                 Vm.NetworkConnection(
                     i.attrib["network"],

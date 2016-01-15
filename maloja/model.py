@@ -262,12 +262,17 @@ class Network(DataObject):
 
     """
 
+    DHCP = namedtuple(
+        "DHCP", ["pool"]
+    )
+
     _defaults = [
         ("name", None),
         ("href", None),
         ("type", None),
         ("defaultGateway", None),
         ("netmask", None),
+        ("dhcp", None),
         ("dnsSuffix", None),
         ("dns", []),
     ]
@@ -284,6 +289,7 @@ class Network(DataObject):
 
         """
         log = logging.getLogger("maloja.model.Network")
+        log.debug(ET.tostring(tree, encoding="unicode"))
         self.dns = [tree.attrib.get("dns1"), tree.attrib.get("dns2")]
         super().feed_xml(tree, ns=ns)
         return self
@@ -483,6 +489,7 @@ ruamel.yaml.RoundTripDumper.add_representer(Gateway.FW, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.DNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Gateway.SNAT, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Network, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Network.DHCP, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Org, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Project, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)

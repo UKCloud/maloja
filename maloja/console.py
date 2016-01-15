@@ -137,18 +137,24 @@ class Console(cmd.Cmd):
                 n += 1
                 level = os.path.splitext(getattr(status.path, "file", ""))[0]
                 if msg is None:
-                    sys.stdout.write("\n[{0.id}] {1:^10} job {0.job:03} complete.\n".format(status, level))
+                    sys.stdout.write(
+                        "\n[{0.id}] {1:^10} job {0.job:03} complete.\n\n".format(
+                            status, level
+                        )
+                    )
                 elif isinstance(msg, Token):
                     self.token = msg
                     sys.stdout.write(
-                        "\n[{0.id}] job {0.job} Token received.\n".format(status, level)
+                        "\n[{0.id}] job {0.job:03} Token received.\n\n".format(
+                            status, level
+                        )
                     )
                     self.prompt = "Type 'help' for commands > "
                 elif isinstance(msg, str):
                     sys.stdout.write("\n[{0.id}] {1}\n".format(status, msg))
                 else:
                     sys.stdout.write(
-                        "\n[{0.id}] {1.__name__} received.\n".format(status, type(msg))
+                        "\n[{0.id}] {1.__name__} received.\n\n".format(status, type(msg))
                     )
                 sys.stdout.flush()
                 sys.stdout.write(self.prompt)

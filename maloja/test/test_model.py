@@ -11,6 +11,7 @@ import unittest
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils
 
+from maloja.model import Network
 from maloja.model import Org
 from maloja.model import Template
 from maloja.model import Vm
@@ -21,6 +22,7 @@ import maloja.surveyor
 import maloja.types
 
 from maloja.workflow.utils import find_xpath
+ 
 
 template_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <VAppTemplate xmlns="http://www.vmware.com/vcloud/v1.5" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" goldMaster="false" status="8" name="Windows_2008_R2_STD_50GB_MediumHighMem_v1.0.2" id="urn:vcloud:vm:359b91ab-bdd1-4091-a30f-da18e264d311" href="https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-359b91ab-bdd1-4091-a30f-da18e264d311" type="application/vnd.vmware.vcloud.vm+xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.dmtf.org/ovf/envelope/1 http://schemas.dmtf.org/ovf/envelope/1/dsp8023_1.1.0.xsd http://www.vmware.com/vcloud/v1.5 http://10.10.6.11/api/v1.5/schema/master.xsd">
@@ -419,6 +421,55 @@ class TaskTests(unittest.TestCase):
         self.assertEqual("f52ec6bedae4491c8ab21fb58f89b003", obj.owner.name)
         self.assertEqual("application/vnd.vmware.vcloud.vApp+xml", obj.owner.type)
 
+
+class NetworkTests(unittest.TestCase):
+    xml = textwrap.dedent("""<?xml version="1.0" encoding="UTF-8"?><ns0:OrgVdcNetwork
+    xmlns:ns0="http://www.vmware.com/vcloud/v1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162" id="urn:vcloud:network:6be91cc6-8c8a-417c-97ba-9aabef8d3162" name="Arbitrary net" status="1" type="application/vnd.vmware.vcloud.orgVdcNetwork+xml" xsi:schemaLocation="http://www.vmware.com/vcloud/v1.5 http://10.10.6.14/api/v1.5/schema/master.xsd">
+        <ns0:Link href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162" rel="edit" type="application/vnd.vmware.vcloud.orgVdcNetwork+xml" />
+        <ns0:Link href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162" rel="remove" />
+        <ns0:Link href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162/action/reset" rel="repair" />
+        <ns0:Link href="https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1" rel="up" type="application/vnd.vmware.vcloud.vdc+xml" />
+        <ns0:Link href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162/metadata" rel="down" type="application/vnd.vmware.vcloud.metadata+xml" />
+        <ns0:Link href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162/allocatedAddresses/" rel="down" type="application/vnd.vmware.vcloud.allocatedNetworkAddress+xml" />
+        <ns0:Description />
+        <ns0:Configuration>
+            <ns0:IpScopes>
+                <ns0:IpScope>
+                    <ns0:IsInherited>false</ns0:IsInherited>
+                    <ns0:Gateway>192.168.1.255</ns0:Gateway>
+                    <ns0:Netmask>255.255.0.0</ns0:Netmask>
+                    <ns0:IsEnabled>true</ns0:IsEnabled>
+                </ns0:IpScope>
+            </ns0:IpScopes>
+            <ns0:FenceMode>isolated</ns0:FenceMode>
+            <ns0:RetainNetInfoAcrossDeployments>false</ns0:RetainNetInfoAcrossDeployments>
+        </ns0:Configuration>
+        <ns0:ServiceConfig>
+            <ns0:GatewayDhcpService>
+                <ns0:IsEnabled>true</ns0:IsEnabled>
+                <ns0:Pool>
+                    <ns0:IsEnabled>true</ns0:IsEnabled>
+                    <ns0:Network href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/6be91cc6-8c8a-417c-97ba-9aabef8d3162" name="Arbitrary net" type="application/vnd.vmware.vcloud.orgVdcNetwork+xml" />
+                    <ns0:DefaultLeaseTime>3600</ns0:DefaultLeaseTime>
+                    <ns0:MaxLeaseTime>7200</ns0:MaxLeaseTime>
+                    <ns0:LowIpAddress>192.168.2.1</ns0:LowIpAddress>
+                    <ns0:HighIpAddress>192.168.2.254</ns0:HighIpAddress>
+                </ns0:Pool>
+            </ns0:GatewayDhcpService>
+        </ns0:ServiceConfig>
+        <ns0:IsShared>false</ns0:IsShared>
+    </ns0:OrgVdcNetwork>""")
+
+    def test_orgvdcnetwork(self):
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        tree = ET.fromstring(NetworkTests.xml)
+        #record = next(tree.iter(ns + "VMRecord"))
+        obj = Network()
+        self.assertIs(None, obj.dhcp)
+        self.assertIs(obj, obj.feed_xml(tree))
+        self.assertIsInstance(obj.dhcp, Network.DHCP)
+        self.assertEqual("192.168.2.1", str(obj.dhcp.pool[0]))
+        self.assertEqual("192.168.2.254", str(obj.dhcp.pool[-1]))
 
 class VmTests(unittest.TestCase):
 

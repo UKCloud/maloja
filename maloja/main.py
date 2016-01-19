@@ -109,7 +109,7 @@ def main(args):
             return maloja.planner.report(data)
 
     # Other commands require a broker
-    broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)
+    broker = maloja.broker.create_broker(operations, results, max_workers=64, loop=loop)
 
     reply = None
     while not isinstance(reply, Token):
@@ -131,23 +131,26 @@ def main(args):
 
     while not isinstance(reply, Stop):
         try:
-            status, reply = results.get(block=True, timeout=10)
+            status, reply = results.get(block=True, timeout=30)
         except queue.Empty:
-            return 0
+            break
         else:
             if isinstance(status, Status):
                 log.info(status)
             if reply is not None:
                 log.info(reply)
             time.sleep(0)
-    else:
-        operations.put((2, reply))
-        results = [
-            i.result()
-            for i in concurrent.futures.as_completed(set(broker.tasks.values()))
-            if i.done()
-        ]
 
+    operations.put((2, Stop()))
+    time.sleep(1)
+
+    done, not_done = tasks = concurrent.futures.wait(
+        set(broker.tasks.values()), timeout=6,
+        return_when=concurrent.futures.FIRST_EXCEPTION
+    )
+    for task in not_done:
+        log.debug(task)
+        log.debug(task.cancel())
     return 0
 
 

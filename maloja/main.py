@@ -27,6 +27,7 @@ from logging.handlers import WatchedFileHandler
 import os
 import queue
 import sys
+import time
 import warnings
 
 import maloja.cli
@@ -36,6 +37,7 @@ import maloja.surveyor
 import maloja.planner
 from maloja.types import Credentials
 from maloja.types import Design
+from maloja.types import Status
 from maloja.types import Stop
 from maloja.types import Survey
 from maloja.types import Token
@@ -106,38 +108,47 @@ def main(args):
         with open(args.input, "r") as data:
             return maloja.planner.report(data)
 
+    # Other commands require a broker
+    broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)
+
+    reply = None
+    while not isinstance(reply, Token):
+        password = getpass.getpass(prompt="Enter your API password: ")
+        creds = Credentials(args.url, args.user, password.strip())
+        operations.put((0, creds))
+        status, reply = results.get()
+
+    if args.command == "survey":
+        operations.put((1, Survey(path)))
+ 
     elif args.command == "build":
         objs = []
-        broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)
-
         with open(args.input, "r") as data:
             objs = list(maloja.planner.read_objects(data.read()))
             objs = maloja.planner.check_objects(objs)
 
-        reply = None
-        while not isinstance(reply, Token):
-            password = getpass.getpass(prompt="Enter your API password: ")
-            creds = Credentials(args.url, args.user, password.strip())
-            operations.put((0, creds))
-            status, reply = results.get()
-
         operations.put((1, Design(objs)))
 
-        while not isinstance(reply, Stop):
-            status, reply = results.get()
-            log.info(status)
-            log.info(reply)
+    while not isinstance(reply, Stop):
+        try:
+            status, reply = results.get(block=True, timeout=10)
+        except queue.Empty:
+            return 0
         else:
-            operations.put((2, reply))
-
+            if isinstance(status, Status):
+                log.info(status)
+            if reply is not None:
+                log.info(reply)
+            time.sleep(0)
+    else:
+        operations.put((2, reply))
         results = [
             i.result()
             for i in concurrent.futures.as_completed(set(broker.tasks.values()))
             if i.done()
         ]
 
-
-        return 0
+    return 0
 
 
 def run():

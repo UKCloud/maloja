@@ -66,7 +66,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Maloja'
-copyright = '2015, D Haynes'
+copyright = '2015 Skyscape Cloud Services'
 author = 'D Haynes'
 
 # The version info for the project you're documenting, acts as replacement for

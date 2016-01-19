@@ -93,11 +93,20 @@ def main(args):
         Survey, maloja.surveyor.Surveyor.survey_handler
     )
 
-    if args.command == "plan":
+    if not args.command:
+        console = maloja.console.create_console(operations, results, args, path, loop=loop)
+        results = [
+            i.result()
+            for i in concurrent.futures.as_completed(set(console.tasks.values()))
+            if i.done()
+        ]
+        return 0
+
+    elif args.command == "plan":
         with open(args.input, "r") as data:
             return maloja.planner.report(data)
 
-    if args.command == "build":
+    elif args.command == "build":
         objs = []
         broker = maloja.broker.create_broker(operations, results, max_workers=12, loop=loop)
 
@@ -127,15 +136,8 @@ def main(args):
             if i.done()
         ]
 
-    else:
-        console = maloja.console.create_console(operations, results, args, path, loop=loop)
-        results = [
-            i.result()
-            for i in concurrent.futures.as_completed(set(console.tasks.values()))
-            if i.done()
-        ]
 
-    return 0
+        return 0
 
 
 def run():

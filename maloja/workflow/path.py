@@ -109,7 +109,7 @@ def find_ypath(path: Path, query, **kwargs):
         Vdc: wildcards[:4] + ["vdc.yaml"],
         Network: wildcards[:6] + ["net.yaml"],
         VApp: wildcards[:6] + ["vapp.yaml"],
-        Template: wildcards[:5] + ["template.yaml"],
+        Template: wildcards[:6] + ["template.yaml"],
         Vm: wildcards[:7] + ["vm.yaml"],
     }
     typ = type(query)

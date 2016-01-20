@@ -93,7 +93,7 @@ def parsers(description=__doc__):
     p = subparsers.add_parser(
         "survey",
         help="Maloja 'survey' command.",
-        description="Invokes the surveyor module to map your infrastructure."
+        description="Invokes the surveyor module to map your virtual infrastructure."
     )
 
     p = subparsers.add_parser(

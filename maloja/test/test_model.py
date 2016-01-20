@@ -538,10 +538,8 @@ class VmTests(unittest.TestCase):
         self.assertTrue(obj.networkcards)
 
         self.assertTrue(obj.harddisks)
-        self.assertEqual(
-            {"name": "Hard disk", "capacity": 51200},
-            dict((obj.harddisks[0]))
-        )
+        self.assertEqual("Hard disk", obj.harddisks[0].name)
+        self.assertEqual(51200, obj.harddisks[0].capacity)
 
     def test_feed_template_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"

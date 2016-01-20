@@ -46,7 +46,6 @@ def dataobject_as_ordereddict(dumper, data, flow_style=False):
         OrderedDict([(k, getattr(data, k)) for k, v in data._defaults])
     )
 
-
 def namedtuple_as_dict(dumper, data, flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_dict(data._asdict())
@@ -527,12 +526,16 @@ class Vm(DataObject):
         the `kwargs` dictionary.
 
         """
-        seq, typ = ("networkconnections", Vm.NetworkConnection)
-        if seq in kwargs:
-            kwargs[seq] = [
-                typ(**{k: self.typecast(v) for k, v in i.items()})
-                for i in kwargs[seq]
-            ]
+        for seq, typ in [
+            ("harddisks", Vm.HardDisk),
+            ("networkcards", Vm.NetworkCard),
+            ("networkconnections", Vm.NetworkConnection),
+        ]:
+            if seq in kwargs:
+                kwargs[seq] = [
+                    typ(**{k: self.typecast(v) for k, v in i.items()})
+                    for i in kwargs[seq]
+                ]
 
         super().__init__(**kwargs)
 
@@ -564,18 +567,14 @@ class Vm(DataObject):
                 elif key == 4:
                     self.memoryMB = int(obj.virtualQuantity.text)
                 elif key == 10:
-                    entry = dict([
-                        ("name", obj.elementName.text), ("mac", obj.address.text)
-                    ])
-                    entry = (obj.elementName.text, obj.address.text)
+                    entry = Vm.NetworkCard(
+                        obj.elementName.text,
+                        obj.address.text
+                    )
                     if entry not in self.networkcards:
                         self.networkcards.append(entry)
                 elif key == 17:
-                    entry = dict([
-                        ("name", obj.description.text),
-                        ("capacity", int(obj.hostResource.attrib.get(ns + "capacity")))
-                    ])
-                    entry = (
+                    entry = Vm.HardDisk(
                         obj.description.text,
                         int(obj.hostResource.attrib.get(ns + "capacity"))
                     )

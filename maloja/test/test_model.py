@@ -121,10 +121,10 @@ vm_yaml = """
 - memoryMB:
 - networkcards:
   - name:
+    mac:
 - harddisks:
   - name:
     capacity:
-    bustype:
 - cd:
   - description:
 - floppydisk:

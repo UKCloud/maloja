@@ -25,6 +25,7 @@ import getpass
 import logging
 from logging.handlers import WatchedFileHandler
 import os
+import os.path
 import queue
 import sys
 import time
@@ -136,7 +137,8 @@ def main(args):
             break
         else:
             if isinstance(status, Status):
-                log.info(status)
+                level = os.path.splitext(getattr(status.path, "file", ""))[0]
+                log.info("{0:^10} job {1.job:04}".format(level, status))
             if reply is not None:
                 log.info(reply)
             time.sleep(0)

@@ -152,7 +152,7 @@ class Console(cmd.Cmd):
                 level = os.path.splitext(getattr(status.path, "file", ""))[0]
                 if msg is None:
                     sys.stdout.write(
-                        "\n[{0.id}] {1:^10} job {0.job:03} complete.\n\n".format(
+                        "\n[{0.id}] {1:^10} job {0.job:04} complete.\n\n".format(
                             status, level
                         )
                     )

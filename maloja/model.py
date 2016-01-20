@@ -476,6 +476,14 @@ class Vm(DataObject):
         23: namedtuple("USBController", []),
     }
 
+    HardDisk = namedtuple(
+        "HardDisk", ["name", "capacity"]
+    )
+
+    NetworkCard = namedtuple(
+        "NetworkCard", ["name", "mac"]
+    )
+
     NetworkConnection = namedtuple(
         "NetworkConnection", [
             "name", "ip", "isConnected", "macAddress",
@@ -556,12 +564,23 @@ class Vm(DataObject):
                 elif key == 4:
                     self.memoryMB = int(obj.virtualQuantity.text)
                 elif key == 10:
-                    self.networkcards.append((obj.elementName.text, obj.address.text))
+                    entry = dict([
+                        ("name", obj.elementName.text), ("mac", obj.address.text)
+                    ])
+                    entry = (obj.elementName.text, obj.address.text)
+                    if entry not in self.networkcards:
+                        self.networkcards.append(entry)
                 elif key == 17:
-                    self.harddisks.append((
+                    entry = dict([
+                        ("name", obj.description.text),
+                        ("capacity", int(obj.hostResource.attrib.get(ns + "capacity")))
+                    ])
+                    entry = (
                         obj.description.text,
                         int(obj.hostResource.attrib.get(ns + "capacity"))
-                    ))
+                    )
+                    if entry not in self.harddisks:
+                        self.harddisks.append(entry)
 
             self.networkconnections = [
                 Vm.NetworkConnection(
@@ -591,4 +610,6 @@ ruamel.yaml.RoundTripDumper.add_representer(Template, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(VApp, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vdc, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
+ruamel.yaml.RoundTripDumper.add_representer(Vm.HardDisk, namedtuple_as_dict)
+ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkCard, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)

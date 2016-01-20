@@ -121,7 +121,7 @@ def main(args):
 
     if args.command == "survey":
         operations.put((1, Survey(path)))
- 
+
     elif args.command == "build":
         objs = []
         with open(args.input, "r") as data:

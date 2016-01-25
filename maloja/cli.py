@@ -109,6 +109,13 @@ def parsers(description=__doc__):
         description="Invokes the builder module to create virtual infrastructure."
     )
     p = add_builder_options(p)
+
+    p = subparsers.add_parser(
+        "inspect",
+        help="Maloja 'inspect' command.",
+        description="Invokes the inspector module to check virtual infrastructure."
+    )
+    p = add_builder_options(p)
     return (rv, subparsers)
 
 def cli():

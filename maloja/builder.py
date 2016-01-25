@@ -60,6 +60,11 @@ class Builder:
                     log.warning("Request refused: duplicate name.")
                 else:
                     log.warning(response.text)
+            elif response.status_code == 403:
+                if "ACCESS_TO_RESOURCE_IS_FORBIDDEN" in response.text:
+                    log.warning("Request refused: access forbidden.")
+                else:
+                    log.warning(response.text)
             else:
                 log.debug(response.text)
         except Exception as e:

@@ -40,7 +40,7 @@ from maloja.workflow.utils import find_xpath
 from maloja.workflow.utils import group_by_type
 
 
-class Inspector:
+class Inspector(Builder):
     """
     The Inspector accepts a sequence of objects from the
     :ref:`data model <data model>` and uses them to check
@@ -96,4 +96,9 @@ class Inspector:
 
         """
         log = logging.getLogger("maloja.inspector")
-        log.info("No-op.")
+        for gw in self.plans[Gateway]:
+            log.info(gw)
+            response = self.check_response(
+                *self.wait_for(session.get(gw.href))
+            )
+            log.debug(response.text)

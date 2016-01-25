@@ -48,6 +48,22 @@ class Inspector:
 
     """
 
+    @staticmethod
+    def inspection_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.inspection.handler")
+        try:
+            inspector = Inspector(msg.objects, results, session.executor)
+        except Exception as e:
+            log.error(str(getattr(e, "args", e) or e))
+            return tuple()
+        else:
+            headers = {
+                "Accept": "application/*+xml;version=5.5",
+                token.key: token.value,
+            }
+            session.headers.update(headers)
+            return (session.executor.submit(inspector, session, token, callback, status),)
+
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
         """
         :param objs: a sequence of Maloja objects
@@ -80,3 +96,4 @@ class Inspector:
 
         """
         log = logging.getLogger("maloja.inspector")
+        log.info("No-op.")

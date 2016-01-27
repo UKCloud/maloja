@@ -50,7 +50,12 @@ types = {
 
 def read_objects(text):
     log = logging.getLogger("maloja.planner")
-    for n, data in enumerate(yaml_loads(text)):
+    contents = yaml_loads(text)
+    if contents is None:
+        log.warning("No objects found.")
+        return
+
+    for n, data in enumerate(contents):
         try:
             typ = types[data.get("type", None)]
         except KeyError:

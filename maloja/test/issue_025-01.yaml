@@ -1,0 +1,5 @@
+%YAML 1.2
+---
+
+# To check this file:
+# %HOME%\py3.5\maloja @options.skydemo plan --input maloja\test\issue_025-01.yaml

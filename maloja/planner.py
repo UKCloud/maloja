@@ -75,7 +75,8 @@ def read_objects(text):
             log.warning(e)
             continue
 
-        log.info(obj)
+        action = "Modify" if obj.href else "Create"
+        log.info("{0} <{1.__class__.__name__}> {1.name}".format(action, obj))
         yield obj
 
 
@@ -91,7 +92,7 @@ def check_objects(seq):
 def report(fObj):
     objs = list(read_objects(fObj.read()))
     objs = check_objects(objs)
-    print(*[vars(i) for i in objs], sep="\n")
+    #print(*[vars(i) for i in objs], sep="\n")
     return 0
 
 

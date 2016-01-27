@@ -19,3 +19,18 @@
     - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/c3c360c0-8786-45fa-b81b-b23ab3e222f7
     - type: application/vnd.vmware.vcloud.vdc+xml
     - description:
+
+# Paste in the exact contents of a network.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for dns, etc
+# Remove the 'href' value. This is to be a new network, not a change to an existing one.
+-   !!omap
+    - name: Demo Network
+    - href:
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 192.168.0.1
+    - netmask: 255.255.0.0
+    - dhcp:
+    - dnsSuffix:
+    - dns:
+      - 8.8.8.8

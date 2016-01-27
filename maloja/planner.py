@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections.abc
 import logging
 from logging.handlers import WatchedFileHandler
 import itertools
@@ -54,6 +55,8 @@ def read_objects(text):
     if contents is None:
         log.warning("No objects found.")
         return
+    elif isinstance(contents, collections.abc.Mapping):
+        contents = [contents]
 
     for n, data in enumerate(contents):
         try:

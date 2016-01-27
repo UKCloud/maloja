@@ -26,6 +26,7 @@ import xml.etree.ElementTree as ET
 
 from maloja.model import Gateway
 from maloja.model import Network
+from maloja.model import Org
 from maloja.model import Task
 from maloja.model import Template
 from maloja.model import VApp
@@ -118,6 +119,37 @@ class Builder:
 
         """
         log = logging.getLogger("maloja.builder")
+
+        org = self.plans[Org][0]
+        orgNetwork = self.plans[Network][0]
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "OrgNetwork.pt"
+            )
+        )
+        data = {"network": orgNetwork}
+        url = "{service}/{endpoint}".format(
+            service=org.href.replace("/org/", "/admin/org/", 1),
+            endpoint="networks"
+        )
+        xml = macro(**data)
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.admin.orgNetwork+xml"})
+
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.post(url, data=xml)
+                )
+            )
+            task = next(self.get_tasks(response))
+            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        self.send_status(status, stop=True)
+        return
 
         # Step 1: Instantiate empty VApp
 

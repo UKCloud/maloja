@@ -4,7 +4,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 tal:attributes="
 name network.name;"
 >
-    <Description tal:content="network.description"></Description>
+    <Description tal:content="getattr(network, 'description', '')"></Description>
     <Configuration tal:condition="False">
         <IpScopes>
             <IpScope>

@@ -3,8 +3,19 @@
 
 # To check this file:
 # %HOME%\py3.5\maloja @options.skydemo plan --input maloja\test\issue_025-01.yaml
-!!omap
-- name: 1-1-1-a4f57h
-- href: https://api.vcd.portal.skyscapecloud.com/api/org/66b750f9-ea5d-4845-9b2d-ca9c7da437ff
-- type: application/vnd.vmware.vcloud.org+xml
-- fullName: Skyscape vCloud
+
+# Paste in the exact contents of an org.yaml file (optional?).
+# Indent once and change the first whitespace character on the first line to '-':
+-   !!omap
+    - name: 1-1-1-a4f57h
+    - href: https://api.vcd.portal.skyscapecloud.com/api/org/66b750f9-ea5d-4845-9b2d-ca9c7da437ff
+    - type: application/vnd.vmware.vcloud.org+xml
+    - fullName: Skyscape vCloud
+
+# Paste in the exact contents of a vdc.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+-   !!omap
+    - name: Skyscape (IL0-PROD-BASIC)
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/c3c360c0-8786-45fa-b81b-b23ab3e222f7
+    - type: application/vnd.vmware.vcloud.vdc+xml
+    - description:

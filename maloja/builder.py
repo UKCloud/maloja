@@ -120,21 +120,21 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder")
 
-        org = self.plans[Org][0]
-        orgNetwork = self.plans[Network][0]
+        vdc = self.plans[Vdc][0]
+        orgVdcNetwork = self.plans[Network][0]
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
-                "maloja.workflow", "OrgNetwork.pt"
+                "maloja.workflow", "OrgVdcNetwork.pt"
             )
         )
-        data = {"network": orgNetwork}
+        data = {"network": orgVdcNetwork}
         url = "{service}/{endpoint}".format(
-            service=org.href.replace("/org/", "/admin/org/", 1),
+            service=vdc.href.replace("/vdc/", "/admin/vdc/", 1),
             endpoint="networks"
         )
         xml = macro(**data)
         session.headers.update(
-            {"Content-Type": "application/vnd.vmware.admin.orgNetwork+xml"})
+            {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
 
         try:
             response = self.check_response(

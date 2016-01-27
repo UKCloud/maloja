@@ -318,7 +318,6 @@ class Surveyor:
         log = logging.getLogger("maloja.surveyor.on_vdc")
 
         tree = ET.fromstring(response.text)
-        log.debug(response.text)
         obj = Vdc().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="vdc.yaml")
         cache(path, obj)

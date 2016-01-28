@@ -80,7 +80,7 @@ class Builder:
         )
 
     @staticmethod
-    def wait_for(*args, timeout=6):
+    def wait_for(*args, timeout=30):
         done, not_done = concurrent.futures.wait(
             args, timeout=timeout,
             return_when=concurrent.futures.FIRST_EXCEPTION
@@ -249,7 +249,6 @@ class Builder:
 
     def instantiate_vapptemplates(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.instantiate_vapptemplates")
-        log.debug("Called.")
 
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
@@ -290,7 +289,7 @@ class Builder:
             except (StopIteration, TypeError):
                 self.send_status(status, stop=True)
 
-        self.wait_for(*self.tasks.values(), timeout=300)
+        self.wait_for(*self.tasks.values(), timeout=600)
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.update_networks")

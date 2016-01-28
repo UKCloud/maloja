@@ -121,6 +121,7 @@ class Builder:
         log = logging.getLogger("maloja.builder")
 
         self.create_orgvdcnetwork_isolated(session, token, status=status)
+        self.instantiate_vapptemplates(session, token, status=status)
         return
 
         # Step 1: Instantiate empty VApp
@@ -283,6 +284,10 @@ class Builder:
         except (StopIteration, TypeError):
             self.send_status(status, stop=True)
             return
+
+    def instantiate_vapptemplates(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.builder.instantiate_vapptemplates")
+        log.debug("Called.")
 
     def monitor(self, task, session):
         """

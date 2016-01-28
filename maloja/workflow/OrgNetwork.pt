@@ -5,8 +5,8 @@ tal:attributes="
 name network.name;"
 >
     <Description tal:content="getattr(network, 'description', '')"></Description>
-    <Configuration tal:condition="False">
-        <IpScopes>
+    <Configuration>
+        <IpScopes tal:condition="False">
             <IpScope>
                 <IsInherited>false</IsInherited>
                 <Gateway>14.14.14.1</Gateway>

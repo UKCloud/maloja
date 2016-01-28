@@ -120,35 +120,7 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder")
 
-        vdc = self.plans[Vdc][0]
-        orgVdcNetwork = self.plans[Network][0]
-        macro = PageTemplateFile(
-            pkg_resources.resource_filename(
-                "maloja.workflow", "OrgVdcNetwork.pt"
-            )
-        )
-        data = {"gateway": None, "network": orgVdcNetwork}
-        url = "{service}/{endpoint}".format(
-            service=vdc.href.replace("/vdc/", "/admin/vdc/", 1),
-            endpoint="networks"
-        )
-        xml = macro(**data)
-        session.headers.update(
-            {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
-
-        try:
-            response = self.check_response(
-                *self.wait_for(
-                    session.post(url, data=xml)
-                )
-            )
-            task = next(self.get_tasks(response))
-            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-        except (StopIteration, TypeError):
-            self.send_status(status, stop=True)
-            return
-
-        self.send_status(status, stop=True)
+        self.create_orgvdcnetwork_isolated(status)
         return
 
         # Step 1: Instantiate empty VApp
@@ -250,6 +222,67 @@ class Builder:
         response = self.check_response(done, not_done)
 
         self.send_status(status, stop=True)
+
+    def create_orgvdcnetwork_isolated(self, status):
+        log = logging.getLogger("maloja.builder.create_orgvdcnetwork_isolated")
+
+        vdc = self.plans[Vdc][0]
+        orgVdcNetwork = self.plans[Network][0]
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "OrgVdcNetwork.pt"
+            )
+        )
+        data = {"gateway": None, "network": orgVdcNetwork}
+        url = "{service}/{endpoint}".format(
+            service=vdc.href.replace("/vdc/", "/admin/vdc/", 1),
+            endpoint="networks"
+        )
+        xml = macro(**data)
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
+
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.post(url, data=xml)
+                )
+            )
+            task = next(self.get_tasks(response))
+            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+    def create_orgvdcnetwork_routed(self, status):
+        log = logging.getLogger("maloja.builder.create_orgvdcnetwork_routed")
+        vdc = self.plans[Vdc][0]
+        orgVdcNetwork = self.plans[Network][0]
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "OrgVdcNetwork.pt"
+            )
+        )
+        data = {"gateway": None, "network": orgVdcNetwork}
+        url = "{service}/{endpoint}".format(
+            service=vdc.href.replace("/vdc/", "/admin/vdc/", 1),
+            endpoint="networks"
+        )
+        xml = macro(**data)
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
+
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.post(url, data=xml)
+                )
+            )
+            task = next(self.get_tasks(response))
+            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
 
     def monitor(self, task, session):
         """

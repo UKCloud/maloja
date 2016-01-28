@@ -17,4 +17,8 @@ name network.name;"
         <FenceMode>isolated</FenceMode>
         <RetainNetInfoAcrossDeployments>false</RetainNetInfoAcrossDeployments>
     </Configuration>
+    <EdgeGateway tal:condition="gateway"
+        tal:attributes="
+        href gateway.href;"></EdgeGateway>
+   <IsShared>true</IsShared>
 </OrgVdcNetwork>

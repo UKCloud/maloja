@@ -127,7 +127,7 @@ class Builder:
                 "maloja.workflow", "OrgVdcNetwork.pt"
             )
         )
-        data = {"network": orgVdcNetwork}
+        data = {"gateway": None, "network": orgVdcNetwork}
         url = "{service}/{endpoint}".format(
             service=vdc.href.replace("/vdc/", "/admin/vdc/", 1),
             endpoint="networks"

@@ -120,7 +120,7 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder")
 
-        self.create_orgvdcnetwork_isolated(status)
+        self.create_orgvdcnetwork_isolated(session, token, status=status)
         return
 
         # Step 1: Instantiate empty VApp
@@ -223,7 +223,7 @@ class Builder:
 
         self.send_status(status, stop=True)
 
-    def create_orgvdcnetwork_isolated(self, status):
+    def create_orgvdcnetwork_isolated(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.create_orgvdcnetwork_isolated")
 
         vdc = self.plans[Vdc][0]
@@ -254,7 +254,7 @@ class Builder:
             self.send_status(status, stop=True)
             return
 
-    def create_orgvdcnetwork_routed(self, status):
+    def create_orgvdcnetwork_routed(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.create_orgvdcnetwork_routed")
         vdc = self.plans[Vdc][0]
         orgVdcNetwork = self.plans[Network][0]

@@ -4,7 +4,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 tal:attributes="
 name network.name;"
 >
-    <Description tal:content="getattr(network, 'description', '')"></Description>
+    <Description tal:content="getattr(network, 'description', 'Isolated Organization VDC Network')"></Description>
     <Configuration>
         <IpScopes tal:condition="False">
             <IpScope>
@@ -15,6 +15,6 @@ name network.name;"
             </IpScope>
         </IpScopes>
         <FenceMode>isolated</FenceMode>
-        <RetainNetInfoAcrossDeployments>false</RetainNetInfoAcrossDeployments>
+        <!-- API v1.5 requires NetworkPool -->
     </Configuration>
 </OrgNetwork>

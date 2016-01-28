@@ -410,6 +410,7 @@ class Surveyor:
         log = logging.getLogger("maloja.surveyor.on_org")
 
         tree = ET.fromstring(response.text)
+        log.debug(response.text)
         obj = Org().feed_xml(tree, ns="{http://www.vmware.com/vcloud/v1.5}")
         path = path._replace(file="org.yaml")
         fP = cache(path, obj)

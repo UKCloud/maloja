@@ -121,47 +121,9 @@ class Builder:
         log = logging.getLogger("maloja.builder")
 
         self.create_orgvdcnetwork_isolated(session, token, status=status)
+        self.update_networks(session, token, status=status)
         self.instantiate_vapptemplates(session, token, status=status)
         return
-
-        # Step 1: Instantiate empty VApp
-
-        prototypes = self.plans[VApp] + self.plans[Template]
-        macro = PageTemplateFile(
-            pkg_resources.resource_filename(
-                "maloja.workflow", "InstantiateVAppTemplateParams.pt"
-            )
-        )
-        data = {
-            "appliance": {
-                "name": uuid.uuid4().hex,
-                "description": "Created by Maloja builder",
-                "vms": [],
-            },
-            "networks": [],
-            "template": prototypes[0]
-        }
-        url = "{vdc.href}/{endpoint}".format(
-            vdc=self.plans[Vdc][0],
-            endpoint="action/instantiateVAppTemplate"
-        )
-        xml = macro(**data)
-        session.headers.update(
-            {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
-
-        try:
-            response = self.check_response(
-                *self.wait_for(
-                    session.post(url, data=xml)
-                )
-            )
-            task = next(self.get_tasks(response))
-            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-        except (StopIteration, TypeError):
-            self.send_status(status, stop=True)
-            return
-
-        self.wait_for(*self.tasks.values(), timeout=300)
 
         # Step 2: Get Recompose Link
 
@@ -288,6 +250,51 @@ class Builder:
     def instantiate_vapptemplates(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.instantiate_vapptemplates")
         log.debug("Called.")
+
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "InstantiateVAppTemplateParams.pt"
+            )
+        )
+
+        for template in self.plans[Template]:
+            data = {
+                "appliance": {
+                    "name": uuid.uuid4().hex,
+                    "description": "Created by Maloja builder",
+                    "vms": [],
+                },
+                "networks": self.plans[Network],
+                "template": {
+                    "name": template.name,
+                    "href": template.href
+                }
+            }
+
+            url = "{vdc.href}/{endpoint}".format(
+                vdc=self.plans[Vdc][0],
+                endpoint="action/instantiateVAppTemplate"
+            )
+            xml = macro(**data)
+            session.headers.update(
+                {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
+
+            try:
+                response = self.check_response(
+                    *self.wait_for(
+                        session.post(url, data=xml)
+                    )
+                )
+                task = next(self.get_tasks(response))
+                self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
+            except (StopIteration, TypeError):
+                self.send_status(status, stop=True)
+
+        self.wait_for(*self.tasks.values(), timeout=300)
+
+    def update_networks(self, session, token, callback=None, status=None, **kwargs):
+        # TODO: Update Network plans with existing hrefs.
+        pass
 
     def monitor(self, task, session):
         """

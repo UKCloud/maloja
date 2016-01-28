@@ -293,8 +293,22 @@ class Builder:
         self.wait_for(*self.tasks.values(), timeout=300)
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
-        # TODO: Update Network plans with existing hrefs.
-        pass
+        log = logging.getLogger("maloja.builder.update_networks")
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.get(self.plans[Vdc][0].href)
+                )
+            )
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+        else:
+            tree = ET.fromstring(response.text)
+            for elem in tree.iter(ns + "Network"):
+                for net in self.plans[Network]:
+                    if net.name == elem.attrib.get("name"):
+                        net.href = elem.attrib.get("href")
 
     def monitor(self, task, session):
         """

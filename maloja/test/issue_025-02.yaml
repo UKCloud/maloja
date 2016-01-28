@@ -1,0 +1,36 @@
+%YAML 1.2
+---
+
+# To check this file:
+# %HOME%\py3.5\maloja @options.skydemo plan --input maloja\test\issue_025-01.yaml
+
+# Paste in the exact contents of an org.yaml file (optional?).
+# Indent once and change the first whitespace character on the first line to '-':
+-   !!omap
+    - name: 1-1-1-a4f57h
+    - href: https://api.vcd.portal.skyscapecloud.com/api/org/1fa3fcf9-72a6-4464-8a5f-e00e4f60cd3a
+    - type: application/vnd.vmware.vcloud.org+xml
+    - fullName: Python Development
+
+# Paste in the exact contents of a vdc.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+-   !!omap
+    - name: Skyscape Python Development (IL2-PROD-STANDARD)
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1
+    - type: application/vnd.vmware.vcloud.vdc+xml
+    - description: Skyscape Python Development (IL2-PROD-STANDARD)
+
+# Paste in the exact contents of a network.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for dns, etc
+# Remove the 'href' value. This is to be a new network, not a change to an existing one.
+-   !!omap
+    - name: Demo Network
+    - href:
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 192.168.0.1
+    - netmask: 255.255.0.0
+    - dhcp:
+    - dnsSuffix:
+    - dns:
+      - 8.8.8.8

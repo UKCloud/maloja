@@ -70,6 +70,8 @@ class Builder:
 
     @staticmethod
     def get_tasks(response):
+        if response is None:
+            return tuple()
         tree = ET.fromstring(response.text)
         return (
             Task().feed_xml(elem)
@@ -81,10 +83,13 @@ class Builder:
 
     @staticmethod
     def wait_for(*args, timeout=30):
+        log = logging.getLogger("maloja.builder.wait_for")
         done, not_done = concurrent.futures.wait(
             args, timeout=timeout,
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
+        log.debug(done)
+        log.debug(not_done)
         return (done, not_done)
 
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
@@ -213,7 +218,11 @@ class Builder:
             )
             task = next(self.get_tasks(response))
             self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-        except (StopIteration, TypeError):
+        except StopIteration:
+            # No task related to network suggests one already exists.
+            # If so, that will be logged by check_response.
+            return
+        except TypeError:
             self.send_status(status, stop=True)
             return
 
@@ -285,8 +294,11 @@ class Builder:
                     )
                 )
                 task = next(self.get_tasks(response))
-                self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-            except (StopIteration, TypeError):
+                self.tasks[task.owner.href] = self.executor.submit(
+                    self.monitor, task, session
+                )
+            except (StopIteration, TypeError) as e:
+                log.error(e)
                 self.send_status(status, stop=True)
 
         self.wait_for(*self.tasks.values(), timeout=600)
@@ -318,6 +330,7 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder.monitor")
         backoff = 0
+        log.debug(vars(task))
         while task.status == "running":
             backoff += 1
             time.sleep(backoff)
@@ -327,8 +340,10 @@ class Builder:
             )
             response = done.pop().result()
             task.feed_xml(ET.fromstring(response.text))
+            log.debug(response.text)
 
         log.debug("Backoff: {0}s".format(backoff))
+        log.debug(response.text)
         return task
 
     def send_status(self, status, stop=False):

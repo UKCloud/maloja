@@ -63,6 +63,8 @@ class Builder:
                     log.warning(response.text)
             else:
                 log.debug(response.text)
+        except KeyError:
+            log.warning("Task incomplete.")
         except Exception as e:
             log.error(e)
         finally:
@@ -71,7 +73,7 @@ class Builder:
     @staticmethod
     def get_tasks(response):
         if response is None:
-            return tuple()
+            return iter(tuple())
         tree = ET.fromstring(response.text)
         return (
             Task().feed_xml(elem)
@@ -335,12 +337,23 @@ class Builder:
             backoff += 1
             time.sleep(backoff)
             done, not_done = concurrent.futures.wait(
-                [session.get(task.href)], timeout=6,
+                [session.get(task.href)], timeout=30,
                 return_when=concurrent.futures.FIRST_EXCEPTION
             )
-            response = done.pop().result()
-            task.feed_xml(ET.fromstring(response.text))
-            log.debug(response.text)
+            try:
+                response = done.pop().result()
+            except KeyError:
+                # Hanging task after timeout
+                if not_done:
+                    broken = not_done.pop()
+                    if broken.cancel():
+                        log.warning("Cancelled.")
+                    else:
+                        log.warning("Failed to cancel.")
+                        log.debug(broken)
+            else:
+                task.feed_xml(ET.fromstring(response.text))
+                log.debug(response.text)
 
         log.debug("Backoff: {0}s".format(backoff))
         log.debug(response.text)

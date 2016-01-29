@@ -392,7 +392,6 @@ class Task(DataObject):
         self.organization = Org().feed_xml(org, ns=ns)
         owner = tree.find(ns + "Owner")
         typ = owner.attrib.get("type")
-        log.debug(typ)
         self.owner = {
             "application/vnd.vmware.vcloud.vApp+xml": VApp
         }.get(typ)().feed_xml(owner, ns=ns)

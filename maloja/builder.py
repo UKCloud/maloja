@@ -19,6 +19,7 @@ import concurrent.futures
 import itertools
 import logging
 import sys
+from threading import Event
 import time
 import uuid
 import warnings
@@ -66,7 +67,7 @@ class Builder:
                 log.debug(response.status_code)
                 log.debug(response.text)
         except KeyError:
-            log.warning("Task incomplete.")
+            log.warning("Response incomplete.")
             log.debug(getattr(response, "status_code", "No status code."))
             log.debug(getattr(response, "text", "No text."))
         except Exception as e:
@@ -88,14 +89,51 @@ class Builder:
         )
 
     @staticmethod
+    def monitor(task, session, event=None, backoff=0):
+        """
+        The builder launches this method in a new thread whenever
+        a VMware task is initiated. The method tracks the progress
+        of the task.
+
+        If a task cannot be retrieved then it may be complete. Its
+        owner may have other tasks pending, which we must monitor
+        in turn.
+        """
+        log = logging.getLogger("maloja.builder.monitor")
+        log.info("{0.operationName} is {0.status}.".format(task))
+        if task.status != "running":
+            if event is not None:
+                event.set()
+            return task
+
+        log.debug("Backoff: {0}s".format(backoff))
+        time.sleep(backoff)
+
+        # Get next task
+        reponse = None
+        while response is None:
+            try:
+                response = Builder.check_response(
+                    *Builder.wait_for(
+                        session.get(task.owner.href),
+                        timeout=6
+                    )
+                )
+                task = next(Builder.get_tasks(response))
+                session.executor.submit(Builder.monitor, task, session, event, backoff + 1)
+            except (AttributeError, StopIteration, TypeError):
+                log.warning("No response from task.")
+                response = None
+
+        return task
+
+    @staticmethod
     def wait_for(*args, timeout=30):
         log = logging.getLogger("maloja.builder.wait_for")
         done, not_done = concurrent.futures.wait(
             args, timeout=timeout,
             return_when=concurrent.futures.FIRST_EXCEPTION
         )
-        log.debug(done)
-        log.debug(not_done)
         return (done, not_done)
 
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
@@ -293,10 +331,12 @@ class Builder:
             session.headers.update(
                 {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
 
+            log.info("Instantiating...")
             try:
                 response = self.check_response(
                     *self.wait_for(
-                        session.post(url, data=xml)
+                        session.post(url, data=xml),
+                        timeout=None
                     )
                 )
                 tree = ET.fromstring(response.text)
@@ -306,20 +346,21 @@ class Builder:
                     )
                 )
                 task = next(self.get_tasks(response))
-                self.tasks[task.owner.href] = self.executor.submit(
-                    self.monitor, task, session
-                )
+                event = Event()
+                self.executor.submit(Builder.monitor, task, session, event)
+
+                log.info("Waiting...")
+                if not event.wait():
+                    # No timeout specified for now
+                    log.warning("Timed out while monitoring {0}".format(vars(task)))
+                else:
+                    log.info("Task complete.")
             except IndexError:
                 log.error("No VApp to match template")
                 self.send_status(status, stop=True)
             except (StopIteration, TypeError) as e:
                 log.error(e)
                 self.send_status(status, stop=True)
-
-        while not self.tasks[task.owner.href].done():
-            future = self.tasks[task.owner.href]
-            log.debug("Waiting for {}.".format(future))
-            self.wait_for(future, timeout=60)
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.update_networks")
@@ -338,53 +379,6 @@ class Builder:
                 for net in self.plans[Network]:
                     if net.name == elem.attrib.get("name"):
                         net.href = elem.attrib.get("href")
-
-    def monitor(self, task, session, backoff=0):
-        """
-        The builder launches this method in a new thread whenever
-        a VMware task is initiated. The method tracks the progress
-        of the task.
-
-        If a task cannot be retrieved then it may be complete. Its
-        owner may have other tasks pending, which we must monitor
-        in turn.
-        """
-        log = logging.getLogger("maloja.builder.monitor")
-        log.debug(vars(task))
-        if task.status != "running":
-            log.info(task.status)
-            return task
-
-        log.debug("Backoff: {0}s".format(backoff))
-        time.sleep(backoff)
-        # Get next task
-        try:
-            response = self.check_response(
-                *self.wait_for(
-                    session.get(task.owner.href)
-                )
-            )
-            task = next(self.get_tasks(response))
-            log.info("{0.operationName} is {0.status}.".format(task))
-            self.tasks[task.owner.href] = self.executor.submit(
-                self.monitor, task, session, backoff + 1
-            )
-        except (StopIteration, TypeError):
-            log.warning("No task to track.")
-            log.debug(response.text)
-        except (AttributeError, KeyError):
-            # Timeout or task changed
-            if not_done:
-                broken = not_done.pop()
-                if broken.cancel():
-                    log.info("Cancelled request.")
-                else:
-                    log.info("Failed to cancel request.")
-
-        except Exception as e:
-            log.error(e)
-        finally:
-            return task
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

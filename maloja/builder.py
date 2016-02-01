@@ -60,8 +60,10 @@ class Builder:
                 if "DUPLICATE_NAME" in response.text:
                     log.warning("Request refused: duplicate name.")
                 else:
+                    log.warning(response.status_code)
                     log.warning(response.text)
             else:
+                log.debug(response.status_code)
                 log.debug(response.text)
         except KeyError:
             log.warning("Task incomplete.")
@@ -303,7 +305,6 @@ class Builder:
                         tree, ns="{http://www.vmware.com/vcloud/v1.5}"
                     )
                 )
-                log.debug(vars(self.plans[VApp][n]))
                 task = next(self.get_tasks(response))
                 self.tasks[task.owner.href] = self.executor.submit(
                     self.monitor, task, session
@@ -316,8 +317,9 @@ class Builder:
                 self.send_status(status, stop=True)
 
         while not self.tasks[task.owner.href].done():
-            log.debug("Waiting.")
-            self.wait_for(self.tasks[task.owner.href], timeout=600)
+            future = self.tasks[task.owner.href]
+            log.debug("Waiting for {}.".format(future))
+            self.wait_for(future, timeout=60)
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.update_networks")
@@ -355,23 +357,6 @@ class Builder:
 
         log.debug("Backoff: {0}s".format(backoff))
         time.sleep(backoff)
-        done, not_done = concurrent.futures.wait(
-            [session.get(task.href)], timeout=30,
-            return_when=concurrent.futures.FIRST_EXCEPTION
-        )
-        try:
-            response = done.pop().result()
-            task.feed_xml(ET.fromstring(response.text))
-            log.info("{0.operationName} is {0.status}.".format(task))
-        except KeyError:
-            # Timeout or task changed
-            if not_done:
-                broken = not_done.pop()
-                if broken.cancel():
-                    log.warning("Cancelled.")
-                else:
-                    log.warning("Failed to cancel.")
-
         # Get next task
         try:
             response = self.check_response(
@@ -380,14 +365,26 @@ class Builder:
                 )
             )
             task = next(self.get_tasks(response))
+            log.info("{0.operationName} is {0.status}.".format(task))
             self.tasks[task.owner.href] = self.executor.submit(
                 self.monitor, task, session, backoff + 1
             )
         except (StopIteration, TypeError):
             log.warning("No task to track.")
             log.debug(response.text)
+        except (AttributeError, KeyError):
+            # Timeout or task changed
+            if not_done:
+                broken = not_done.pop()
+                if broken.cancel():
+                    log.info("Cancelled request.")
+                else:
+                    log.info("Failed to cancel request.")
 
-        return task
+        except Exception as e:
+            log.error(e)
+        finally:
+            return task
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

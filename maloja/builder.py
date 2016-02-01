@@ -89,7 +89,7 @@ class Builder:
         )
 
     @staticmethod
-    def monitor(task, session, event=None, backoff=1):
+    def monitor(task, session, event=None, backoff=1, results=None, status=None):
         """
         The builder launches this method in a new thread whenever
         a VMware task is initiated. The method tracks the progress
@@ -102,15 +102,21 @@ class Builder:
         log = logging.getLogger("maloja.builder.monitor")
 
         while True:
-            log.debug("Backoff: {0}s".format(backoff))
-            time.sleep(backoff)
-            backoff += 1
+            if results and status:
+                results.put((status._replace(job=status.job + 1), None))
 
-            log.info("{0.operationName} is {0.status}.".format(task))
-            if task.status != "running":
-                if event is not None:
-                    event.set()
-                break
+            try:
+                log.debug("Backoff: {0}s".format(backoff))
+                time.sleep(backoff)
+                backoff = min(backoff + 1, 20)
+
+                log.info("{0.operationName} is {0.status}.".format(task))
+                if task.status != "running":
+                    if event is not None:
+                        event.set()
+                    break
+            except Exception as e:
+                log.error(e)
 
             # Get next task
             reponse = None
@@ -174,6 +180,7 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder")
 
+        self.executor.submit(self.heartbeat, session, None, self.results, status)
         self.create_orgvdcnetwork_isolated(session, token, status=status)
         self.update_networks(session, token, status=status)
         self.instantiate_vapptemplates(session, token, status=status)
@@ -239,6 +246,12 @@ class Builder:
         response = self.check_response(done, not_done)
 
         self.send_status(status, stop=True)
+
+    def heartbeat(self, session, response, results=None, status=None):
+        while True:
+            time.sleep(15)
+            if results and status:
+                results.put((status, None))
 
     def create_orgvdcnetwork_isolated(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.create_orgvdcnetwork_isolated")
@@ -349,7 +362,10 @@ class Builder:
                 )
                 task = next(self.get_tasks(response))
                 event = Event()
-                self.executor.submit(Builder.monitor, task, session, event)
+                self.executor.submit(
+                    Builder.monitor, task, session, event,
+                    status=status, results=self.results
+                )
 
                 log.info("Waiting...")
                 if not event.wait():

@@ -151,7 +151,7 @@ def main(args):
         return_when=concurrent.futures.FIRST_EXCEPTION
     )
     for task in not_done:
-        log.debug(task)
+        log.warning("Not completed: {0}".format(task))
         log.debug(task.cancel())
     return 0
 

@@ -65,6 +65,8 @@ class Builder:
                 log.debug(response.text)
         except KeyError:
             log.warning("Task incomplete.")
+            log.debug(response.status_code)
+            log.debug(response.text)
         except Exception as e:
             log.error(e)
         finally:
@@ -267,7 +269,7 @@ class Builder:
             )
         )
 
-        for template in self.plans[Template]:
+        for n, template in enumerate(self.plans[Template]):
             data = {
                 "appliance": {
                     "name": uuid.uuid4().hex,
@@ -295,10 +297,20 @@ class Builder:
                         session.post(url, data=xml)
                     )
                 )
+                tree = ET.fromstring(response.text)
+                self.plans[VApp].append(
+                    VApp().feed_xml(
+                        tree, ns="{http://www.vmware.com/vcloud/v1.5}"
+                    )
+                )
+                log.debug(vars(self.plans[VApp][n]))
                 task = next(self.get_tasks(response))
                 self.tasks[task.owner.href] = self.executor.submit(
                     self.monitor, task, session
                 )
+            except IndexError:
+                log.error("No VApp to match template")
+                self.send_status(status, stop=True)
             except (StopIteration, TypeError) as e:
                 log.error(e)
                 self.send_status(status, stop=True)
@@ -329,11 +341,15 @@ class Builder:
         a VMware task is initiated. The method tracks the progress
         of the task.
 
+        If a task cannot be retrieved then it may be complete. Its
+        owner may have other tasks pending, which we must monitor
+        in turn.
         """
         log = logging.getLogger("maloja.builder.monitor")
         backoff = 0
         log.debug(vars(task))
         while task.status == "running":
+            log.debug("Backoff: {0}s".format(backoff))
             backoff += 1
             time.sleep(backoff)
             done, not_done = concurrent.futures.wait(
@@ -343,19 +359,35 @@ class Builder:
             try:
                 response = done.pop().result()
             except KeyError:
-                # Hanging task after timeout
+                # Timeout or task changed
                 if not_done:
                     broken = not_done.pop()
                     if broken.cancel():
                         log.warning("Cancelled.")
                     else:
                         log.warning("Failed to cancel.")
-                        log.debug(broken)
+
+                    # Get next task
+                    try:
+                        response = self.check_response(
+                            *self.wait_for(
+                                session.get(task.owner.href)
+                            )
+                        )
+                        task = next(self.get_tasks(response))
+                        self.tasks[task.owner.href] = self.executor.submit(
+                            self.monitor, task, session
+                        )
+                    except (StopIteration, TypeError):
+                        log.warning("No task to track.")
+                        log.debug(response.text)
+                        self.send_status(status, stop=True)
+                    finally:
+                        break
             else:
                 task.feed_xml(ET.fromstring(response.text))
-                log.debug(response.text)
+                log.info("{0.operationName} is {0.status}.".format(task))
 
-        log.debug("Backoff: {0}s".format(backoff))
         log.debug(response.text)
         return task
 

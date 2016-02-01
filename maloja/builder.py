@@ -65,8 +65,8 @@ class Builder:
                 log.debug(response.text)
         except KeyError:
             log.warning("Task incomplete.")
-            log.debug(response.status_code)
-            log.debug(response.text)
+            log.debug(getattr(response, "status_code", "No status code."))
+            log.debug(getattr(response, "text", "No text."))
         except Exception as e:
             log.error(e)
         finally:
@@ -315,7 +315,9 @@ class Builder:
                 log.error(e)
                 self.send_status(status, stop=True)
 
-        self.wait_for(*self.tasks.values(), timeout=600)
+        while not self.tasks[task.owner.href].done():
+            log.debug("Waiting.")
+            self.wait_for(self.tasks[task.owner.href], timeout=600)
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.update_networks")
@@ -335,7 +337,7 @@ class Builder:
                     if net.name == elem.attrib.get("name"):
                         net.href = elem.attrib.get("href")
 
-    def monitor(self, task, session):
+    def monitor(self, task, session, backoff=0):
         """
         The builder launches this method in a new thread whenever
         a VMware task is initiated. The method tracks the progress
@@ -346,49 +348,45 @@ class Builder:
         in turn.
         """
         log = logging.getLogger("maloja.builder.monitor")
-        backoff = 0
         log.debug(vars(task))
-        while task.status == "running":
-            log.debug("Backoff: {0}s".format(backoff))
-            backoff += 1
-            time.sleep(backoff)
-            done, not_done = concurrent.futures.wait(
-                [session.get(task.href)], timeout=30,
-                return_when=concurrent.futures.FIRST_EXCEPTION
+        if task.status != "running":
+            log.info(task.status)
+            return task
+
+        log.debug("Backoff: {0}s".format(backoff))
+        time.sleep(backoff)
+        done, not_done = concurrent.futures.wait(
+            [session.get(task.href)], timeout=30,
+            return_when=concurrent.futures.FIRST_EXCEPTION
+        )
+        try:
+            response = done.pop().result()
+            task.feed_xml(ET.fromstring(response.text))
+            log.info("{0.operationName} is {0.status}.".format(task))
+        except KeyError:
+            # Timeout or task changed
+            if not_done:
+                broken = not_done.pop()
+                if broken.cancel():
+                    log.warning("Cancelled.")
+                else:
+                    log.warning("Failed to cancel.")
+
+        # Get next task
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.get(task.owner.href)
+                )
             )
-            try:
-                response = done.pop().result()
-            except KeyError:
-                # Timeout or task changed
-                if not_done:
-                    broken = not_done.pop()
-                    if broken.cancel():
-                        log.warning("Cancelled.")
-                    else:
-                        log.warning("Failed to cancel.")
+            task = next(self.get_tasks(response))
+            self.tasks[task.owner.href] = self.executor.submit(
+                self.monitor, task, session, backoff + 1
+            )
+        except (StopIteration, TypeError):
+            log.warning("No task to track.")
+            log.debug(response.text)
 
-                    # Get next task
-                    try:
-                        response = self.check_response(
-                            *self.wait_for(
-                                session.get(task.owner.href)
-                            )
-                        )
-                        task = next(self.get_tasks(response))
-                        self.tasks[task.owner.href] = self.executor.submit(
-                            self.monitor, task, session
-                        )
-                    except (StopIteration, TypeError):
-                        log.warning("No task to track.")
-                        log.debug(response.text)
-                        self.send_status(status, stop=True)
-                    finally:
-                        break
-            else:
-                task.feed_xml(ET.fromstring(response.text))
-                log.info("{0.operationName} is {0.status}.".format(task))
-
-        log.debug(response.text)
         return task
 
     def send_status(self, status, stop=False):

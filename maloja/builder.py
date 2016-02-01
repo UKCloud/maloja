@@ -89,7 +89,7 @@ class Builder:
         )
 
     @staticmethod
-    def monitor(task, session, event=None, backoff=0):
+    def monitor(task, session, event=None, backoff=1):
         """
         The builder launches this method in a new thread whenever
         a VMware task is initiated. The method tracks the progress
@@ -100,30 +100,35 @@ class Builder:
         in turn.
         """
         log = logging.getLogger("maloja.builder.monitor")
-        log.info("{0.operationName} is {0.status}.".format(task))
-        if task.status != "running":
-            if event is not None:
-                event.set()
-            return task
 
-        log.debug("Backoff: {0}s".format(backoff))
-        time.sleep(backoff)
+        while True:
+            log.debug("Backoff: {0}s".format(backoff))
+            time.sleep(backoff)
+            backoff += 1
 
-        # Get next task
-        reponse = None
-        while response is None:
-            try:
-                response = Builder.check_response(
-                    *Builder.wait_for(
-                        session.get(task.owner.href),
-                        timeout=6
+            log.info("{0.operationName} is {0.status}.".format(task))
+            if task.status != "running":
+                if event is not None:
+                    event.set()
+                break
+
+            # Get next task
+            reponse = None
+            while response is None:
+                try:
+                    response = Builder.check_response(
+                        *Builder.wait_for(
+                            session.get(task.owner.href),
+                            timeout=6
+                        )
                     )
-                )
-                task = next(Builder.get_tasks(response))
-                session.executor.submit(Builder.monitor, task, session, event, backoff + 1)
-            except (AttributeError, StopIteration, TypeError):
-                log.warning("No response from task.")
-                response = None
+                    task = next(Builder.get_tasks(response))
+                except (AttributeError, StopIteration, TypeError):
+                    log.warning("No response from task.")
+                    response = None
+                except Exception as e:
+                    log.error(e)
+                    response = None
 
         return task
 
@@ -261,7 +266,15 @@ class Builder:
                 )
             )
             task = next(self.get_tasks(response))
-            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
+            event = Event()
+            self.executor.submit(Builder.monitor, task, session, event)
+
+            log.info("Waiting...")
+            if not event.wait():
+                # No timeout specified for now
+                log.warning("Timed out while monitoring {0}".format(vars(task)))
+            else:
+                log.info("Task complete.")
         except StopIteration:
             # No task related to network suggests one already exists.
             # If so, that will be logged by check_response.
@@ -287,18 +300,7 @@ class Builder:
         xml = macro(**data)
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
-
-        try:
-            response = self.check_response(
-                *self.wait_for(
-                    session.post(url, data=xml)
-                )
-            )
-            task = next(self.get_tasks(response))
-            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-        except (StopIteration, TypeError):
-            self.send_status(status, stop=True)
-            return
+        return
 
     def instantiate_vapptemplates(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.instantiate_vapptemplates")

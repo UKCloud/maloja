@@ -42,3 +42,40 @@
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-207117c3-ee0f-4301-ae3f-0e026481a363
     - type: application/vnd.vmware.vcloud.vAppTemplate+xml
     - dateCreated: '2013-07-17T10:38:56.457+01:00'
+
+# Paste in the exact contents of a vm.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for hard disk capacity, etc
+# Remove the 'href' and 'mac' values. This is to be a new VM.
+-   !!omap
+    - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
+    - href:
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - dateCreated:
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - hardwareVersion: 8
+    - cpu: 1
+    - memoryMB: 2048
+    - networkcards:
+      - name: Network adapter 0
+        mac:
+    - harddisks:
+      - name: Hard disk
+        capacity: 51200
+    - cd:
+    - floppydisk:
+    - isBusy: false
+    - isDeleted: false
+    - isDeployed: false
+    - isInMaintenanceMode: false
+    - isPublished: false
+    - status: 8
+    - storageProfileName: STANDARD-Any
+    - vmToolsVersion: 8389
+    - networkconnections:
+      - name: none
+        ip:
+        isConnected: false
+        macAddress:
+        ipAddressAllocationMode: NONE
+    - guestcustomization:

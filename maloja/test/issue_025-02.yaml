@@ -46,10 +46,9 @@
 # Paste in the exact contents of a vm.yaml file:
 # Indent once and change the first whitespace character on the first line to '-':
 # Change the variables as necessary for hard disk capacity, etc
-# Remove the 'href' and 'mac' values. This is to be a new VM.
 -   !!omap
     - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
-    - href:
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vApp/vm-8762b665-0f3e-4e44-ab79-73d2c8762463
     - type: application/vnd.vmware.vcloud.vm+xml
     - dateCreated:
     - guestOs: CentOS 4/5/6/7 (64-bit)

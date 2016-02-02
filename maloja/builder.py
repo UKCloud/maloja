@@ -100,7 +100,7 @@ class Builder:
             self.send_status(status)
             try:
                 time.sleep(backoff)
-                backoff = min(backoff + 1, 20)
+                backoff = min(backoff + 2, 20)
 
                 log.info("{0.operationName} is {0.status}.".format(task))
                 if task.status != "running":
@@ -175,6 +175,7 @@ class Builder:
         self.create_orgvdcnetwork_isolated(session, token, status=status)
         self.update_networks(session, token, status=status)
         self.instantiate_vapptemplates(session, token, status=status)
+        self.recompose_vapp(session, token, status=status)
         self.working = False
         return
 
@@ -361,6 +362,60 @@ class Builder:
             except (StopIteration, TypeError) as e:
                 log.error(e)
                 self.send_status(status, stop=True)
+
+    def recompose_vapp(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.builder.recompose_vapp")
+
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "RecomposeVAppParams.pt"
+            )
+        )
+
+        vapp = self.plans[VApp][0]
+        template = self.plans[Template][0]
+        data = {
+            "appliance": {
+                "name": vapp.name,
+                "description": "Created by Maloja builder",
+                "vms": self.plans[Vm],
+            },
+            "networks": self.plans[Network],
+            "template": {
+                "name": template.name,
+                "href": template.href
+            }
+        }
+        xml = macro(**data)
+        log.debug(xml)
+        url = "{vapp.href}/{endpoint}".format(
+            vapp=vapp,
+            endpoint="action/recomposeVApp"
+        )
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
+        )
+        log.info("Recomposing...")
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.post(url, data=xml),
+                    timeout=None
+                )
+            )
+            tree = ET.fromstring(response.text)
+            #self.plans[VApp].append(
+            #    VApp().feed_xml(
+            #        tree, ns="{http://www.vmware.com/vcloud/v1.5}"
+            #    )
+            #)
+            task = next(self.get_tasks(response))
+            log.info("Waiting...")
+            self.monitor(task, session, status=status)
+            log.info("Task complete.")
+        except (StopIteration, TypeError) as e:
+            log.error(e)
+            self.send_status(status, stop=True)
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.update_networks")

@@ -104,29 +104,28 @@ class Builder:
 
                 log.info("{0.operationName} is {0.status}.".format(task))
                 if task.status != "running":
-                    break
+                    return task
             except Exception as e:
                 log.error(e)
 
             # Get next task
             response = None
             while response is None:
-                try:
-                    response = Builder.check_response(
-                        *Builder.wait_for(
-                            session.get(task.owner.href),
-                            timeout=6
-                        )
+                response = Builder.check_response(
+                    *Builder.wait_for(
+                        session.get(task.owner.href),
+                        timeout=6
                     )
+                )
+            else:
+                try:
                     task = next(Builder.get_tasks(response))
                 except (AttributeError, StopIteration, TypeError):
-                    log.warning("No response from task.")
-                    break
+                    log.warning("No task in response.")
+                    return task
                 except Exception as e:
                     log.error(e)
                     response = None
-
-        return task
 
     @staticmethod
     def wait_for(*args, timeout=30):
@@ -151,6 +150,7 @@ class Builder:
         self.token = None
         self.tasks = {}
         self.seq = itertools.count(1)
+        self.working = False
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         """
@@ -170,10 +170,12 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder")
 
+        self.working = True
         self.executor.submit(self.heartbeat, session, None, self.results, status)
         self.create_orgvdcnetwork_isolated(session, token, status=status)
         self.update_networks(session, token, status=status)
         self.instantiate_vapptemplates(session, token, status=status)
+        self.working = False
         return
 
         # Step 2: Get Recompose Link
@@ -238,7 +240,7 @@ class Builder:
         self.send_status(status, stop=True)
 
     def heartbeat(self, session, response, results=None, status=None):
-        while True:
+        while self.working:
             time.sleep(15)
             self.send_status(status)
 

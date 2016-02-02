@@ -374,6 +374,9 @@ class Builder:
 
         vapp = self.plans[VApp][0]
         template = self.plans[Template][0]
+        # TODO: Decide on naming system
+        for vm in self.plans[Vm]:
+            vm.name = uuid.uuid4().hex
         data = {
             "appliance": {
                 "name": vapp.name,

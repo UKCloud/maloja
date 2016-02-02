@@ -25,7 +25,7 @@ href network.href;"/>
 <SourcedItem tal:repeat="vm appliance.vms" >
 <Source tal:attributes="href vm.href;" />
   <VmGeneralParams>
-    <Name tal:content="vm.name"></Name>
+    <Name tal:content="vm.name.translate(str.maketrans('._', '--'))"></Name>
   </VmGeneralParams>
   <InstantiationParams>
      <NetworkConnectionSection
@@ -55,7 +55,7 @@ type 'application/vnd.vmware.vcloud.guestCustomizationSection+xml'">
     <AdminAutoLogonCount>0</AdminAutoLogonCount>
     <CustomizationScript tal:content="vm.guestcustomization"></CustomizationScript>
 <ComputerName
-tal:content="vm.name"></ComputerName>
+tal:content="vm.name.translate(str.maketrans('._', '--'))"></ComputerName>
 </GuestCustomizationSection>
   </InstantiationParams>
 </SourcedItem>

@@ -406,13 +406,15 @@ class Builder:
                     timeout=None
                 )
             )
+            log.debug(response.text)
             tree = ET.fromstring(response.text)
-            #self.plans[VApp].append(
-            #    VApp().feed_xml(
-            #        tree, ns="{http://www.vmware.com/vcloud/v1.5}"
-            #    )
-            #)
-            task = next(self.get_tasks(response))
+            task = next(
+                self.get_tasks(response),
+                Task().feed_xml(
+                    tree, ns="{http://www.vmware.com/vcloud/v1.5}"
+                )
+            )
+            log.debug(vars(task))
             log.info("Waiting...")
             self.monitor(task, session, status=status)
             log.info("Task complete.")

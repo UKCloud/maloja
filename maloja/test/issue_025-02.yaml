@@ -52,7 +52,7 @@
     - type: application/vnd.vmware.vcloud.vm+xml
     - dateCreated:
     - guestOs: CentOS 4/5/6/7 (64-bit)
-    - hardwareVersion: 8
+    - hardwareVersion:
     - cpu: 1
     - memoryMB: 2048
     - networkcards:
@@ -63,18 +63,55 @@
         capacity: 51200
     - cd:
     - floppydisk:
-    - isBusy: false
-    - isDeleted: false
-    - isDeployed: false
-    - isInMaintenanceMode: false
+    - isBusy:
+    - isDeleted:
+    - isDeployed:
+    - isInMaintenanceMode:
     - isPublished: false
-    - status: 8
+    - status:
     - storageProfileName: STANDARD-Any
-    - vmToolsVersion: 8389
+    - vmToolsVersion:
     - networkconnections:
-      - name: none
-        ip:
-        isConnected: false
+      - name: Demo Network
+        ip: 192.168.1.5
+        isConnected: true
         macAddress:
-        ipAddressAllocationMode: NONE
+        ipAddressAllocationMode: MANUAL
+    - guestcustomization:
+
+# Paste in the exact contents of a catalog vm.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for hard disk capacity, etc
+-   !!omap
+    - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-e5b91cc2-e85f-4922-8ee2-46e9d8b9f935
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - dateCreated:
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - hardwareVersion:
+    - cpu: 1
+    - memoryMB: 2048
+    - networkcards:
+      - name: Network adapter 0
+        mac:
+    - harddisks:
+      - name: Hard disk
+        capacity: 51200
+    - cd:
+    - floppydisk:
+    - isBusy:
+    - isDeleted:
+    - isDeployed:
+    - isInMaintenanceMode:
+    - isPublished: false
+    - status:
+    - storageProfileName: STANDARD-Any
+    - vmToolsVersion:
+    - networkconnections:
+      - name: Demo Network
+        ip: 192.168.1.6
+        isConnected: true
+        macAddress:
+        # NONE, MANUAL, POOL, or DHCP
+        ipAddressAllocationMode: MANUAL
     - guestcustomization:

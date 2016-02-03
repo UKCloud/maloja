@@ -39,7 +39,10 @@ tal:attributes="
 network networks[n].name;">
            <NetworkConnectionIndex tal:content="n"></NetworkConnectionIndex>
            <IsConnected tal:content="'true' if net.isConnected else 'false'"></IsConnected>
-           <IpAddressAllocationMode>POOL</IpAddressAllocationMode>
+           <IpAddressAllocationMode tal:content="net.ipAddressAllocationMode"></IpAddressAllocationMode>
+           <IpAddress
+tal:condition="net.ipAddressAllocationMode == 'MANUAL'"
+tal:content="net.ipAddress"></IpAddress>
         </NetworkConnection>
      </NetworkConnectionSection>
 <GuestCustomizationSection

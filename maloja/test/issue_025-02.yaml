@@ -119,7 +119,7 @@
 # Paste in the exact contents of an edge.yaml file:
 # Indent once and change the first whitespace character on the first line to '-':
 # Change the variables as necessary for hard disk capacity, etc
-    !!omap
+-   !!omap
     - name: nft002bfi2
     - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
     - type: application/vnd.vmware.admin.edgeGateway+xml

@@ -174,11 +174,12 @@ class Builder:
 
         self.working = True
         self.executor.submit(self.heartbeat, session, None, self.results, status)
-        self.create_orgvdcnetwork_isolated(session, token, status=status)
-        self.update_networks(session, token, status=status)
-        self.instantiate_vapptemplates(session, token, status=status)
-        self.recompose_vapp(session, token, status=status)
-        self.configure_gateway_services(session, token, status=status)
+        if False:
+            self.create_orgvdcnetwork_isolated(session, token, status=status)
+            self.update_networks(session, token, status=status)
+            self.instantiate_vapptemplates(session, token, status=status)
+            self.recompose_vapp(session, token, status=status)
+        self.configure_gateway(session, token, status=status)
         self.working = False
 
     def heartbeat(self, session, response, results=None, status=None):
@@ -383,7 +384,33 @@ class Builder:
 
     def configure_gateway(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.configure_gateway")
-        pass
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.get(self.plans[Gateway][0].href)
+                )
+            )
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        tree = ET.fromstring(response.text)
+
+        # Prepare EdgeGateway services to receive NAT rules
+        try:
+            elem = next(tree.iter(ns + "EdgeGatewayServiceConfiguration"))
+            natService = next(elem.iter(ns + "NatService"), None)
+            log.debug(natService)
+            if natService is None:
+                natService = ET.XML(
+                    """<NatService><IsEnabled>true</IsEnabled></NatService>""")
+                elem.append(natService)
+
+        except StopIteration:
+            self.send_status(status, stop=True)
+            return
+
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

@@ -171,6 +171,7 @@ class Builder:
 
         """
         log = logging.getLogger("maloja.builder")
+        ET.register_namespace("", "http://www.vmware.com/vcloud/v1.5")
 
         self.working = True
         self.executor.submit(self.heartbeat, session, None, self.results, status)
@@ -385,23 +386,40 @@ class Builder:
     def configure_gateway(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.configure_gateway")
         ns = "{http://www.vmware.com/vcloud/v1.5}"
+        natMacro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "NatRule.pt"
+            )
+        )
+        fwMacro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "FirewallRule.pt"
+            )
+        )
+
+        gw = self.plans[Gateway][0]
         try:
             response = self.check_response(
                 *self.wait_for(
-                    session.get(self.plans[Gateway][0].href)
+                    session.get(gw.href)
                 )
             )
+            tree = ET.fromstring(response.text)
+            endpoint = next(find_xpath(
+                ".//*[@type='application/vnd.vmware.admin.edgeGatewayServiceConfiguration+xml']",
+                tree,
+                rel="edgeGateway:configureServices"
+
+            ))
         except (StopIteration, TypeError):
             self.send_status(status, stop=True)
             return
 
-        tree = ET.fromstring(response.text)
 
         # Prepare EdgeGateway services to receive NAT rules
         try:
             elem = next(tree.iter(ns + "EdgeGatewayServiceConfiguration"))
             natService = next(elem.iter(ns + "NatService"), None)
-            log.debug(natService)
             if natService is None:
                 natService = ET.XML(
                     """<NatService><IsEnabled>true</IsEnabled></NatService>""")
@@ -411,6 +429,65 @@ class Builder:
             self.send_status(status, stop=True)
             return
 
+        else:
+
+            for rule in gw.dnat:
+                for ips in itertools.zip_longest(
+                    rule.ext_addr, rule.int_addr, fillvalue=rule.int_addr[-1]
+                ):
+                    data = {
+                        "network": self.built[Network][0],
+                        "ips": ips,
+                        "ports": (rule.ext_port, rule.int_port),
+                        "rule": rule
+                    }
+                    natService.append(ET.XML(natMacro(**data)))
+
+
+            for rule in gw.snat:
+                for ips in itertools.zip_longest(
+                    rule.int_addr, rule.ext_addr, fillvalue=rule.int_addr[-1]
+                ):
+                    data = {
+                        "network": self.built[Network][0],
+                        "ips": ips,
+                        "ports": (rule.int_port, rule.ext_port),
+                        "rule": rule
+                    }
+                    natService.append(ET.XML(natMacro(**data)))
+
+            log.info("Configuring...")
+            url = endpoint.attrib.get("href")
+            xml = ET.tostring(elem, encoding="unicode")
+            log.debug(xml)
+            session.headers.update(
+                {
+                    "Content-Type": (
+                        "application/vnd.vmware.admin"
+                        ".edgeGatewayServiceConfiguration+xml"
+                    )
+                }
+            )
+            try:
+                response = self.check_response(
+                    *self.wait_for(
+                        session.post(url, data=xml),
+                        timeout=None
+                    )
+                )
+                tree = ET.fromstring(response.text)
+                self.built[Gateway].append(
+                    Gateway().feed_xml(
+                        tree, ns="{http://www.vmware.com/vcloud/v1.5}"
+                    )
+                )
+                task = next(self.get_tasks(response))
+                log.info("Waiting...")
+                self.monitor(task, session, status=status)
+                log.info("Task complete.")
+            except (StopIteration, TypeError) as e:
+                log.error(e)
+                self.send_status(status, stop=True)
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import concurrent.futures
+import copy
 import itertools
 import logging
 import sys
@@ -145,6 +146,7 @@ class Builder:
         """
         log = logging.getLogger("maloja.builder.Builder")
         self.plans = group_by_type(objs)
+        self.built = copy.deepcopy(self.plans)
         self.results = results
         self.executor = executor
         self.token = None
@@ -177,68 +179,6 @@ class Builder:
         self.instantiate_vapptemplates(session, token, status=status)
         self.recompose_vapp(session, token, status=status)
         self.working = False
-        return
-
-        # Step 2: Get Recompose Link
-
-        op = session.get(task.owner.href)
-        done, not_done = self.wait_for(op)
-        response = self.check_response(done, not_done)
-        link = next(find_xpath(
-            "./*/[@type='application/vnd.vmware.vcloud.recomposeVAppParams+xml']",
-            ET.fromstring(response.text),
-            rel="recompose"
-        ), None)
-
-        # Step 3: Add Vms
-        # TODO: All VMs at once
-        data = {
-            "appliance": {
-                "name": task.owner.name,
-                "description": "Created by Maloja builder",
-                "vms": [self.plans[Vm][1]],
-            },
-            "networks": self.plans[Network],
-        }
-
-        macro = PageTemplateFile(
-            pkg_resources.resource_filename(
-                "maloja.workflow", "RecomposeVAppParams.pt"
-            )
-        )
-
-        url = link.attrib.get("href")
-        xml = macro(**data)
-        session.headers.update(
-            {"Content-Type": "application/vnd.vmware.vcloud.recomposeVAppParams+xml"}
-        )
-        op = session.post(url, data=xml)
-        log.debug(xml)
-        done, not_done = self.wait_for(op)
-
-        response = self.check_response(done, not_done)
-        for task in self.get_tasks(response):
-            self.tasks[task.owner.href] = self.executor.submit(self.monitor, task, session)
-
-        self.wait_for(*self.tasks.values(), timeout=300)
-
-        # Step 4: Rename VApp
-        data = {
-            "appliance": {
-                "name": prototypes[0].name,
-                "description": "Created by Maloja builder",
-                "vms": [],
-            },
-            "networks": [],
-        }
-
-        xml = macro(**data)
-        op = session.post(url, data=xml)
-
-        done, not_done = self.wait_for(op)
-        response = self.check_response(done, not_done)
-
-        self.send_status(status, stop=True)
 
     def heartbeat(self, session, response, results=None, status=None):
         while self.working:
@@ -323,7 +263,7 @@ class Builder:
                     "description": "Created by Maloja builder",
                     "vms": [],
                 },
-                "networks": self.plans[Network],
+                "networks": self.built[Network],
                 "template": {
                     "name": template.name,
                     "href": template.href
@@ -347,7 +287,7 @@ class Builder:
                     )
                 )
                 tree = ET.fromstring(response.text)
-                self.plans[VApp].append(
+                self.built[VApp].append(
                     VApp().feed_xml(
                         tree, ns="{http://www.vmware.com/vcloud/v1.5}"
                     )
@@ -372,18 +312,18 @@ class Builder:
             )
         )
 
-        vapp = self.plans[VApp][0]
+        vapp = self.built[VApp][0]
         template = self.plans[Template][0]
         # TODO: Decide on naming system
-        for vm in self.plans[Vm]:
+        for vm in self.built[Vm]:
             vm.name = uuid.uuid4().hex
         data = {
             "appliance": {
                 "name": vapp.name,
                 "description": "Created by Maloja builder",
-                "vms": self.plans[Vm],
+                "vms": self.built[Vm],
             },
-            "networks": self.plans[Network],
+            "networks": self.built[Network],
             "template": {
                 "name": template.name,
                 "href": template.href
@@ -436,7 +376,7 @@ class Builder:
         else:
             tree = ET.fromstring(response.text)
             for elem in tree.iter(ns + "Network"):
-                for net in self.plans[Network]:
+                for net in self.built[Network]:
                     if net.name == elem.attrib.get("name"):
                         net.href = elem.attrib.get("href")
 

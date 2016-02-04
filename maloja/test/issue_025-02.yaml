@@ -20,6 +20,21 @@
     - type: application/vnd.vmware.vcloud.vdc+xml
     - description: Skyscape Python Development (IL2-PROD-STANDARD)
 
+# Paste in the exact contents of a network.yaml file.
+# This will be the external network to VApp.
+# Indent once and change the first whitespace character on the first line to '-':
+-   !!omap
+    - name: USER_NET
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/9191a38b-e244-40b2-a3bb-46079fa46bab
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 10.124.24.1
+    - netmask: 255.255.255.192
+    - dhcp:
+    - dnsSuffix:
+    - dns:
+      -
+      -
+
 # Paste in the exact contents of a network.yaml file:
 # Indent once and change the first whitespace character on the first line to '-':
 # Change the variables as necessary for dns, etc

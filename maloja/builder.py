@@ -175,7 +175,7 @@ class Builder:
 
         self.working = True
         self.executor.submit(self.heartbeat, session, None, self.results, status)
-        if False:
+        if True:
             self.create_orgvdcnetwork_isolated(session, token, status=status)
             self.update_networks(session, token, status=status)
             self.instantiate_vapptemplates(session, token, status=status)
@@ -192,7 +192,7 @@ class Builder:
         log = logging.getLogger("maloja.builder.create_orgvdcnetwork_isolated")
 
         vdc = self.plans[Vdc][0]
-        orgVdcNetwork = self.plans[Network][0]
+        orgVdcNetwork = self.plans[Network][1]
         macro = PageTemplateFile(
             pkg_resources.resource_filename(
                 "maloja.workflow", "OrgVdcNetwork.pt"
@@ -436,7 +436,7 @@ class Builder:
                     rule.ext_addr, rule.int_addr, fillvalue=rule.int_addr[-1]
                 ):
                     data = {
-                        "network": self.built[Network][0],
+                        "network": self.plans[Network][0],
                         "ips": ips,
                         "ports": (rule.ext_port, rule.int_port),
                         "rule": rule
@@ -449,7 +449,7 @@ class Builder:
                     rule.int_addr, rule.ext_addr, fillvalue=rule.int_addr[-1]
                 ):
                     data = {
-                        "network": self.built[Network][0],
+                        "network": self.plans[Network][0],
                         "ips": ips,
                         "ports": (rule.int_port, rule.ext_port),
                         "rule": rule

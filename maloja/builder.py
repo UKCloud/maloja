@@ -338,13 +338,15 @@ class Builder:
         # TODO: Decide on naming system
         for vm in self.built[Vm]:
             vm.name = uuid.uuid4().hex
+
+        # TODO: think harder about Networks
         data = {
             "appliance": {
                 "name": vapp.name,
                 "description": "Created by Maloja builder",
                 "vms": self.built[Vm],
             },
-            "networks": self.built[Network],
+            "networks": self.built[Network][-1:],
             "template": {
                 "name": template.name,
                 "href": template.href

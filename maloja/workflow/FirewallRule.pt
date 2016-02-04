@@ -1,0 +1,16 @@
+<FirewallRule>
+    <IsEnabled>true</IsEnabled>
+    <MatchOnTranslate>false</MatchOnTranslate>
+    <Description tal:content="description"></Description>
+    <Policy>allow</Policy>
+    <Protocols>
+        <Tcp>true</Tcp>
+    </Protocols>
+    <Port>-1</Port>
+    <DestinationPortRange>Any</DestinationPortRange>
+    <DestinationIp tal:content="rule.rx if typ == 'DNAT' else rule.tx"></DestinationIp>
+    <SourcePort>-1</SourcePort>
+    <SourcePortRange>Any</SourcePortRange>
+    <SourceIp>Any</SourceIp>
+    <EnableLogging>true</EnableLogging>
+</FirewallRule>

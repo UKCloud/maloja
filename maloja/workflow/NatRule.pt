@@ -1,0 +1,16 @@
+<NatRule>
+  <RuleType tal:content="typ"></RuleType>
+  <IsEnabled>true</IsEnabled>
+  <GatewayNatRule>
+     <Interface tal:attributes="
+href network.href;
+name network.name;
+type 'application/vnd.vmware.admin.network+xml';
+" />
+     <OriginalIp tal:content="rule.rx"></OriginalIp>
+     <OriginalPort tal:condition="typ == 'DNAT'">any</OriginalPort>
+     <TranslatedIp tal:content="rule.tx"></TranslatedIp>
+     <TranslatedPort tal:condition="typ == 'DNAT'">any</TranslatedPort>
+     <Protocol>tcp</Protocol>
+  </GatewayNatRule>
+</NatRule>

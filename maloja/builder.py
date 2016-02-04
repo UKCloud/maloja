@@ -122,7 +122,7 @@ class Builder:
                 try:
                     task = next(Builder.get_tasks(response))
                 except (AttributeError, StopIteration, TypeError):
-                    log.warning("No task in response.")
+                    log.info("No task in response.")
                     return task
                 except Exception as e:
                     log.error(e)
@@ -178,6 +178,7 @@ class Builder:
         self.update_networks(session, token, status=status)
         self.instantiate_vapptemplates(session, token, status=status)
         self.recompose_vapp(session, token, status=status)
+        self.configure_gateway_services(session, token, status=status)
         self.working = False
 
     def heartbeat(self, session, response, results=None, status=None):
@@ -246,6 +247,24 @@ class Builder:
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
         return
+
+    def update_networks(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.builder.update_networks")
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.get(self.plans[Vdc][0].href)
+                )
+            )
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+        else:
+            tree = ET.fromstring(response.text)
+            for elem in tree.iter(ns + "Network"):
+                for net in self.built[Network]:
+                    if net.name == elem.attrib.get("name"):
+                        net.href = elem.attrib.get("href")
 
     def instantiate_vapptemplates(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.instantiate_vapptemplates")
@@ -362,23 +381,9 @@ class Builder:
             log.error(e)
             self.send_status(status, stop=True)
 
-    def update_networks(self, session, token, callback=None, status=None, **kwargs):
-        log = logging.getLogger("maloja.builder.update_networks")
-        ns = "{http://www.vmware.com/vcloud/v1.5}"
-        try:
-            response = self.check_response(
-                *self.wait_for(
-                    session.get(self.plans[Vdc][0].href)
-                )
-            )
-        except (StopIteration, TypeError):
-            self.send_status(status, stop=True)
-        else:
-            tree = ET.fromstring(response.text)
-            for elem in tree.iter(ns + "Network"):
-                for net in self.built[Network]:
-                    if net.name == elem.attrib.get("name"):
-                        net.href = elem.attrib.get("href")
+    def configure_gateway(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.builder.configure_gateway")
+        pass
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

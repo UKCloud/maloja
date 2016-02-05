@@ -47,8 +47,9 @@
 
 # Paste in the exact contents of a template.yaml file.
 # Indent once and change the first whitespace character on the first line to '-'.
+# Change the name if necessary.
 -   !!omap
-    - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
+    - name: Demo Website
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-207117c3-ee0f-4301-ae3f-0e026481a363
     - type: application/vnd.vmware.vcloud.vAppTemplate+xml
     - dateCreated: '2013-07-17T10:38:56.457+01:00'

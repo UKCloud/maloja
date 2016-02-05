@@ -187,7 +187,9 @@ class Builder:
             time.sleep(15)
             self.send_status(status)
 
-    def create_orgvdcnetwork_isolated(self, session, token, callback=None, status=None, **kwargs):
+    def create_orgvdcnetwork_isolated(
+        self, session, token, callback=None, status=None, **kwargs
+    ):
         log = logging.getLogger("maloja.builder.create_orgvdcnetwork_isolated")
 
         vdc = self.plans[Vdc][0]
@@ -272,7 +274,10 @@ class Builder:
             )
             xml = macro(**data)
             session.headers.update(
-                {"Content-Type": "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml"})
+                {"Content-Type": (
+                    "application/vnd.vmware.vcloud"
+                    ".instantiateVAppTemplateParams+xml"
+                )})
 
             log.info("Instantiating...")
             try:
@@ -382,8 +387,9 @@ class Builder:
                 )
             )
             tree = ET.fromstring(response.text)
-            endpoint = next(find_xpath(
-                ".//*[@type='application/vnd.vmware.admin.edgeGatewayServiceConfiguration+xml']",
+            endpoint = next(find_xpath((
+                ".//*[@type='application/vnd.vmware.admin"
+                ".edgeGatewayServiceConfiguration+xml']"),
                 tree,
                 rel="edgeGateway:configureServices"
 

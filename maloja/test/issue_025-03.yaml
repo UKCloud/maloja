@@ -1,0 +1,162 @@
+%YAML 1.2
+---
+
+# To check this file:
+# %HOME%\py3.5\maloja @options.skydemo plan --input maloja\test\issue_025-03.yaml
+
+# Paste in the exact contents of an org.yaml file (optional?).
+# Indent once and change the first whitespace character on the first line to '-'.
+-   !!omap
+    - name: 1-1-1-a4f57h
+    - href: https://api.vcd.portal.skyscapecloud.com/api/org/1fa3fcf9-72a6-4464-8a5f-e00e4f60cd3a
+    - type: application/vnd.vmware.vcloud.org+xml
+    - fullName: Python Development
+
+# Paste in the exact contents of a vdc.yaml file.
+# Indent once and change the first whitespace character on the first line to '-'.
+-   !!omap
+    - name: Skyscape Python Development (IL2-PROD-STANDARD)
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/8bdd2156-f276-4718-8ea2-21560d89b8e1
+    - type: application/vnd.vmware.vcloud.vdc+xml
+    - description: Skyscape Python Development (IL2-PROD-STANDARD)
+
+# Paste in the exact contents of a network.yaml file.
+# This will be the external network to VApp.
+# Indent once and change the first whitespace character on the first line to '-'.
+-   !!omap
+    - name: USER_NET
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/9191a38b-e244-40b2-a3bb-46079fa46bab
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 10.124.24.1
+    - netmask: 255.255.255.192
+
+# Paste in the exact contents of a network.yaml file:
+# Indent once and change the first whitespace character on the first line to '-'.
+# Change the variables as necessary for dns, etc.
+# Remove the 'href' value. This is to be a new network, not a change to an existing one.
+-   !!omap
+    - name: Demo Network
+    - href:
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 192.168.0.1
+    - netmask: 255.255.0.0
+    - dhcp:
+    - dnsSuffix:
+    - dns:
+      - 8.8.8.8
+
+# Paste in the exact contents of a template.yaml file.
+# Indent once and change the first whitespace character on the first line to '-'.
+-   !!omap
+    - name: Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-207117c3-ee0f-4301-ae3f-0e026481a363
+    - type: application/vnd.vmware.vcloud.vAppTemplate+xml
+    - dateCreated: '2013-07-17T10:38:56.457+01:00'
+
+# Paste in the exact contents of a catalog vm.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for hard disk capacity, etc and remove the rest.
+-   !!omap
+    - name: Web
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-e5b91cc2-e85f-4922-8ee2-46e9d8b9f935
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - hardwareVersion:
+    - cpu: 1
+    - memoryMB: 2048
+    - networkcards:
+      - name: Network adapter 0
+        mac:
+    - harddisks:
+      - name: Hard disk
+        capacity: 51200
+    - cd:
+    - networkconnections:
+      - name: Demo Network
+        ip: 192.168.1.5
+        isConnected: true
+        macAddress:
+        # NONE, MANUAL, POOL, or DHCP
+        ipAddressAllocationMode: MANUAL
+    - guestcustomization:
+
+# Paste in the exact contents of a catalog vm.yaml file.
+# Indent once and change the first whitespace character on the first line to '-'.
+# Change the variables as necessary for hard disk capacity, etc and remove the rest.
+-   !!omap
+    - name: App
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-e5b91cc2-e85f-4922-8ee2-46e9d8b9f935
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - cpu: 1
+    - memoryMB: 2048
+    - networkcards:
+      - name: Network adapter 0
+        mac:
+    - harddisks:
+      - name: Hard disk
+        capacity: 51200
+    - cd:
+    - networkconnections:
+      - name: Demo Network
+        ip: 192.168.1.6
+        isConnected: true
+        macAddress:
+        # NONE, MANUAL, POOL, or DHCP
+        ipAddressAllocationMode: MANUAL
+    - guestcustomization:
+
+# Paste in the exact contents of a catalog vm.yaml file.
+# Indent once and change the first whitespace character on the first line to '-'.
+# Change the variables as necessary for hard disk capacity, etc and remove the rest.
+-   !!omap
+    - name: DB
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-e5b91cc2-e85f-4922-8ee2-46e9d8b9f935
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - cpu: 1
+    - memoryMB: 2048
+    - networkcards:
+      - name: Network adapter 0
+        mac:
+    - harddisks:
+      - name: Hard disk
+        capacity: 51200
+    - cd:
+    - networkconnections:
+      - name: Demo Network
+        ip: 192.168.1.7
+        isConnected: true
+        macAddress:
+        ipAddressAllocationMode: MANUAL
+    - guestcustomization:
+
+# Paste in the exact contents of an edge.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for hard disk capacity, etc
+-   !!omap
+    - name: nft002bfi2
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
+    - type: application/vnd.vmware.admin.edgeGateway+xml
+    - fw:
+      - description: Web service
+        int_addr:
+        - 51.179.194.122
+        - 51.179.194.123
+        int_port: 80
+        ext_addr:
+        ext_port:
+    - dnat:
+      - int_addr:
+        - 192.168.1.5
+        int_port: 80
+        ext_addr:
+        - 51.179.194.122
+        ext_port: 80
+    - snat:
+      - int_addr:
+        - 192.168.1.5
+        int_port:
+        ext_addr:
+        - 51.179.194.122
+        ext_port:

@@ -231,6 +231,9 @@ class Gateway(DataObject):
         config = tree.find(
             "./*/{}EdgeGatewayServiceConfiguration".format(ns)
         )
+        if config is None:
+            return self
+
         elem = config.find(ns + "FirewallService")
         for rule in elem.iter(ns + "FirewallRule"):
             int_ip = rule.find(ns + "DestinationIp").text
@@ -393,6 +396,7 @@ class Task(DataObject):
         owner = tree.find(ns + "Owner")
         typ = owner.attrib.get("type")
         self.owner = {
+            "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
             "application/vnd.vmware.vcloud.vApp+xml": VApp
         }.get(typ)().feed_xml(owner, ns=ns)
         return self

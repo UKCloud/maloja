@@ -145,7 +145,7 @@
         - 51.179.194.123
         int_port: 80
         ext_addr:
-        ext_port: 80
+        ext_port:
     - dnat:
       - int_addr:
         - 192.168.1.5

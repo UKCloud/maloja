@@ -175,11 +175,10 @@ class Builder:
 
         self.working = True
         self.executor.submit(self.heartbeat, session, None, self.results, status)
-        if True:
-            self.create_orgvdcnetwork_isolated(session, token, status=status)
-            self.update_networks(session, token, status=status)
-            self.instantiate_vapptemplates(session, token, status=status)
-            self.recompose_vapp(session, token, status=status)
+        self.create_orgvdcnetwork_isolated(session, token, status=status)
+        self.update_networks(session, token, status=status)
+        self.instantiate_vapptemplates(session, token, status=status)
+        self.recompose_vapp(session, token, status=status)
         self.configure_gateway(session, token, status=status)
         self.working = False
 
@@ -214,15 +213,6 @@ class Builder:
                 )
             )
             task = next(self.get_tasks(response))
-            #event = Event()
-            #self.executor.submit(Builder.monitor, task, session, event)
-
-            #log.info("Waiting...")
-            #if not event.wait():
-            #    # No timeout specified for now
-            #    log.warning("Timed out while monitoring {0}".format(vars(task)))
-            #else:
-            #    log.info("Task complete.")
         except StopIteration:
             # No task related to network suggests one already exists.
             # If so, that will be logged by check_response.
@@ -233,22 +223,7 @@ class Builder:
 
     def create_orgvdcnetwork_routed(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.create_orgvdcnetwork_routed")
-        vdc = self.plans[Vdc][0]
-        orgVdcNetwork = self.plans[Network][0]
-        macro = PageTemplateFile(
-            pkg_resources.resource_filename(
-                "maloja.workflow", "OrgVdcNetwork.pt"
-            )
-        )
-        data = {"gateway": None, "network": orgVdcNetwork}
-        url = "{service}/{endpoint}".format(
-            service=vdc.href.replace("/vdc/", "/admin/vdc/", 1),
-            endpoint="networks"
-        )
-        xml = macro(**data)
-        session.headers.update(
-            {"Content-Type": "application/vnd.vmware.vcloud.orgVdcNetwork+xml"})
-        return
+        raise NotImplementedError
 
     def update_networks(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.update_networks")
@@ -417,7 +392,6 @@ class Builder:
             self.send_status(status, stop=True)
             return
 
-
         # Prepare EdgeGateway services to receive NAT rules
         try:
             elem = next(tree.iter(ns + "EdgeGatewayServiceConfiguration"))
@@ -426,70 +400,81 @@ class Builder:
                 natService = ET.XML(
                     """<NatService><IsEnabled>true</IsEnabled></NatService>""")
                 elem.append(natService)
+            fwService = next(elem.iter(ns + "FirewallService"))
 
         except StopIteration:
             self.send_status(status, stop=True)
             return
 
-        else:
-
-            for rule in gw.dnat:
-                for ips in itertools.zip_longest(
-                    rule.ext_addr, rule.int_addr, fillvalue=rule.int_addr[-1]
-                ):
-                    data = {
-                        "network": self.plans[Network][0],
-                        "ips": ips,
-                        "ports": (rule.ext_port, rule.int_port),
-                        "rule": rule
-                    }
-                    natService.append(ET.XML(natMacro(**data)))
-
-
-            for rule in gw.snat:
-                for ips in itertools.zip_longest(
-                    rule.int_addr, rule.ext_addr, fillvalue=rule.int_addr[-1]
-                ):
-                    data = {
-                        "network": self.plans[Network][0],
-                        "ips": ips,
-                        "ports": (rule.int_port, rule.ext_port),
-                        "rule": rule
-                    }
-                    natService.append(ET.XML(natMacro(**data)))
-
-            log.info("Configuring...")
-            url = endpoint.attrib.get("href")
-            xml = ET.tostring(elem, encoding="unicode")
-            log.debug(xml)
-            session.headers.update(
-                {
-                    "Content-Type": (
-                        "application/vnd.vmware.admin"
-                        ".edgeGatewayServiceConfiguration+xml"
-                    )
+        for rule in gw.dnat:
+            for ips in itertools.zip_longest(
+                rule.ext_addr, rule.int_addr, fillvalue=rule.int_addr[-1]
+            ):
+                data = {
+                    "network": self.plans[Network][0],
+                    "ips": ips,
+                    "ports": (rule.ext_port, rule.int_port),
+                    "rule": rule
                 }
+                natService.append(ET.XML(natMacro(**data)))
+
+        for rule in gw.snat:
+            for ips in itertools.zip_longest(
+                rule.int_addr, rule.ext_addr, fillvalue=rule.int_addr[-1]
+            ):
+                data = {
+                    "network": self.plans[Network][0],
+                    "ips": ips,
+                    "ports": (rule.int_port, rule.ext_port),
+                    "rule": rule
+                }
+                natService.append(ET.XML(natMacro(**data)))
+
+        for rule in gw.fw:
+            log.debug(rule)
+            for ips in itertools.zip_longest(
+                rule.ext_addr or [], rule.int_addr, fillvalue=rule.int_addr[-1]
+            ):
+                data = {
+                    "network": self.plans[Network][0],
+                    "ips": ips,
+                    "ports": (rule.ext_port, rule.int_port),
+                    "rule": rule
+                }
+                fwService.append(ET.XML(fwMacro(**data)))
+
+        log.info("Configuring...")
+        url = endpoint.attrib.get("href")
+        xml = ET.tostring(elem, encoding="unicode")
+        log.debug(xml)
+        session.headers.update(
+            {
+                "Content-Type": (
+                    "application/vnd.vmware.admin"
+                    ".edgeGatewayServiceConfiguration+xml"
+                )
+            }
+        )
+        try:
+            response = self.check_response(
+                *self.wait_for(
+                    session.post(url, data=xml),
+                    timeout=None
+                )
             )
-            try:
-                response = self.check_response(
-                    *self.wait_for(
-                        session.post(url, data=xml),
-                        timeout=None
-                    )
+            tree = ET.fromstring(response.text)
+            task = next(
+                self.get_tasks(response),
+                Task().feed_xml(
+                    tree, ns="{http://www.vmware.com/vcloud/v1.5}"
                 )
-                tree = ET.fromstring(response.text)
-                self.built[Gateway].append(
-                    Gateway().feed_xml(
-                        tree, ns="{http://www.vmware.com/vcloud/v1.5}"
-                    )
-                )
-                task = next(self.get_tasks(response))
-                log.info("Waiting...")
-                self.monitor(task, session, status=status)
-                log.info("Task complete.")
-            except (StopIteration, TypeError) as e:
-                log.error(e)
-                self.send_status(status, stop=True)
+            )
+            log.info("Waiting...")
+            self.monitor(task, session, status=status)
+            log.info("Task complete.")
+        except (StopIteration, TypeError) as e:
+            log.error(e)
+            self.send_status(status, stop=True)
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

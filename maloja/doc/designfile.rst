@@ -11,8 +11,7 @@ These files keep all the attributes of your Organisations, Templates, Vms etc in
 format.
 
 You can paste the contents of these files together to describe to Maloja what
-infrastructure you want it to build. When you save these scraps of YAML together it's
-called a `design file`.
+infrastructure you want it to build. Save it as your `design file`.
 
 In order to build a new VApp, a design file contains:
 
@@ -41,7 +40,6 @@ You can check your design file with Maloja's `plan` command::
 The output will verify the objects in the file::
 
     2016-02-08 13:53:09,640 INFO    maloja|Using project proj_55i3s4ug.
-    2016-02-08 13:53:09,687 INFO    maloja.planner|Modify <Org> 1-1-1-xxxxxx
     2016-02-08 13:53:09,687 INFO    maloja.planner|Modify <Vdc> Skyscape (PROD-STANDARD)
     2016-02-08 13:53:09,687 INFO    maloja.planner|Modify <Network> USER_NET
     2016-02-08 13:53:09,687 INFO    maloja.planner|Create <Network> Data network
@@ -50,8 +48,13 @@ The output will verify the objects in the file::
     2016-02-08 13:53:09,702 INFO    maloja.planner|Modify <Vm> App
     2016-02-08 13:53:09,702 INFO    maloja.planner|Modify <Vm> DB
     2016-02-08 13:53:09,718 INFO    maloja.planner|Modify <Gateway> ext0001
-    2016-02-08 13:53:09,718 INFO    maloja.planner|Approved 9 objects of 9
+    2016-02-08 13:53:09,718 INFO    maloja.planner|Approved 8 objects of 8
 
 Build command
 =============
+
+Once you're happy with the details of your design file, you can apply the `build` command
+to get it made::
+
+    maloja @options.private build --input=mydesign.yaml
 

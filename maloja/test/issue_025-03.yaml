@@ -10,7 +10,7 @@
     - description: Skyscape Python Development (IL2-PROD-STANDARD)
 
 # Paste in the exact contents of a network.yaml file.
-# This will be the external network to VApp.
+# This will be the external network to the VApp.
 # Indent once and change the first whitespace character on the first line to '-'.
 -   !!omap
     - name: USER_NET
@@ -19,7 +19,7 @@
     - defaultGateway: 10.124.24.1
     - netmask: 255.255.255.192
 
-# Paste in the exact contents of a network.yaml file:
+# Paste in the exact contents of a network.yaml file.
 # Indent once and change the first whitespace character on the first line to '-'.
 # Change the variables as necessary for dns, etc.
 # Remove the 'href' value. This is to be a new network, not a change to an existing one.
@@ -123,7 +123,7 @@
 
 # Paste in the exact contents of an edge.yaml file:
 # Indent once and change the first whitespace character on the first line to '-':
-# Change the variables as necessary for hard disk capacity, etc
+# Change the variables as necessary for NATting, Firewall, etc
 -   !!omap
     - name: nft002bfi2
     - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56

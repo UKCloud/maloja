@@ -13,6 +13,7 @@ Contents:
    quickstart
    cli
    model
+   designfile
    plugins
    api
    contribute

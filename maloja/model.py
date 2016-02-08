@@ -129,7 +129,10 @@ class DataObject:
         return self
 
 class Project(DataObject):
-    pass
+    """
+    Available for storing Maloja project information.
+
+    """
 
 class Catalog(DataObject):
     """

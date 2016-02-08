@@ -1,17 +1,6 @@
 %YAML 1.2
 ---
 
-# To check this file:
-# %HOME%\py3.5\maloja @options.skydemo plan --input maloja\test\issue_025-03.yaml
-
-# Paste in the exact contents of an org.yaml file (optional?).
-# Indent once and change the first whitespace character on the first line to '-'.
--   !!omap
-    - name: 1-1-1-a4f57h
-    - href: https://api.vcd.portal.skyscapecloud.com/api/org/1fa3fcf9-72a6-4464-8a5f-e00e4f60cd3a
-    - type: application/vnd.vmware.vcloud.org+xml
-    - fullName: Python Development
-
 # Paste in the exact contents of a vdc.yaml file.
 # Indent once and change the first whitespace character on the first line to '-'.
 -   !!omap

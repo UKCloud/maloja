@@ -73,7 +73,7 @@ class RecomposeVAppTests(unittest.TestCase):
 
     def setUp(self):
         fP = pkg_resources.resource_filename(
-                "maloja.test", "issue_025-02.yaml"
+                "maloja.test", "issue_025-03.yaml"
             )
         with open(fP, "r") as data:
             self.design = list(maloja.planner.read_objects(data.read()))
@@ -84,9 +84,9 @@ class RecomposeVAppTests(unittest.TestCase):
                 "maloja.workflow", "RecomposeVAppParams.pt"
             )
         )
-        networks = self.design[2:3]
+        networks = self.design[1:3]
         template = self.design[3]
-        vms = self.design[4:]
+        vms = self.design[4:7]
 
         data = {
             "appliance": {

@@ -77,7 +77,7 @@ On Ubuntu Linux 14.04::
 
 On Windows 8.1::
 
-    > %HOME%\py3.5\Scripts\pip uninstall -y maloja
+    > %USERPROFILE%\py3.5\Scripts\pip uninstall -y maloja
 
 Running unit tests
 ==================
@@ -88,7 +88,7 @@ On Ubuntu Linux 14.04::
 
 On Windows 8.1::
 
-    > %HOME%\py3.5\Scripts\python -m unittest discover maloja
+    > %USERPROFILE%\py3.5\Scripts\python -m unittest discover maloja
 
 Building documentation
 ======================
@@ -102,7 +102,7 @@ On Ubuntu Linux 14.04::
 
 On Windows 8.1::
 
-    > %HOME%\py3.5\Scripts\sphinx-build maloja\doc maloja\doc\html
+    > %USERPROFILE%\py3.5\Scripts\sphinx-build maloja\doc maloja\doc\html
 
 Read the documentation in your browser::
 
@@ -117,7 +117,7 @@ On Ubuntu Linux 14.04::
 
 On Windows 8.1::
 
-    > %HOME%\py3.5\Scripts\pep8 .
+    > %USERPROFILE%\py3.5\Scripts\pep8 .
 
 .. _BPF explained here: https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow
 .. _read this description of the workflow: https://www.acquia.com/blog/pragmatic-guide-branch-feature-git-branching-strategy

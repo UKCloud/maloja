@@ -1,9 +1,6 @@
 %YAML 1.2
 ---
 
-# To check this file:
-# %HOME%\py3.5\maloja @options.skydemo plan --input maloja\test\issue_025-01.yaml
-
 # Paste in the exact contents of an org.yaml file (optional?).
 # Indent once and change the first whitespace character on the first line to '-':
 -   !!omap

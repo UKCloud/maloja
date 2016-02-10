@@ -25,7 +25,7 @@ On Ubuntu 14.04::
 
 On Windows 8.1::
 
-    > start %HOME%\py3.5\Scripts\maloja @options.private
+    > start %USERPROFILE%\py3.5\Scripts\maloja @options.private
 
 The window will open and prompt you for your API password::
 

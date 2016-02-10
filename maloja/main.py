@@ -48,10 +48,6 @@ from maloja.workflow.path import Path
 from maloja.workflow.path import make_project
 from maloja.workflow.path import find_project
 
-__doc__ = """
-start %HOME%\\maloja-py3.5\\scripts\\python -m maloja.main
-@options.private build --input=maloja\\test\\use_case01.yaml
-"""
 
 def main(args):
 

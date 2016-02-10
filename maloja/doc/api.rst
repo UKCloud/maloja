@@ -92,7 +92,7 @@ On Ubuntu 14.04::
 
 On Windows 8.1::
 
-    > %HOME%\py3.5\Scripts\maloja @options.private plan --input=maloja/test/use_case01.yaml
+    > %USERPROFILE%\py3.5\Scripts\maloja @options.private plan --input=maloja/test/use_case01.yaml
 
 Builder module
 ==============

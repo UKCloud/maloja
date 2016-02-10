@@ -71,13 +71,7 @@ class Inspector(Builder):
         :param executor: a `concurrent.futures.Executor` object
 
         """
-        log = logging.getLogger("maloja.inspector.Inspector")
-        self.plans = group_by_type(objs)
-        self.results = results
-        self.executor = executor
-        self.token = None
-        self.tasks = {}
-        self.seq = itertools.count(1)
+        super().__init__(objs, results, executor=None, loop=None, **kwargs)
 
     def __call__(self, session, token, callback=None, status=None, **kwargs):
         """
@@ -96,9 +90,46 @@ class Inspector(Builder):
 
         """
         log = logging.getLogger("maloja.inspector")
-        for gw in self.plans[Gateway]:
-            log.info(gw)
-            response = self.check_response(
-                *self.wait_for(session.get(gw.href))
+
+        self.check_orgvdcnetwork(session, token, status=status)
+
+    def check_orgvdcnetwork(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.inspector.check_orgvdcnetwork")
+
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        vdc = self.plans[Vdc][0]
+        networksUrl = None
+        try:
+            response = self.check_response(*self.wait_for(session.get(vdc.href)))
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        tree = ET.fromstring(response.text)
+        networksUrl = next(find_xpath(
+            "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
+            tree,
+            rel="orgVdcNetworks"
+        ), None)
+
+        log.debug(networksUrl)
+        try:
+            response = self.check_response(*self.wait_for(
+                session.get(networksUrl.attrib.get("href"))
+            ))
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        tree = ET.fromstring(response.text)
+        log.debug(response.text)
+        orgVdcNetUrls = [
+            i.attrib.get("href")
+            for i in find_xpath(
+                "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
+                tree,
+                rel="orgVdcNetworks"
             )
-            log.debug(response.text)
+        ]
+
+        log.debug(orgVdcNetUrls)

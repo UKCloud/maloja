@@ -25,7 +25,7 @@ href network.href;"/>
 <SourcedItem tal:repeat="vm appliance.vms" >
 <Source tal:attributes="href vm.href;" />
   <VmGeneralParams>
-    <Name tal:content="vm.name"></Name>
+    <Name tal:content="vm.name.translate(str.maketrans('._', '--'))"></Name>
   </VmGeneralParams>
   <InstantiationParams>
      <NetworkConnectionSection
@@ -38,8 +38,11 @@ href network.href;"/>
 tal:attributes="
 network networks[n].name;">
            <NetworkConnectionIndex tal:content="n"></NetworkConnectionIndex>
+           <IpAddress
+tal:condition="net.ipAddressAllocationMode == 'MANUAL'"
+tal:content="net.ip"></IpAddress>
            <IsConnected tal:content="'true' if net.isConnected else 'false'"></IsConnected>
-           <IpAddressAllocationMode>POOL</IpAddressAllocationMode>
+           <IpAddressAllocationMode tal:content="net.ipAddressAllocationMode"></IpAddressAllocationMode>
         </NetworkConnection>
      </NetworkConnectionSection>
 <GuestCustomizationSection
@@ -55,7 +58,7 @@ type 'application/vnd.vmware.vcloud.guestCustomizationSection+xml'">
     <AdminAutoLogonCount>0</AdminAutoLogonCount>
     <CustomizationScript tal:content="vm.guestcustomization"></CustomizationScript>
 <ComputerName
-tal:content="vm.name"></ComputerName>
+tal:content="vm.name.translate(str.maketrans('._', '--'))"></ComputerName>
 </GuestCustomizationSection>
   </InstantiationParams>
 </SourcedItem>

@@ -129,7 +129,10 @@ class DataObject:
         return self
 
 class Project(DataObject):
-    pass
+    """
+    Available for storing Maloja project information.
+
+    """
 
 class Catalog(DataObject):
     """
@@ -231,6 +234,9 @@ class Gateway(DataObject):
         config = tree.find(
             "./*/{}EdgeGatewayServiceConfiguration".format(ns)
         )
+        if config is None:
+            return self
+
         elem = config.find(ns + "FirewallService")
         for rule in elem.iter(ns + "FirewallRule"):
             int_ip = rule.find(ns + "DestinationIp").text
@@ -391,9 +397,11 @@ class Task(DataObject):
         org = tree.find(ns + "Organization")
         self.organization = Org().feed_xml(org, ns=ns)
         owner = tree.find(ns + "Owner")
+        typ = owner.attrib.get("type")
         self.owner = {
+            "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
             "application/vnd.vmware.vcloud.vApp+xml": VApp
-        }.get(owner.attrib.get("type"))().feed_xml(owner, ns=ns)
+        }.get(typ)().feed_xml(owner, ns=ns)
         return self
 
 class Template(DataObject):

@@ -152,7 +152,7 @@ def main(args):
         else:
             if isinstance(status, Status):
                 level = os.path.splitext(getattr(status.path, "file", ""))[0]
-                log.info("{0:^10} job {1.job:04}".format(level, status))
+                log.info("{0:^10} update {1.job:04}".format(level, status))
             if reply is not None:
                 log.info(reply)
             time.sleep(0)
@@ -165,7 +165,7 @@ def main(args):
         return_when=concurrent.futures.FIRST_EXCEPTION
     )
     for task in not_done:
-        log.debug(task)
+        log.warning("Not completed: {0}".format(task))
         log.debug(task.cancel())
     return 0
 

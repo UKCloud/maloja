@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections.abc
 import logging
 from logging.handlers import WatchedFileHandler
 import itertools
@@ -25,6 +26,7 @@ import warnings
 import maloja.cli
 from maloja.model import Gateway
 from maloja.model import Network
+from maloja.model import Org
 from maloja.model import Template
 from maloja.model import Vdc
 from maloja.model import Vm
@@ -42,6 +44,7 @@ from a survey (also YAML) assembled in a hierarchical structure.
 types = {
     "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
     "application/vnd.vmware.vcloud.orgVdcNetwork+xml": Network,
+    "application/vnd.vmware.vcloud.org+xml": Org,
     "application/vnd.vmware.vcloud.vAppTemplate+xml": Template,
     "application/vnd.vmware.vcloud.vdc+xml": Vdc,
     "application/vnd.vmware.vcloud.vm+xml": Vm,
@@ -50,7 +53,14 @@ types = {
 
 def read_objects(text):
     log = logging.getLogger("maloja.planner")
-    for n, data in enumerate(yaml_loads(text)):
+    contents = yaml_loads(text)
+    if contents is None:
+        log.warning("No objects found.")
+        return
+    elif isinstance(contents, collections.abc.Mapping):
+        contents = [contents]
+
+    for n, data in enumerate(contents):
         try:
             typ = types[data.get("type", None)]
         except KeyError:
@@ -65,7 +75,8 @@ def read_objects(text):
             log.warning(e)
             continue
 
-        log.info(obj)
+        action = "Modify" if obj.href else "Create"
+        log.info("{0} <{1.__class__.__name__}> {1.name}".format(action, obj))
         yield obj
 
 
@@ -81,7 +92,7 @@ def check_objects(seq):
 def report(fObj):
     objs = list(read_objects(fObj.read()))
     objs = check_objects(objs)
-    print(*[vars(i) for i in objs], sep="\n")
+    # print(*[vars(i) for i in objs], sep="\n")
     return 0
 
 

@@ -1,0 +1,16 @@
+<FirewallRule>
+    <IsEnabled>true</IsEnabled>
+    <MatchOnTranslate>false</MatchOnTranslate>
+    <Description tal:content="rule.description"></Description>
+    <Policy>allow</Policy>
+    <Protocols>
+        <Tcp>true</Tcp>
+    </Protocols>
+    <Port>-1</Port>
+    <DestinationPortRange tal:content="ports[1]"></DestinationPortRange>
+    <DestinationIp tal:content="ips[1]"></DestinationIp>
+    <SourcePort>-1</SourcePort>
+    <SourcePortRange>Any</SourcePortRange>
+    <SourceIp>Any</SourceIp>
+    <EnableLogging>true</EnableLogging>
+</FirewallRule>

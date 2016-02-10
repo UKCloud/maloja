@@ -1,0 +1,25 @@
+<OrgVdcNetwork xmlns="http://www.vmware.com/vcloud/v1.5"
+type="application/vnd.vmware.vcloud.orgVdcNetwork+xml"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+tal:attributes="
+name network.name;"
+>
+    <Description tal:content="getattr(network, 'description', '')"></Description>
+    <Configuration>
+        <IpScopes tal:condition="not gateway">
+            <IpScope>
+                <IsInherited>false</IsInherited>
+                <Gateway tal:content="network.defaultGateway"></Gateway>
+                <Netmask tal:content="network.netmask"></Netmask>
+                <Dns1 tal:content="network.dns[0]"></Dns1>
+                <DnsSuffix tal:content="network.dnsSuffix"></DnsSuffix>
+                <IsEnabled>true</IsEnabled>
+            </IpScope>
+        </IpScopes>
+        <FenceMode>isolated</FenceMode>
+    </Configuration>
+    <EdgeGateway tal:condition="gateway"
+        tal:attributes="
+        href gateway.href;"></EdgeGateway>
+   <IsShared>true</IsShared>
+</OrgVdcNetwork>

@@ -20,6 +20,8 @@ import unittest
 from chameleon import PageTemplateFile
 import pkg_resources
 
+import maloja.planner
+
 class ComposeVAppTests(unittest.TestCase):
 
     def setUp(self):
@@ -66,3 +68,36 @@ class ComposeVAppTests(unittest.TestCase):
             }
         }
         self.assertEqual(2457, len(self.macro(**data)))
+
+class RecomposeVAppTests(unittest.TestCase):
+
+    def setUp(self):
+        fP = pkg_resources.resource_filename(
+                "maloja.test", "issue_025-03.yaml"
+            )
+        with open(fP, "r") as data:
+            self.design = list(maloja.planner.read_objects(data.read()))
+
+    def test_macro(self):
+        macro = PageTemplateFile(
+            pkg_resources.resource_filename(
+                "maloja.workflow", "RecomposeVAppParams.pt"
+            )
+        )
+        networks = self.design[1:3]
+        template = self.design[3]
+        vms = self.design[4:7]
+
+        data = {
+            "appliance": {
+                "name": "Test VApp",
+                "description": "Created by Maloja unit tests.",
+                "vms": vms,
+            },
+            "networks": networks,
+            "template": {
+                "name": template.name,
+                "href": template.href
+            }
+        }
+        xml = macro(**data)

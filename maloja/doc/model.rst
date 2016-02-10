@@ -35,3 +35,6 @@ Data model
 .. autoclass:: maloja.model.Task
    :members: __init__, _defaults, feed_xml
 
+.. autoclass:: maloja.model.Project
+   :members: __init__, _defaults
+

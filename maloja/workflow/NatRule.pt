@@ -1,0 +1,20 @@
+<NatRule tal:define="typ rule.__class__.__name__">
+  <RuleType tal:content="typ"></RuleType>
+  <IsEnabled>true</IsEnabled>
+  <GatewayNatRule>
+     <Interface tal:attributes="
+href network.href;
+name network.name;
+type network.type;
+" />
+     <OriginalIp tal:content="ips[0]"></OriginalIp>
+     <OriginalPort
+        tal:condition="typ == 'DNAT'"
+        tal:content="ports[0]"></OriginalPort>
+     <TranslatedIp tal:content="ips[1]"></TranslatedIp>
+     <TranslatedPort
+        tal:condition="typ == 'DNAT'"
+        tal:content="ports[1]"></TranslatedPort>
+     <Protocol>tcp</Protocol>
+  </GatewayNatRule>
+</NatRule>

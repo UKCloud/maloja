@@ -1,0 +1,20 @@
+<OrgNetwork xmlns="http://www.vmware.com/vcloud/v1.5"
+type="application/vnd.vmware.vcloud.orgVdcNetwork+xml"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+tal:attributes="
+name network.name;"
+>
+    <Description tal:content="getattr(network, 'description', 'Isolated Organization VDC Network')"></Description>
+    <Configuration>
+        <IpScopes tal:condition="False">
+            <IpScope>
+                <IsInherited>false</IsInherited>
+                <Gateway>14.14.14.1</Gateway>
+                <Netmask>255.255.255.0</Netmask>
+                <IsEnabled>true</IsEnabled>
+            </IpScope>
+        </IpScopes>
+        <FenceMode>isolated</FenceMode>
+        <!-- API v1.5 requires NetworkPool -->
+    </Configuration>
+</OrgNetwork>

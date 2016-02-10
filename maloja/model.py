@@ -318,7 +318,6 @@ class Network(DataObject):
 
         """
         log = logging.getLogger("maloja.model.Network")
-        log.debug(ET.tostring(tree, encoding="unicode"))
         self.dns = [tree.attrib.get("dns1"), tree.attrib.get("dns2")]
         super().feed_xml(tree, ns=ns)
 

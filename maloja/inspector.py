@@ -112,7 +112,6 @@ class Inspector(Builder):
             rel="orgVdcNetworks"
         ), None)
 
-        log.debug(networksUrl)
         try:
             response = self.check_response(*self.wait_for(
                 session.get(networksUrl.attrib.get("href"))
@@ -122,14 +121,19 @@ class Inspector(Builder):
             return
 
         tree = ET.fromstring(response.text)
-        log.debug(response.text)
-        orgVdcNetUrls = [
-            i.attrib.get("href")
-            for i in find_xpath(
-                "./*/[@type='application/vnd.vmware.vcloud.query.records+xml']",
-                tree,
-                rel="orgVdcNetworks"
-            )
-        ]
+        nets = {}
+        for elem in tree.iter(ns + "OrgVdcNetworkRecord"):
+            try:
+                response = self.check_response(*self.wait_for(
+                    session.get(elem.attrib.get("href"))
+                ))
+            except (StopIteration, TypeError):
+                self.send_status(status, stop=True)
+            else:
+                tree = ET.fromstring(response.text)
+                obj = Network().feed_xml(tree, ns=ns)
+                nets[obj.name] = obj
 
-        log.debug(orgVdcNetUrls)
+        net = nets.get(self.plans[Network][0].name, None)
+        log.info(net)
+

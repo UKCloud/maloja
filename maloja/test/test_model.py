@@ -295,7 +295,6 @@ class NetworkTests(unittest.TestCase):
         self.assertIn("defaultGateway", dict(elems))
         self.assertIn("netmask", dict(elems))
         self.assertEqual(2, [i[0] for i in elems].count("pool"))
-        print(elems)
 
 class VmTests(unittest.TestCase):
 

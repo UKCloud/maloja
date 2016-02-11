@@ -131,9 +131,7 @@ class Inspector(Builder):
                 self.send_status(status, stop=True)
             else:
                 tree = ET.fromstring(response.text)
-                log.debug(response.text)
                 obj = Network().feed_xml(tree)
-                log.debug(vars(obj))
                 nets[obj.name] = obj
 
         target = self.plans[Network][0]
@@ -143,8 +141,13 @@ class Inspector(Builder):
             self.send_status(status, stop=True)
             return
 
-        log.info(list(target.elements))
-        log.info(list(net.elements))
-        if target != net:
-            log.warning(set(target.elements) - set(net.elements))
+        missing = (
+            set([(n, str(v)) for n, v in target.elements]) -
+            set([(n, str(v)) for n, v in net.elements])
+        )
+        for n, v in missing:
+            log.warning("Missing {0}:{1}".format(n, v))
+
+        if not missing:
+            log.info("Network '{0.name}' OK.".format(target))
 

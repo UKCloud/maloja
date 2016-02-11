@@ -131,9 +131,20 @@ class Inspector(Builder):
                 self.send_status(status, stop=True)
             else:
                 tree = ET.fromstring(response.text)
-                obj = Network().feed_xml(tree, ns=ns)
+                log.debug(response.text)
+                obj = Network().feed_xml(tree)
+                log.debug(vars(obj))
                 nets[obj.name] = obj
 
-        net = nets.get(self.plans[Network][0].name, None)
-        log.info(net)
+        target = self.plans[Network][0]
+        net = nets.get(target.name, None)
+        if net is None:
+            log.warning("Network '{0}' not found.".format(target.name))
+            self.send_status(status, stop=True)
+            return
+
+        log.info(list(target.elements))
+        log.info(list(net.elements))
+        if target != net:
+            log.warning(set(target.elements) - set(net.elements))
 

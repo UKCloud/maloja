@@ -15,7 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import Counter
+from collections import defaultdict
 import collections.abc
+import copy
 import logging
 from logging.handlers import WatchedFileHandler
 import itertools
@@ -51,6 +54,14 @@ types = {
 }
 
 
+_advisor = {
+    Gateway: iter(["to modify rules"]),
+    Network: iter(["is public network", " is private network"]),
+    Template: iter(["provides VApp template"]),
+    Vdc: iter(["is parent Vdc"]),
+    Vm: itertools.repeat("to be created"),
+}
+
 def read_objects(text):
     log = logging.getLogger("maloja.planner")
     contents = yaml_loads(text)
@@ -75,24 +86,31 @@ def read_objects(text):
             log.warning(e)
             continue
 
-        action = "Modify" if obj.href else "Create"
-        log.info("{0} <{1.__class__.__name__}> {1.name}".format(action, obj))
         yield obj
 
 
 def check_objects(seq):
     log = logging.getLogger("maloja.planner")
-    missing = set(types.values()) - {type(obj) for obj in seq}
-    for typ in missing:
-        log.warning("Missing an object of type {0.__name__}".format(typ))
-    log.info("Approved {0} objects of {0}".format(len(seq)))
+    advisor = copy.deepcopy(_advisor)
+    tally = 0
+    for obj in seq:
+        typ = type(obj)
+        try:
+            msg = next(advisor[typ])
+            tally += 1
+        except (StopIteration, KeyError):
+            msg = "ignored"
+        log.info("{0.__name__} '{1.name}' {2}.".format(typ, obj, msg))
+    log.info("Approved {0} objects of {1}".format(tally, len(seq)))
     return seq
 
 
 def report(fObj):
+    log = logging.getLogger("maloja.planner")
     objs = list(read_objects(fObj.read()))
     objs = check_objects(objs)
-    # print(*[vars(i) for i in objs], sep="\n")
+    if objs:
+        log.info("OK.")
     return 0
 
 

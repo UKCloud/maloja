@@ -90,24 +90,25 @@ class DataObject:
     @property
     def elements(self):
 
-        def visitor(obj):
+        def visitor(obj, name):
             try:
                 yield from obj.elements
-            except AttributeError:
-                if isinstance(obj, str):
-                    yield (k, obj)
+            except AttributeError as e:
+                if isinstance(obj, (str, ipaddress.IPv4Address)):
+                    yield (name, obj)
                     return
 
             try:
-                yield from obj._asdict().items()
-            except AttributeError:
+                for k, v in obj._asdict().items():
+                    yield from visitor(v, k)
+            except AttributeError as e:
                 if isinstance(obj, list):
                     for item in obj:
-                        yield from visitor(item)
+                        yield from visitor(item, name)
 
         for k, _ in self._defaults:
             obj = getattr(self, k)
-            yield from visitor(obj)
+            yield from visitor(obj, name=k)
 
     def feed_xml(self, tree, *args, **kwargs):
         """

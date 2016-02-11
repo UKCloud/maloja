@@ -292,10 +292,10 @@ class NetworkTests(unittest.TestCase):
         tree = ET.fromstring(NetworkTests.xml)
         obj = Network().feed_xml(tree)
         elems = list(obj.elements)
-        print(elems)
-        self.assertIn("pool", dict(elems))
         self.assertIn("defaultGateway", dict(elems))
         self.assertIn("netmask", dict(elems))
+        self.assertEqual(2, [i[0] for i in elems].count("pool"))
+        print(elems)
 
 class VmTests(unittest.TestCase):
 

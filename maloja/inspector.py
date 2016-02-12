@@ -93,6 +93,7 @@ class Inspector(Builder):
 
         self.check_orgvdcnetwork(session, token, status=status)
         self.check_vapp(session, token, status=status)
+        self.check_vms(session, token, status=status)
 
     def check_orgvdcnetwork(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_orgvdcnetwork")
@@ -156,9 +157,9 @@ class Inspector(Builder):
         log = logging.getLogger("maloja.inspector.check_vapp")
 
         ns = "{http://www.vmware.com/vcloud/v1.5}"
-        vapp = self.plans[Template][0]
+        tgt = self.plans[Template][0]
         try:
-            response = self.check_response(*self.wait_for(session.get(vapp.href)))
+            response = self.check_response(*self.wait_for(session.get(tgt.href)))
         except (StopIteration, TypeError):
             self.send_status(status, stop=True)
             return
@@ -167,11 +168,27 @@ class Inspector(Builder):
         obj = VApp().feed_xml(tree)
 
         missing = (
-            set([(n, str(v)) for n, v in vapp.elements]) -
+            set([(n, str(v)) for n, v in tgt.elements]) -
             set([(n, str(v)) for n, v in obj.elements])
         )
         for n, v in missing:
             log.warning("Missing {0}: {1}".format(n, v))
 
         if not missing:
-            log.info("VApp '{0.name}' OK.".format(vapp))
+            log.info("VApp '{0.name}' OK.".format(tgt))
+
+    def check_vms(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.inspector.check_vms")
+
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        for tgt in self.plans[Vm]:
+            try:
+                response = self.check_response(*self.wait_for(session.get(tgt.href)))
+            except (StopIteration, TypeError):
+                self.send_status(status, stop=True)
+                return
+            
+            tree = ET.fromstring(response.text)
+            obj = Vm().feed_xml(tree)
+            log.debug(vars(obj))
+

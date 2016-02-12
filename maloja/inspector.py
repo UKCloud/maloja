@@ -147,7 +147,7 @@ class Inspector(Builder):
             set([(n, str(v)) for n, v in net.elements])
         )
         for n, v in missing:
-            log.warning("Missing {0}:{1}".format(n, v))
+            log.warning("Missing {0}: {1}".format(n, v))
 
         if not missing:
             log.info("Network '{0.name}' OK.".format(target))
@@ -171,7 +171,7 @@ class Inspector(Builder):
             set([(n, str(v)) for n, v in obj.elements])
         )
         for n, v in missing:
-            log.warning("Missing {0}:{1}".format(n, v))
+            log.warning("Missing {0}: {1}".format(n, v))
 
         if not missing:
             log.info("VApp '{0.name}' OK.".format(vapp))

@@ -20,6 +20,8 @@ import itertools
 import logging
 import sys
 import time
+from urllib.parse import quote as urlquote
+from urllib.parse import urlparse
 import uuid
 import warnings
 import xml.etree.ElementTree as ET
@@ -96,8 +98,8 @@ class Inspector(Builder):
         log = logging.getLogger("maloja.inspector")
 
         self.check_orgvdcnetwork(session, token, status=status)
-        self.check_vapp(session, token, status=status)
-        self.check_vms(session, token, status=status)
+        self.check_vapp(session, token, status=status, name=name)
+        self.check_vms(session, token, status=status, name=name)
 
     def check_orgvdcnetwork(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_orgvdcnetwork")
@@ -181,27 +183,46 @@ class Inspector(Builder):
         if not missing:
             log.info("VApp '{0.name}' OK.".format(tgt))
 
-    def check_vms(self, session, token, callback=None, status=None, **kwargs):
+    def check_vms(self, session, token, callback=None, status=None, name=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_vms")
 
         ns = "{http://www.vmware.com/vcloud/v1.5}"
-        for tgt in self.plans[Vm]:
-            try:
-                response = self.check_response(*self.wait_for(session.get(tgt.href)))
-            except (StopIteration, TypeError):
-                self.send_status(status, stop=True)
-                return
+        vdc = self.plans[Vdc][0]
+        try:
+            response = self.check_response(*self.wait_for(session.get(vdc.href)))
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
 
+        tree = ET.fromstring(response.text)
+        ref = next(find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.vApp+xml']",
+            tree,
+            name=name
+        ), None)
+        try:
+            response = self.check_response(*self.wait_for(
+                session.get(ref.attrib.get("href"))
+            ))
+        except (AttributeError, StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        try:
             tree = ET.fromstring(response.text)
-            obj = Vm().feed_xml(tree)
+            obj = VApp().feed_xml(tree)
 
-            missing = (
-                set([(n, str(v)) for n, v in tgt.elements]) -
-                set([(n, str(v)) for n, v in obj.elements])
-            )
-            for n, v in missing:
-                log.warning("Missing {0}: {1}".format(n, v))
-
-            if not missing:
-                log.info("VApp '{0.name}' OK.".format(tgt))
+            url = urlparse(response.url)
+            query = "/".join((
+                url.scheme + "://" + url.netloc,
+                "api/vms/query?filter=(container=={0})".format(urlquote(response.url))
+            ))
+            vms = list(find_xpath(
+                "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
+                ET.fromstring(response.text)
+            ))
+            log.debug(vms)
+        finally:
+            self.send_status(status, stop=True)
+            return
 

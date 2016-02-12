@@ -138,7 +138,7 @@ def main(args):
             objs = list(maloja.planner.read_objects(data.read()))
             objs = maloja.planner.check_objects(objs)
 
-        operations.put((1, Inspection(objs)))
+        operations.put((1, Inspection(args.name, objs)))
 
     while not isinstance(reply, Stop):
         try:

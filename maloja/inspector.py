@@ -62,7 +62,11 @@ class Inspector(Builder):
                 token.key: token.value,
             }
             session.headers.update(headers)
-            return (session.executor.submit(inspector, session, token, callback, status),)
+            return (
+                session.executor.submit(
+                    inspector, session, token, callback, status, name=msg.name
+                ),
+            )
 
     def __init__(self, objs, results, executor=None, loop=None, **kwargs):
         """
@@ -73,7 +77,7 @@ class Inspector(Builder):
         """
         super().__init__(objs, results, executor=None, loop=None, **kwargs)
 
-    def __call__(self, session, token, callback=None, status=None, **kwargs):
+    def __call__(self, session, token, callback=None, status=None, name=None):
         """
         An Inspector is a callable object which runs in its own thread.
 
@@ -187,8 +191,17 @@ class Inspector(Builder):
             except (StopIteration, TypeError):
                 self.send_status(status, stop=True)
                 return
-            
+
             tree = ET.fromstring(response.text)
             obj = Vm().feed_xml(tree)
-            log.debug(vars(obj))
+
+            missing = (
+                set([(n, str(v)) for n, v in tgt.elements]) -
+                set([(n, str(v)) for n, v in obj.elements])
+            )
+            for n, v in missing:
+                log.warning("Missing {0}: {1}".format(n, v))
+
+            if not missing:
+                log.info("VApp '{0.name}' OK.".format(tgt))
 

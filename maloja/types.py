@@ -19,7 +19,7 @@ from collections import namedtuple
 
 Credentials = namedtuple("Credentials", ["url", "user", "password"])
 Design = namedtuple("Design", ["objects"])
-Inspection = namedtuple("Inspection", ["objects"])
+Inspection = namedtuple("Inspection", ["name", "objects"])
 
 Plugin = namedtuple(
     "Plugin",

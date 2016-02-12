@@ -208,21 +208,37 @@ class Inspector(Builder):
             self.send_status(status, stop=True)
             return
 
-        try:
+        tree = ET.fromstring(response.text)
+        obj = VApp().feed_xml(tree)
+
+        url = urlparse(response.url)
+        query = "/".join((
+            url.scheme + "://" + url.netloc,
+            "api/vms/query?filter=(container=={0})".format(urlquote(response.url))
+        ))
+        vms = list(find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
+            ET.fromstring(response.text)
+        ))
+
+        for ref, tgt in zip(vms, self.plans[Vm]):
+            try:
+                response = self.check_response(*self.wait_for(
+                    session.get(ref.attrib.get("href"))
+                ))
+            except (AttributeError, StopIteration, TypeError):
+                self.send_status(status, stop=True)
+                return
+
             tree = ET.fromstring(response.text)
-            obj = VApp().feed_xml(tree)
+            obj = Vm().feed_xml(tree)
 
-            url = urlparse(response.url)
-            query = "/".join((
-                url.scheme + "://" + url.netloc,
-                "api/vms/query?filter=(container=={0})".format(urlquote(response.url))
-            ))
-            vms = list(find_xpath(
-                "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
-                ET.fromstring(response.text)
-            ))
-            log.debug(vms)
-        finally:
-            self.send_status(status, stop=True)
-            return
+            missing = (
+                set([(n, str(v)) for n, v in tgt.elements]) -
+                set([(n, str(v)) for n, v in obj.elements])
+            )
+            for n, v in missing:
+                log.warning("Missing {0}: {1}".format(n, v))
 
+            if not missing:
+                log.info("Vm '{0.name}' OK.".format(tgt))

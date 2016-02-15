@@ -238,7 +238,9 @@ class Inspector(Builder):
             for tgt in self.plans[Vm]:
                 goal = set([(n, str(v)) for n, v in tgt.elements])
                 fit = truth.difference(goal)
-                picks[len(fit)] = fit
+                picks[len(fit)] = {k: getattr(tgt, k, None) for k, v in fit}
 
-            for n, v in picks[min(picks.keys())]:
-                log.warning("Missing {0}: {1}".format(n, v))
+            pick = picks[min(picks.keys())]
+            for n, v in pick.items():
+                if n not in ("dateCreated", "href", "mac", "macAddress"):
+                    log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))

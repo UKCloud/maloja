@@ -221,7 +221,7 @@ class Inspector(Builder):
             ET.fromstring(response.text)
         ))
 
-        for ref, tgt in zip(vms, self.plans[Vm]):
+        for ref in vms:
             try:
                 response = self.check_response(*self.wait_for(
                     session.get(ref.attrib.get("href"))
@@ -233,12 +233,12 @@ class Inspector(Builder):
             tree = ET.fromstring(response.text)
             obj = Vm().feed_xml(tree)
 
-            missing = (
-                set([(n, str(v)) for n, v in tgt.elements]) -
-                set([(n, str(v)) for n, v in obj.elements])
-            )
-            for n, v in missing:
-                log.warning("Missing {0}: {1}".format(n, v))
+            picks = {}
+            truth = set([(n, str(v)) for n, v in obj.elements])
+            for tgt in self.plans[Vm]:
+                goal = set([(n, str(v)) for n, v in tgt.elements])
+                fit = truth.difference(goal)
+                picks[len(fit)] = fit
 
-            if not missing:
-                log.info("Vm '{0.name}' OK.".format(tgt))
+            for n, v in picks[min(picks.keys())]:
+                log.warning("Missing {0}: {1}".format(n, v))

@@ -116,9 +116,9 @@ class DataObject:
 
         """
         ns = kwargs.pop("ns", "")
-        fields = [k for k, v in self._defaults]
+        fields = [k for k, v in self._defaults if v is None]
         attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
-        tags = [ns + k[0].upper() + k[1:] for k, v in self._defaults]
+        tags = [ns + k[0].upper() + k[1:] for k, v in self._defaults if v is None]
         body = (
             (elem.tag.replace(ns, ""), elem.text)
             for elem in tree
@@ -511,7 +511,7 @@ class Vm(DataObject):
         ("type", None),
         ("dateCreated", None),
         ("guestOs", None),
-        ("hardwareVersion", None),
+        ("hardwareVersion", set([])),
         ("cpu", None),
         ("memoryMB", None),
         ("networkcards", []),
@@ -565,6 +565,11 @@ class Vm(DataObject):
 
         if tree.tag in (ns + "VAppTemplate", ns + "Vm", ns + "VMRecord"):
             super().feed_xml(tree, ns=ns)
+            try:
+                self.hardwareVersion.add(int(tree.attrib.get("hardwareVersion")))
+            except TypeError:
+                #  No version supplied
+                pass
 
         if tree.tag in (ns + "VAppTemplate", ns + "Vm"):
             hardware = find_xpath(

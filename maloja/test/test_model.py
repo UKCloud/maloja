@@ -517,7 +517,7 @@ class VmTests(unittest.TestCase):
             "Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1",
             obj.name)
         self.assertEqual("CentOS 4/5/6/7 (64-bit)", obj.guestOs)
-        self.assertEqual(8, obj.hardwareVersion)
+        self.assertEqual(set([8]), obj.hardwareVersion)
         self.assertEqual("STANDARD-Any", obj.storageProfileName)
         self.assertEqual(0, len(obj.networkconnections))
 

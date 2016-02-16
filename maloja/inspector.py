@@ -100,6 +100,7 @@ class Inspector(Builder):
         self.check_orgvdcnetwork(session, token, status=status)
         self.check_vapp(session, token, status=status, name=name)
         self.check_vms(session, token, status=status, name=name)
+        self.check_gateway(session, token, status=status)
 
     def check_orgvdcnetwork(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_orgvdcnetwork")
@@ -244,3 +245,20 @@ class Inspector(Builder):
             for n, v in pick.items():
                 if n not in ("dateCreated", "href", "mac", "macAddress"):
                     log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
+
+    def check_gateway(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.inspector.check_vms")
+
+        ns = "{http://www.vmware.com/vcloud/v1.5}"
+        gw = self.plans[Gateway][0]
+        try:
+            response = self.check_response(*self.wait_for(session.get(gw.href)))
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        log.debug(response.text)
+        tree = ET.fromstring(response.text)
+        obj = Gateway().feed_xml(tree)
+        log.debug(vars(obj))
+

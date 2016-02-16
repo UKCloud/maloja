@@ -57,6 +57,7 @@
     - networkcards:
       - name: Network adapter 0
         mac:
+        device: E1000
     - harddisks:
       - name: Hard disk
         capacity: 51200
@@ -83,6 +84,7 @@
     - networkcards:
       - name: Network adapter 0
         mac:
+        device: E1000
     - harddisks:
       - name: Hard disk
         capacity: 51200
@@ -109,6 +111,7 @@
     - networkcards:
       - name: Network adapter 0
         mac:
+        device: E1000
     - harddisks:
       - name: Hard disk
         capacity: 51200

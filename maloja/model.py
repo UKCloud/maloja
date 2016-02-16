@@ -471,7 +471,7 @@ class Vm(DataObject):
         6: namedtuple("SCSIController", ["address", "description", "instanceID"]),
         10: namedtuple(
             "EthernetAdapter",
-            ["address", "connection", "elementName", "instanceID"]
+            ["address", "connection", "elementName", "instanceID", "resourceSubType"]
         ),
         14: namedtuple("FloppyDrive", ["description", "instanceID"]),
         15: namedtuple("CDDrive", ["description", "instanceID"]),
@@ -488,7 +488,7 @@ class Vm(DataObject):
     )
 
     NetworkCard = namedtuple(
-        "NetworkCard", ["name", "mac"]
+        "NetworkCard", ["name", "mac", "device"]
     )
 
     NetworkConnection = namedtuple(
@@ -577,7 +577,8 @@ class Vm(DataObject):
                 elif key == 10:
                     entry = Vm.NetworkCard(
                         obj.elementName.text,
-                        obj.address.text
+                        obj.address.text,
+                        obj.resourceSubType.text
                     )
                     if entry not in self.networkcards:
                         self.networkcards.append(entry)

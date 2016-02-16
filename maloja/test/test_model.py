@@ -122,6 +122,7 @@ vm_yaml = """
 - networkcards:
   - name:
     mac:
+    device:
 - harddisks:
   - name:
     capacity:
@@ -536,6 +537,8 @@ class VmTests(unittest.TestCase):
         self.assertEqual(1, obj.cpu)
         self.assertEqual(2048, obj.memoryMB)
         self.assertTrue(obj.networkcards)
+        self.assertEqual("00:50:56:01:aa:99", obj.networkcards[0].mac)
+        self.assertEqual("E1000", obj.networkcards[0].device)
 
         self.assertTrue(obj.harddisks)
         self.assertEqual("Hard disk", obj.harddisks[0].name)

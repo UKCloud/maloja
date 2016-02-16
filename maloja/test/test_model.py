@@ -126,6 +126,9 @@ vm_yaml = """
 - harddisks:
   - name:
     capacity:
+- scsi:
+  - name:
+    device:
 - cd:
   - description:
 - floppydisk:
@@ -543,6 +546,10 @@ class VmTests(unittest.TestCase):
         self.assertTrue(obj.harddisks)
         self.assertEqual("Hard disk", obj.harddisks[0].name)
         self.assertEqual(51200, obj.harddisks[0].capacity)
+
+        self.assertTrue(obj.scsi)
+        self.assertEqual("SCSI Controller 0", obj.scsi[0].name)
+        self.assertEqual("lsilogic", obj.scsi[0].device)
 
     def test_feed_template_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"

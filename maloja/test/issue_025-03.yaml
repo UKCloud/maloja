@@ -58,6 +58,9 @@
       - name: Network adapter 0
         mac:
         device: E1000
+    - scsi:
+      - name:
+        device: lsilogic
     - harddisks:
       - name: Hard disk
         capacity: 51200
@@ -85,6 +88,9 @@
       - name: Network adapter 0
         mac:
         device: E1000
+    - scsi:
+      - name:
+        device: lsilogic
     - harddisks:
       - name: Hard disk
         capacity: 51200
@@ -112,6 +118,9 @@
       - name: Network adapter 0
         mac:
         device: E1000
+    - scsi:
+      - name:
+        device: lsilogic
     - harddisks:
       - name: Hard disk
         capacity: 51200

@@ -468,7 +468,10 @@ class Vm(DataObject):
         3: namedtuple("Processor", ["instanceID", "virtualQuantity"]),
         4: namedtuple("Memory", ["instanceID", "virtualQuantity"]),
         5: namedtuple("IDEController", ["address", "description", "instanceID"]),
-        6: namedtuple("SCSIController", ["address", "description", "instanceID"]),
+        6: namedtuple(
+            "SCSIController",
+            ["address", "description", "elementName", "instanceID", "resourceSubType"]
+        ),
         10: namedtuple(
             "EthernetAdapter",
             ["address", "connection", "elementName", "instanceID", "resourceSubType"]
@@ -498,6 +501,10 @@ class Vm(DataObject):
         ]
     )
 
+    SCSIController = namedtuple(
+        "SCSIController", ["name", "device"]
+    )
+
     _defaults = [
         ("name", None),
         ("href", None),
@@ -509,6 +516,7 @@ class Vm(DataObject):
         ("memoryMB", None),
         ("networkcards", []),
         ("harddisks", []),
+        ("scsi", []),
         ("cd", None),
         ("floppydisk", None),
         ("isBusy", None),
@@ -538,6 +546,7 @@ class Vm(DataObject):
             ("harddisks", Vm.HardDisk),
             ("networkcards", Vm.NetworkCard),
             ("networkconnections", Vm.NetworkConnection),
+            ("scsi", Vm.SCSIController),
         ]:
             if seq in kwargs:
                 kwargs[seq] = [
@@ -574,6 +583,13 @@ class Vm(DataObject):
                     self.cpu = int(obj.virtualQuantity.text)
                 elif key == 4:
                     self.memoryMB = int(obj.virtualQuantity.text)
+                elif key == 6:
+                    entry = Vm.SCSIController(
+                        obj.elementName.text,
+                        obj.resourceSubType.text
+                    )
+                    if entry not in self.scsi:
+                        self.scsi.append(entry)
                 elif key == 10:
                     entry = Vm.NetworkCard(
                         obj.elementName.text,
@@ -621,3 +637,4 @@ ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.HardDisk, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkCard, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)
+ruamel.yaml.RoundTripDumper.add_representer(Vm.SCSIController, namedtuple_as_dict)

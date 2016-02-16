@@ -511,7 +511,7 @@ class Vm(DataObject):
         ("type", None),
         ("dateCreated", None),
         ("guestOs", None),
-        ("hardwareVersion", set([])),
+        ("hardwareVersion", []),
         ("cpu", None),
         ("memoryMB", None),
         ("networkcards", []),
@@ -563,15 +563,30 @@ class Vm(DataObject):
 
         """
 
-        if tree.tag in (ns + "VAppTemplate", ns + "Vm", ns + "VMRecord"):
-            super().feed_xml(tree, ns=ns)
+        super().feed_xml(tree, ns=ns)
+        if tree.tag == ns + "VMRecord":
             try:
-                self.hardwareVersion.add(int(tree.attrib.get("hardwareVersion")))
-            except TypeError:
+                val = int(tree.attrib.get("hardwareVersion"))
+                if val not in self.hardwareVersion:
+                    self.hardwareVersion.append(val)
+            except TypeError as e:
                 #  No version supplied
                 pass
 
         if tree.tag in (ns + "VAppTemplate", ns + "Vm"):
+            system = next(find_xpath(
+                "./*/{}System".format("{http://schemas.dmtf.org/ovf/envelope/1}"), tree
+            ), None)
+            if system is not None:
+                try:
+                    versions = set(self.hardwareVersion).union({
+                        int(i.lstrip("vmx-")) for i in system.find((
+                        "{http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2"
+                        "/CIM_VirtualSystemSettingData}VirtualSystemType")).text.split()})
+                    self.hardwareVersion = list(versions)
+                except (AttributeError, TypeError, ValueError):
+                    pass
+
             hardware = find_xpath(
                 "./*/{}Item".format("{http://schemas.dmtf.org/ovf/envelope/1}"), tree
             )

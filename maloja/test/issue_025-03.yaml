@@ -51,7 +51,7 @@
     - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-e5b91cc2-e85f-4922-8ee2-46e9d8b9f935
     - type: application/vnd.vmware.vcloud.vm+xml
     - guestOs: CentOS 4/5/6/7 (64-bit)
-    - hardwareVersion:
+    - hardwareVersion: []
     - cpu: 1
     - memoryMB: 2048
     - networkcards:

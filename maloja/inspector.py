@@ -247,7 +247,7 @@ class Inspector(Builder):
                     log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
 
     def check_gateway(self, session, token, callback=None, status=None, **kwargs):
-        log = logging.getLogger("maloja.inspector.check_vms")
+        log = logging.getLogger("maloja.inspector.check_gateway")
 
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         gw = self.plans[Gateway][0]
@@ -261,4 +261,14 @@ class Inspector(Builder):
         tree = ET.fromstring(response.text)
         obj = Gateway().feed_xml(tree)
         log.debug(vars(obj))
+
+        truth = set([(n, str(v)) for n, v in obj.elements])
+        goal = set([(n, str(v)) for n, v in gw.elements])
+        fit = truth.difference(goal)
+        log.debug(truth)
+        log.debug(goal)
+        log.debug(fit)
+        for n, v in fit:
+            if n not in ("dateCreated", "href"):
+                log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
 

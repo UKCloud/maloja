@@ -581,8 +581,8 @@ class Vm(DataObject):
                 try:
                     versions = set(self.hardwareVersion).union({
                         int(i.lstrip("vmx-")) for i in system.find((
-                        "{http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2"
-                        "/CIM_VirtualSystemSettingData}VirtualSystemType")).text.split()})
+                            "{http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2"
+                            "/CIM_VirtualSystemSettingData}VirtualSystemType")).text.split()})
                     self.hardwareVersion = list(versions)
                 except (AttributeError, TypeError, ValueError):
                     pass

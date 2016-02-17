@@ -174,15 +174,16 @@ class Inspector(Builder):
         tree = ET.fromstring(response.text)
         obj = VApp().feed_xml(tree)
 
-        missing = (
-            set([(n, str(v)) for n, v in tgt.elements]) -
-            set([(n, str(v)) for n, v in obj.elements])
-        )
-        for n, v in missing:
-            log.warning("Missing {0}: {1}".format(n, v))
-
-        if not missing:
+        truth = set([(n, str(v)) for n, v in obj.elements])
+        goal = set([(n, str(v)) for n, v in tgt.elements])
+        unfit = truth.difference(goal)
+        if not unfit:
             log.info("VApp '{0.name}' OK.".format(tgt))
+
+        for n, v in unfit:
+            if n not in ("dateCreated", "href"):
+                log.warning("Found {0}: '{1}', expected {2}".format(
+                    n, getattr(obj, n, ""), getattr(tgt, n, "")))
 
     def check_vms(self, session, token, callback=None, status=None, name=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_vms")
@@ -267,20 +268,18 @@ class Inspector(Builder):
             self.send_status(status, stop=True)
             return
 
-        log.debug(response.text)
         tree = ET.fromstring(response.text)
         obj = Gateway().feed_xml(tree)
-        log.debug(vars(obj))
 
         truth = set([(n, str(v)) for n, v in obj.elements])
         goal = set([(n, str(v)) for n, v in gw.elements])
         unfit = truth.difference(goal)
-        log.debug(truth)
-        log.debug(goal)
         if not unfit:
             log.info("Gateway '{0.name}' OK.".format(gw))
 
         for n, v in unfit:
             if n not in ("dateCreated", "href"):
-                log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
+                log.warning("Found {0}: '{1}', expected {2}".format(
+                    n, getattr(obj, n, ""), getattr(gw, n, ""))
+                )
 

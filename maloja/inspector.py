@@ -51,7 +51,9 @@ class Inspector(Builder):
     """
 
     @staticmethod
-    def inspection_handler(msg, session, token, callback=None, results=None, status=None, **kwargs):
+    def inspection_handler(
+        msg, session, token, callback=None, results=None, status=None, **kwargs
+    ):
         log = logging.getLogger("maloja.inspection.handler")
         try:
             inspector = Inspector(msg.objects, results, session.executor)
@@ -170,7 +172,7 @@ class Inspector(Builder):
         except (StopIteration, TypeError):
             self.send_status(status, stop=True)
             return
-        
+
         tree = ET.fromstring(response.text)
         obj = VApp().feed_xml(tree)
 
@@ -252,7 +254,9 @@ class Inspector(Builder):
             for n, v in pick.items():
                 if n not in ("dateCreated", "href", "mac", "macAddress"):
                     fault = True
-                    log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
+                    log.warning("Found {0}: '{1}', expected {2}".format(
+                        n, getattr(obj, n, ""), v)
+                    )
 
             if not fault:
                 log.info("VM '{0.name}' OK.".format(obj))

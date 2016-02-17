@@ -222,7 +222,13 @@ class Inspector(Builder):
             ET.fromstring(response.text)
         ))
 
+        if len(vms) > len(self.plans[Vm]):
+            log.warning("VApp contains extra VMs.")
+        elif len(vms) < len(self.plans[Vm]):
+            log.warning("VM missing from VApp.")
+
         for ref in vms:
+            fault = False
             try:
                 response = self.check_response(*self.wait_for(
                     session.get(ref.attrib.get("href"))
@@ -238,13 +244,17 @@ class Inspector(Builder):
             truth = set([(n, str(v)) for n, v in obj.elements])
             for tgt in self.plans[Vm]:
                 goal = set([(n, str(v)) for n, v in tgt.elements])
-                fit = truth.difference(goal)
-                picks[len(fit)] = {k: getattr(tgt, k, None) for k, v in fit}
+                unfit = truth.difference(goal)
+                picks[len(unfit)] = {k: getattr(tgt, k, None) for k, v in unfit}
 
             pick = picks[min(picks.keys())]
             for n, v in pick.items():
                 if n not in ("dateCreated", "href", "mac", "macAddress"):
+                    fault = True
                     log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
+
+            if not fault:
+                log.info("VM '{0.name}' OK.".format(obj))
 
     def check_gateway(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_gateway")
@@ -264,11 +274,13 @@ class Inspector(Builder):
 
         truth = set([(n, str(v)) for n, v in obj.elements])
         goal = set([(n, str(v)) for n, v in gw.elements])
-        fit = truth.difference(goal)
+        unfit = truth.difference(goal)
         log.debug(truth)
         log.debug(goal)
-        log.debug(fit)
-        for n, v in fit:
+        if not unfit:
+            log.info("Gateway '{0.name}' OK.".format(gw))
+
+        for n, v in unfit:
             if n not in ("dateCreated", "href"):
                 log.warning("Found {0}: '{1}', expected {2}".format(n, getattr(obj, n, ""), v))
 

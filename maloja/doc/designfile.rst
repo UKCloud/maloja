@@ -35,20 +35,21 @@ Plan command
 
 You can check your design file with Maloja's `plan` command::
 
-    maloja @options.private plan --input=mydesign.yaml
+    maloja @options.private plan --input=my_design.yaml
     
 The output will verify the objects in the file::
 
-    2016-02-08 13:53:09,640 INFO    maloja|Using project proj_55i3s4ug.
-    2016-02-08 13:53:09,687 INFO    maloja.planner|Modify <Vdc> Skyscape (PROD-STANDARD)
-    2016-02-08 13:53:09,687 INFO    maloja.planner|Modify <Network> USER_NET
-    2016-02-08 13:53:09,687 INFO    maloja.planner|Create <Network> Data network
-    2016-02-08 13:53:09,702 INFO    maloja.planner|Modify <Template> Public Website
-    2016-02-08 13:53:09,702 INFO    maloja.planner|Modify <Vm> Web
-    2016-02-08 13:53:09,702 INFO    maloja.planner|Modify <Vm> App
-    2016-02-08 13:53:09,702 INFO    maloja.planner|Modify <Vm> DB
-    2016-02-08 13:53:09,718 INFO    maloja.planner|Modify <Gateway> ext0001
-    2016-02-08 13:53:09,718 INFO    maloja.planner|Approved 8 objects of 8
+    2016-02-18 10:02:00,626 INFO    maloja|Using project proj_f9rb9m99.
+    2016-02-18 10:02:00,676 INFO    maloja.planner|Vdc 'Skyscape Python Development (IL2-PROD-STANDARD)' is parent Vdc.
+    2016-02-18 10:02:00,676 INFO    maloja.planner|Network 'USER_NET' is public network.
+    2016-02-18 10:02:00,686 INFO    maloja.planner|Network 'Demo Network'  is private network.
+    2016-02-18 10:02:00,686 INFO    maloja.planner|Template 'Demo Website' provides VApp template.
+    2016-02-18 10:02:00,686 INFO    maloja.planner|Vm 'Web' to be created.
+    2016-02-18 10:02:00,696 INFO    maloja.planner|Vm 'App' to be created.
+    2016-02-18 10:02:00,696 INFO    maloja.planner|Vm 'DB' to be created.
+    2016-02-18 10:02:00,696 INFO    maloja.planner|Gateway 'nft002bfi2' to modify rules.
+    2016-02-18 10:02:00,706 INFO    maloja.planner|Approved 8 objects of 8
+    2016-02-18 10:02:00,706 INFO    maloja.planner|OK.
 
 Build command
 =============
@@ -56,5 +57,36 @@ Build command
 Once you're happy with the details of your design file, you can apply the `build` command
 to get it made::
 
-    maloja @options.private build --input=mydesign.yaml
+    maloja @options.private build --input=my_design.yaml
+
+Inspect command
+===============
+
+Use the `inspect` command to check the results of a `build`. Pass in the design file you used and the
+name of an entity to check::
+
+    maloja @options.private inspect --input=my_design.yaml --name=my_asset_name
+
+In this example, we passed in the name of a VApp we created. The non-complying items are marked
+with `WARNINGS`::
+
+    2016-02-18 10:10:04,349 INFO    maloja|Using project proj_f9rb9m99.
+    Enter your API password:
+    2016-02-18 10:10:13,159 INFO    maloja.planner|Vdc 'Skyscape Python Development (IL2-PROD-STANDARD)' is parent Vdc.
+    2016-02-18 10:10:13,159 INFO    maloja.planner|Network 'USER_NET' is public network.
+    2016-02-18 10:10:13,159 INFO    maloja.planner|Network 'Demo Network'  is private network.
+    2016-02-18 10:10:13,159 INFO    maloja.planner|Template 'Demo Website' provides VApp template.
+    2016-02-18 10:10:13,169 INFO    maloja.planner|Vm 'Web' to be created.
+    2016-02-18 10:10:13,169 INFO    maloja.planner|Vm 'App' to be created.
+    2016-02-18 10:10:13,169 INFO    maloja.planner|Vm 'DB' to be created.
+    2016-02-18 10:10:13,179 INFO    maloja.planner|Gateway 'nft002bfi2' to modify rules.
+    2016-02-18 10:10:13,179 INFO    maloja.planner|Approved 8 objects of 8
+    2016-02-18 10:10:20,259 INFO    maloja.inspector.check_orgvdcnetwork|Network 'USER_NET' OK.
+    2016-02-18 10:10:20,659 WARNING maloja.inspector.check_vapp|Found name: 'Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1', expected 'Demo Website'.
+    2016-02-18 10:10:22,589 WARNING maloja.inspector.check_vms|VApp contains extra VMs.
+    2016-02-18 10:10:24,049 WARNING maloja.inspector.check_vms|Found name: 'b064e3070ffd4e719be6560365b1bd79', expected 'App'.
+    2016-02-18 10:10:25,989 WARNING maloja.inspector.check_vms|Found name: '2c92974018344be680aefe218c721049', expected 'DB'.
+    2016-02-18 10:10:28,429 WARNING maloja.inspector.check_vms|Found name: 'Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1', expected 'DB'.
+    2016-02-18 10:10:30,789 WARNING maloja.inspector.check_vms|Found name: '8f5184e531824b0883d9300c1e23918f', expected 'Web'.
+    2016-02-18 10:10:32,819 INFO    maloja.inspector.check_gateway|Gateway 'nft002bfi2' OK.
 

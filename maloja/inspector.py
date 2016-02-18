@@ -104,6 +104,7 @@ class Inspector(Builder):
         self.check_vapp(session, token, status=status, name=name)
         self.check_vms(session, token, status=status, name=name)
         self.check_gateway(session, token, status=status)
+        self.send_status(status, stop=True)
 
     def check_orgvdcnetwork(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_orgvdcnetwork")
@@ -185,7 +186,7 @@ class Inspector(Builder):
 
         for n, v in unfit:
             if n not in ("dateCreated", "href"):
-                log.warning("Found {0}: '{1}', expected {2}".format(
+                log.warning("Found {0}: '{1}', expected '{2}'.".format(
                     n, getattr(obj, n, ""), getattr(tgt, n, "")))
 
     def check_vms(self, session, token, callback=None, status=None, name=None, **kwargs):
@@ -255,7 +256,7 @@ class Inspector(Builder):
             for n, v in pick.items():
                 if n not in ("dateCreated", "href", "mac", "macAddress"):
                     fault = True
-                    log.warning("Found {0}: '{1}', expected {2}".format(
+                    log.warning("Found {0}: '{1}', expected '{2}'.".format(
                         n, getattr(obj, n, ""), v)
                     )
 
@@ -284,7 +285,7 @@ class Inspector(Builder):
 
         for n, v in unfit:
             if n not in ("dateCreated", "href"):
-                log.warning("Found {0}: '{1}', expected {2}".format(
+                log.warning("Found {0}: '{1}', expected '{2}'.".format(
                     n, getattr(obj, n, ""), getattr(gw, n, ""))
                 )
 

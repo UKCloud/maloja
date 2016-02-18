@@ -65,6 +65,7 @@ Examples of these are:
 
     * :py:class:`maloja.types.Survey`
     * :py:class:`maloja.types.Design`
+    * :py:class:`maloja.types.Inspection`
     * :py:class:`maloja.types.Stop`
 
 .. autofunction:: maloja.broker.handler
@@ -102,5 +103,15 @@ The Builder is registered to run whenever a
 
 .. autoclass:: maloja.broker.Builder
    :members: __init__, __call__, monitor
+   :member-order: bysource
+
+Inspector module
+================
+
+The Inspector is registered to run whenever a
+:py:class:`maloja.types.Inspection` message is received by the Broker.
+
+.. autoclass:: maloja.inspector.Inspector
+   :members: __init__, __call__
    :member-order: bysource
 

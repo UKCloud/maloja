@@ -95,6 +95,7 @@ class Inspector(Builder):
             the inspector is done.
         :param status: the current status at the point the inspector
             is invoked.
+        :param name: the name of the entity to be checked.
 
         """
         log = logging.getLogger("maloja.inspector")

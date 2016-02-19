@@ -15,7 +15,7 @@ Stay in charge of your cloud
   in the YAML descriptions of what you need.
 * The Maloja *plan* command will tell you how your design looks and where there
   are mistakes.
-* The Maloja *build* command will make the design for you.
+* The Maloja *build* command will make the design for you via the VMware REST API.
 * The Maloja *inspect* command will check what's built against the original design
   and warn you of any gaps.
 * You can write *plugins* of your own to work with the Maloja framework.

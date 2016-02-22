@@ -33,6 +33,7 @@ import warnings
 
 import maloja.cli
 import maloja.broker
+import maloja.builder
 import maloja.console
 import maloja.surveyor
 import maloja.planner
@@ -95,6 +96,10 @@ def main(args):
     maloja.broker.handler.register(
         Survey, maloja.surveyor.Surveyor.survey_handler
     )
+    maloja.broker.handler.register(
+        Design, maloja.builder.Builder.design_handler
+    )
+
 
     if not args.command:
         console = maloja.console.create_console(operations, results, args, path, loop=loop)

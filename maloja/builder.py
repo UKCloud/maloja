@@ -53,6 +53,26 @@ class Builder:
     """
 
     @staticmethod
+    def design_handler(
+        msg, session, token,
+        callback=None, results=None, status=None,
+        **kwargs
+    ):
+        log = logging.getLogger("maloja.builder.design_handler")
+        try:
+            builder = Builder(msg.objects, results, session.executor)
+        except Exception as e:
+            log.error(str(getattr(e, "args", e) or e))
+            return tuple()
+        else:
+            headers = {
+                "Accept": "application/*+xml;version=5.5",
+                token.key: token.value,
+            }
+            session.headers.update(headers)
+            return (session.executor.submit(builder, session, token, callback, status),)
+
+    @staticmethod
     def check_response(done, not_done):
         log = logging.getLogger("maloja.builder.check_response")
         response = None

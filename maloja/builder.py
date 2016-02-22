@@ -20,6 +20,7 @@ import copy
 import itertools
 import logging
 import sys
+import textwrap
 from threading import Event
 import time
 import uuid
@@ -200,6 +201,7 @@ class Builder:
         self.instantiate_vapptemplates(session, token, status=status)
         self.recompose_vapp(session, token, status=status)
         self.configure_gateway(session, token, status=status)
+        self.rename_resources(session, token, status=status)
         self.working = False
 
     def heartbeat(self, session, response, results=None, status=None):
@@ -353,7 +355,6 @@ class Builder:
             }
         }
         xml = macro(**data)
-        log.debug(xml)
         url = "{vapp.href}/{endpoint}".format(
             vapp=vapp,
             endpoint="action/recomposeVApp"
@@ -369,7 +370,6 @@ class Builder:
                     timeout=None
                 )
             )
-            log.debug(response.text)
             tree = ET.fromstring(response.text)
             task = next(
                 self.get_tasks(response),
@@ -377,13 +377,27 @@ class Builder:
                     tree, ns="{http://www.vmware.com/vcloud/v1.5}"
                 )
             )
-            log.debug(vars(task))
             log.info("Waiting...")
             self.monitor(task, session, status=status)
             log.info("Task complete.")
         except (StopIteration, TypeError) as e:
             log.error(e)
             self.send_status(status, stop=True)
+
+        try:
+            response = self.check_response(*self.wait_for(session.get(vapp.href)))
+        except (StopIteration, TypeError):
+            self.send_status(status, stop=True)
+            return
+
+        elems = list(find_xpath(
+            "./*/*/[@type='application/vnd.vmware.vcloud.vm+xml']",
+            ET.fromstring(response.text)
+        ))
+        refs = {elem.attrib.get("name"): elem.attrib.get("href") for elem in elems}
+        for vm in self.built[Vm]:
+            if vm.name in refs:
+                vm.href = refs[vm.name]
 
     def configure_gateway(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.configure_gateway")
@@ -501,6 +515,35 @@ class Builder:
         except (StopIteration, TypeError) as e:
             log.error(e)
             self.send_status(status, stop=True)
+
+    def rename_resources(self, session, token, callback=None, status=None, **kwargs):
+        log = logging.getLogger("maloja.builder.rename_resources")
+
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.vm+xml"}
+        )
+        template = textwrap.dedent("""
+        <Vm
+         xmlns="http://www.vmware.com/vcloud/v1.5"
+         type="application/vnd.vmware.vcloud.vm+xml"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         name="{0}"
+        ></Vm>""")
+        for vm in self.plans[Vm]:
+            response = self.check_response(
+                *self.wait_for(
+                    session.put(vm.href, data=template.format(vm.name)),
+                    timeout=None
+                )
+            )
+            tree = ET.fromstring(response.text)
+            task = next(
+                self.get_tasks(response),
+                Task().feed_xml(
+                    tree, ns="{http://www.vmware.com/vcloud/v1.5}"
+                )
+            )
+            self.monitor(task, session, status=status)
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

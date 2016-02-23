@@ -130,7 +130,6 @@ class Builder:
             except Exception as e:
                 log.error(e)
 
-            # Get next task
             response = None
             while response is None:
                 response = Builder.check_response(
@@ -527,12 +526,16 @@ class Builder:
          xmlns="http://www.vmware.com/vcloud/v1.5"
          type="application/vnd.vmware.vcloud.vm+xml"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         name="{0}"
+         name="{0.name}"
         ></Vm>""")
-        for vm in self.plans[Vm]:
+        for plan, built in zip(self.plans[Vm], self.built[Vm]):
+            url = "{vm.href}/{endpoint}".format(
+                vm=built,
+                endpoint="action/reconfigureVm"
+            )
             response = self.check_response(
                 *self.wait_for(
-                    session.put(vm.href, data=template.format(vm.name)),
+                    session.post(url, data=template.format(plan)),
                     timeout=None
                 )
             )

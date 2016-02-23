@@ -518,16 +518,26 @@ class Builder:
     def rename_resources(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.builder.rename_resources")
 
+        templates = {
+            Vm: textwrap.dedent("""
+                <Vm
+                 xmlns="http://www.vmware.com/vcloud/v1.5"
+                 type="application/vnd.vmware.vcloud.vm+xml"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 name="{0.name}"
+                ></Vm>"""),
+            VApp: textwrap.dedent("""
+                <VApp
+                 xmlns="http://www.vmware.com/vcloud/v1.5"
+                 type="application/vnd.vmware.vcloud.vApp+xml"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 name="{0.name}"
+                ></VApp>""")
+        }
+
         session.headers.update(
             {"Content-Type": "application/vnd.vmware.vcloud.vm+xml"}
         )
-        template = textwrap.dedent("""
-        <Vm
-         xmlns="http://www.vmware.com/vcloud/v1.5"
-         type="application/vnd.vmware.vcloud.vm+xml"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         name="{0.name}"
-        ></Vm>""")
         for plan, built in zip(self.plans[Vm], self.built[Vm]):
             url = "{vm.href}/{endpoint}".format(
                 vm=built,
@@ -535,7 +545,7 @@ class Builder:
             )
             response = self.check_response(
                 *self.wait_for(
-                    session.post(url, data=template.format(plan)),
+                    session.post(url, data=templates[Vm].format(plan)),
                     timeout=None
                 )
             )
@@ -547,6 +557,26 @@ class Builder:
                 )
             )
             self.monitor(task, session, status=status)
+
+        vapp = self.built[VApp][0]
+        plan = self.plans[Template][0]
+        session.headers.update(
+            {"Content-Type": "application/vnd.vmware.vcloud.vApp+xml"}
+        )
+        response = self.check_response(
+            *self.wait_for(
+                session.put(vapp.href, data=templates[VApp].format(plan)),
+                timeout=None
+            )
+        )
+        tree = ET.fromstring(response.text)
+        task = next(
+            self.get_tasks(response),
+            Task().feed_xml(
+                tree, ns="{http://www.vmware.com/vcloud/v1.5}"
+            )
+        )
+        self.monitor(task, session, status=status)
 
     def send_status(self, status, stop=False):
         reply = Stop() if stop else None

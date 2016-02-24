@@ -196,7 +196,7 @@ class Inspector(Builder):
         vdc = self.plans[Vdc][0]
         try:
             response = self.check_response(*self.wait_for(session.get(vdc.href)))
-        except (StopIteration, TypeError):
+        except (AttributeError, StopIteration, TypeError):
             self.send_status(status, stop=True)
             return
 

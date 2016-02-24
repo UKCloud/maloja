@@ -398,10 +398,15 @@ class Task(DataObject):
         self.organization = Org().feed_xml(org, ns=ns)
         owner = tree.find(ns + "Owner")
         typ = owner.attrib.get("type")
-        self.owner = {
-            "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
-            "application/vnd.vmware.vcloud.vApp+xml": VApp
-        }.get(typ)().feed_xml(owner, ns=ns)
+        try:
+            self.owner = {
+                "application/vnd.vmware.admin.edgeGateway+xml": Gateway,
+                "application/vnd.vmware.vcloud.vApp+xml": VApp,
+                "application/vnd.vmware.vcloud.vm+xml": Vm
+            }.get(typ)().feed_xml(owner, ns=ns)
+        except TypeError:
+            log.warning("Unable to recognise owner.")
+            self.owner = None
         return self
 
 class Template(DataObject):
@@ -563,7 +568,9 @@ class Vm(DataObject):
 
         """
 
-        super().feed_xml(tree, ns=ns)
+        if tree.tag in (ns + "Owner", ns + "VAppTemplate", ns + "Vm", ns + "VMRecord"):
+            super().feed_xml(tree, ns=ns)
+
         if tree.tag == ns + "VMRecord":
             try:
                 val = int(tree.attrib.get("hardwareVersion"))

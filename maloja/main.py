@@ -34,10 +34,12 @@ import warnings
 import maloja.cli
 import maloja.broker
 import maloja.console
+import maloja.inspector
 import maloja.surveyor
 import maloja.planner
 from maloja.types import Credentials
 from maloja.types import Design
+from maloja.types import Inspection
 from maloja.types import Status
 from maloja.types import Stop
 from maloja.types import Survey
@@ -46,10 +48,6 @@ from maloja.workflow.path import Path
 from maloja.workflow.path import make_project
 from maloja.workflow.path import find_project
 
-__doc__ = """
-start %HOME%\\maloja-py3.5\\scripts\\python -m maloja.main
-@options.private build --input=maloja\\test\\use_case01.yaml
-"""
 
 def main(args):
 
@@ -95,6 +93,10 @@ def main(args):
     maloja.broker.handler.register(
         Survey, maloja.surveyor.Surveyor.survey_handler
     )
+    maloja.broker.handler.register(
+        Inspection, maloja.inspector.Inspector.inspection_handler
+    )
+
 
     if not args.command:
         console = maloja.console.create_console(operations, results, args, path, loop=loop)
@@ -129,6 +131,14 @@ def main(args):
             objs = maloja.planner.check_objects(objs)
 
         operations.put((1, Design(objs)))
+
+    elif args.command == "inspect":
+        objs = []
+        with open(args.input, "r") as data:
+            objs = list(maloja.planner.read_objects(data.read()))
+            objs = maloja.planner.check_objects(objs)
+
+        operations.put((1, Inspection(args.name, objs)))
 
     while not isinstance(reply, Stop):
         try:

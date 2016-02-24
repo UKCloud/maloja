@@ -45,15 +45,15 @@ Ubuntu Linux 14.04 LTS
 Microsoft Windows 8.1
 ~~~~~~~~~~~~~~~~~~~~~
 
-#.  Ensure the environment variable '`%HOME%`' points to your user directory.
+#.  Ensure the environment variable '`%USERPROFILE%`' points to your user directory.
 #.  Download and install `Python 3.5.1 for Windows`_.
 #.  Create a new Python virtual environment::
 
-    > C:\Program Files (x86)\Python 3.5\python.exe -m venv %HOME%\py3.5
+    > C:\Program Files (x86)\Python 3.5\python.exe -m venv %USERPROFILE%\py3.5
 
 #.  Upgrade your version of `pip`::
 
-    > %HOME%\py3.5\Scripts\pip install --upgrade pip
+    > %USERPROFILE%\py3.5\Scripts\pip install --upgrade pip
 
 .. _install Maloja:
 
@@ -74,11 +74,11 @@ On Ubuntu Linux 14.04::
 
 On Windows 8.1::
 
-    > %HOME%\py3.5\Scripts\pip install .[dev,docbuild]
+    > %USERPROFILE%\py3.5\Scripts\pip install .[dev,docbuild]
 
 .. #.  Install `Maloja`::
 ..
-..        > %HOME%\py3.5\Scripts\pip install maloja-0.0.0.zip
+..        > %USERPROFILE%\py3.5\Scripts\pip install maloja-0.0.0.zip
 ..
 ..    This step should automatically install the following dependencies from PyPI_:
 ..

@@ -283,9 +283,7 @@ class NetworkTests(unittest.TestCase):
     </ns0:OrgVdcNetwork>""")
 
     def test_orgvdcnetwork(self):
-        ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(NetworkTests.xml)
-        #record = next(tree.iter(ns + "VMRecord"))
         obj = Network()
         self.assertIs(None, obj.dhcp)
         self.assertIs(obj, obj.feed_xml(tree))
@@ -294,6 +292,14 @@ class NetworkTests(unittest.TestCase):
         self.assertEqual("192.168.2.254", str(obj.dhcp.pool[-1]))
         self.assertEqual("192.168.1.255", str(obj.defaultGateway))
         self.assertEqual("255.255.0.0", str(obj.netmask))
+
+    def test_orgvdcnetwork_elements(self):
+        tree = ET.fromstring(NetworkTests.xml)
+        obj = Network().feed_xml(tree)
+        elems = list(obj.elements)
+        self.assertIn("defaultGateway", dict(elems))
+        self.assertIn("netmask", dict(elems))
+        self.assertEqual(2, [i[0] for i in elems].count("pool"))
 
 class VmTests(unittest.TestCase):
 

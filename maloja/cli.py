@@ -67,6 +67,12 @@ def add_common_options(parser):
         help="Set a file path for log output")
     return parser
 
+def add_inspector_options(parser):
+    parser.add_argument(
+        "--name", required=True,
+        help="name of object for inspection")
+    return parser
+
 def add_planner_options(parser):
     parser.add_argument(
         "design", nargs="?", type=argparse.FileType("r"),
@@ -109,6 +115,14 @@ def parsers(description=__doc__):
         description="Invokes the builder module to create virtual infrastructure."
     )
     p = add_builder_options(p)
+
+    p = subparsers.add_parser(
+        "inspect",
+        help="Maloja 'inspect' command.",
+        description="Invokes the inspector module to check virtual infrastructure."
+    )
+    p = add_builder_options(p)
+    p = add_inspector_options(p)
     return (rv, subparsers)
 
 def cli():

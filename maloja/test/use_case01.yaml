@@ -52,10 +52,12 @@
     - type: application/vnd.vmware.vcloud.vm+xml
     - dateCreated: 2013-07-17T10:38:56.457+01:00
     - guestOs: CentOS 4/5/6/7 (64-bit)
-    - hardwareVersion: 8
+    - hardwareVersion:
+      - 8
     - cpu:
     - memoryMB: 2048
     - networkcards: []
+    - scsi: []
     - harddisks: []
     - cd:
     - floppydisk:

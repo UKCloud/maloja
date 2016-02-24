@@ -116,15 +116,20 @@ vm_yaml = """
 - type: application/vnd.vmware.vcloud.vm+xml
 - dateCreated: 2015-08-25 20:37:28.940000
 - guestOs: Ubuntu 12.04 LTS
-- hardwareVersion: 8
+- hardwareVersion:
+  - 8
 - cpu:
 - memoryMB:
 - networkcards:
   - name:
     mac:
+    device:
 - harddisks:
   - name:
     capacity:
+- scsi:
+  - name:
+    device:
 - cd:
   - description:
 - floppydisk:
@@ -503,6 +508,7 @@ class VmTests(unittest.TestCase):
         record = next(tree.iter(ns + "VMRecord"))
         obj = Vm()
         self.assertIs(None, obj.guestOs)
+        self.assertEqual([], obj.hardwareVersion)
         self.assertIs(obj, obj.feed_xml(record))
 
         self.assertEqual((
@@ -513,7 +519,7 @@ class VmTests(unittest.TestCase):
             "Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1",
             obj.name)
         self.assertEqual("CentOS 4/5/6/7 (64-bit)", obj.guestOs)
-        self.assertEqual(8, obj.hardwareVersion)
+        self.assertEqual([8], obj.hardwareVersion)
         self.assertEqual("STANDARD-Any", obj.storageProfileName)
         self.assertEqual(0, len(obj.networkconnections))
 
@@ -530,16 +536,23 @@ class VmTests(unittest.TestCase):
             "Skyscape_CentOS_6_4_x64_50GB_Tiny_v1.0.1",
             obj.name)
         self.assertEqual(None, obj.guestOs)
+        self.assertEqual([8], obj.hardwareVersion)
         self.assertEqual(1, len(obj.networkconnections))
         self.assertEqual("00:50:56:01:aa:99", obj.networkconnections[0].macAddress)
 
         self.assertEqual(1, obj.cpu)
         self.assertEqual(2048, obj.memoryMB)
         self.assertTrue(obj.networkcards)
+        self.assertEqual("00:50:56:01:aa:99", obj.networkcards[0].mac)
+        self.assertEqual("E1000", obj.networkcards[0].device)
 
         self.assertTrue(obj.harddisks)
         self.assertEqual("Hard disk", obj.harddisks[0].name)
         self.assertEqual(51200, obj.harddisks[0].capacity)
+
+        self.assertTrue(obj.scsi)
+        self.assertEqual("SCSI Controller 0", obj.scsi[0].name)
+        self.assertEqual("lsilogic", obj.scsi[0].device)
 
     def test_feed_template_xml(self):
         ns = "{http://www.vmware.com/vcloud/v1.5}"

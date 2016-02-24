@@ -116,9 +116,9 @@ class DataObject:
 
         """
         ns = kwargs.pop("ns", "")
-        fields = [k for k, v in self._defaults]
+        fields = [k for k, v in self._defaults if v is None]
         attribs = ((attr, tree.attrib.get(attr)) for attr in tree.attrib if attr in fields)
-        tags = [ns + k[0].upper() + k[1:] for k, v in self._defaults]
+        tags = [ns + k[0].upper() + k[1:] for k, v in self._defaults if v is None]
         body = (
             (elem.tag.replace(ns, ""), elem.text)
             for elem in tree
@@ -468,10 +468,13 @@ class Vm(DataObject):
         3: namedtuple("Processor", ["instanceID", "virtualQuantity"]),
         4: namedtuple("Memory", ["instanceID", "virtualQuantity"]),
         5: namedtuple("IDEController", ["address", "description", "instanceID"]),
-        6: namedtuple("SCSIController", ["address", "description", "instanceID"]),
+        6: namedtuple(
+            "SCSIController",
+            ["address", "description", "elementName", "instanceID", "resourceSubType"]
+        ),
         10: namedtuple(
             "EthernetAdapter",
-            ["address", "connection", "elementName", "instanceID"]
+            ["address", "connection", "elementName", "instanceID", "resourceSubType"]
         ),
         14: namedtuple("FloppyDrive", ["description", "instanceID"]),
         15: namedtuple("CDDrive", ["description", "instanceID"]),
@@ -488,7 +491,7 @@ class Vm(DataObject):
     )
 
     NetworkCard = namedtuple(
-        "NetworkCard", ["name", "mac"]
+        "NetworkCard", ["name", "mac", "device"]
     )
 
     NetworkConnection = namedtuple(
@@ -498,17 +501,22 @@ class Vm(DataObject):
         ]
     )
 
+    SCSIController = namedtuple(
+        "SCSIController", ["name", "device"]
+    )
+
     _defaults = [
         ("name", None),
         ("href", None),
         ("type", None),
         ("dateCreated", None),
         ("guestOs", None),
-        ("hardwareVersion", None),
+        ("hardwareVersion", []),
         ("cpu", None),
         ("memoryMB", None),
         ("networkcards", []),
         ("harddisks", []),
+        ("scsi", []),
         ("cd", None),
         ("floppydisk", None),
         ("isBusy", None),
@@ -538,6 +546,7 @@ class Vm(DataObject):
             ("harddisks", Vm.HardDisk),
             ("networkcards", Vm.NetworkCard),
             ("networkconnections", Vm.NetworkConnection),
+            ("scsi", Vm.SCSIController),
         ]:
             if seq in kwargs:
                 kwargs[seq] = [
@@ -554,10 +563,30 @@ class Vm(DataObject):
 
         """
 
-        if tree.tag in (ns + "VAppTemplate", ns + "Vm", ns + "VMRecord"):
-            super().feed_xml(tree, ns=ns)
+        super().feed_xml(tree, ns=ns)
+        if tree.tag == ns + "VMRecord":
+            try:
+                val = int(tree.attrib.get("hardwareVersion"))
+                if val not in self.hardwareVersion:
+                    self.hardwareVersion.append(val)
+            except TypeError as e:
+                #  No version supplied
+                pass
 
         if tree.tag in (ns + "VAppTemplate", ns + "Vm"):
+            system = next(find_xpath(
+                "./*/{}System".format("{http://schemas.dmtf.org/ovf/envelope/1}"), tree
+            ), None)
+            if system is not None:
+                try:
+                    versions = set(self.hardwareVersion).union({
+                        int(i.lstrip("vmx-")) for i in system.find((
+                            "{http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2"
+                            "/CIM_VirtualSystemSettingData}VirtualSystemType")).text.split()})
+                    self.hardwareVersion = list(versions)
+                except (AttributeError, TypeError, ValueError):
+                    pass
+
             hardware = find_xpath(
                 "./*/{}Item".format("{http://schemas.dmtf.org/ovf/envelope/1}"), tree
             )
@@ -574,10 +603,18 @@ class Vm(DataObject):
                     self.cpu = int(obj.virtualQuantity.text)
                 elif key == 4:
                     self.memoryMB = int(obj.virtualQuantity.text)
+                elif key == 6:
+                    entry = Vm.SCSIController(
+                        obj.elementName.text,
+                        obj.resourceSubType.text
+                    )
+                    if entry not in self.scsi:
+                        self.scsi.append(entry)
                 elif key == 10:
                     entry = Vm.NetworkCard(
                         obj.elementName.text,
-                        obj.address.text
+                        obj.address.text,
+                        obj.resourceSubType.text
                     )
                     if entry not in self.networkcards:
                         self.networkcards.append(entry)
@@ -620,3 +657,4 @@ ruamel.yaml.RoundTripDumper.add_representer(Vm, dataobject_as_ordereddict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.HardDisk, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkCard, namedtuple_as_dict)
 ruamel.yaml.RoundTripDumper.add_representer(Vm.NetworkConnection, namedtuple_as_dict)
+ruamel.yaml.RoundTripDumper.add_representer(Vm.SCSIController, namedtuple_as_dict)

@@ -79,7 +79,8 @@ class Inspector(Builder):
         :param executor: a `concurrent.futures.Executor` object
 
         """
-        super().__init__(objs, results, executor=None, loop=None, **kwargs)
+        log = logging.getLogger("maloja.inspector.Inspector")
+        super().__init__(objs, results, executor=executor, loop=loop, **kwargs)
 
     def __call__(self, session, token, callback=None, status=None, name=None):
         """
@@ -100,11 +101,13 @@ class Inspector(Builder):
         """
         log = logging.getLogger("maloja.inspector")
 
+        self.working = True
+        self.executor.submit(self.heartbeat, session, None, self.results, status)
         self.check_orgvdcnetwork(session, token, status=status)
         self.check_vapp(session, token, status=status, name=name)
         self.check_vms(session, token, status=status, name=name)
         self.check_gateway(session, token, status=status)
-        self.send_status(status, stop=True)
+        self.working = False
 
     def check_orgvdcnetwork(self, session, token, callback=None, status=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_orgvdcnetwork")
@@ -164,14 +167,14 @@ class Inspector(Builder):
         if not missing:
             log.info("Network '{0.name}' OK.".format(target))
 
-    def check_vapp(self, session, token, callback=None, status=None, **kwargs):
+    def check_vapp(self, session, token, callback=None, status=None, name=None, **kwargs):
         log = logging.getLogger("maloja.inspector.check_vapp")
 
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tgt = self.plans[Template][0]
         try:
             response = self.check_response(*self.wait_for(session.get(tgt.href)))
-        except (StopIteration, TypeError):
+        except (StopIteration, TypeError) as e:
             self.send_status(status, stop=True)
             return
 
@@ -196,7 +199,7 @@ class Inspector(Builder):
         vdc = self.plans[Vdc][0]
         try:
             response = self.check_response(*self.wait_for(session.get(vdc.href)))
-        except (AttributeError, StopIteration, TypeError):
+        except (AttributeError, StopIteration, TypeError) as e:
             self.send_status(status, stop=True)
             return
 
@@ -206,6 +209,11 @@ class Inspector(Builder):
             tree,
             name=name
         ), None)
+        if ref is None:
+            log.warning("Couldn't find a VApp with the name '{}'.".format(name))
+            self.send_status(status, stop=True)
+            return
+
         try:
             response = self.check_response(*self.wait_for(
                 session.get(ref.attrib.get("href"))

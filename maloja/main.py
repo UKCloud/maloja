@@ -83,13 +83,14 @@ def main(args):
         results = queue.Queue()
 
     os.makedirs(args.output, exist_ok=True)
-    if not os.listdir(args.output):
+
+    try:
+        path, proj = find_project(args.output)
+        log.info("Using project {0}.".format(path.project))
+    except StopIteration:
         log.info("No projects detected.")
         path, proj = make_project(args.output)
         log.info("Created {0}.".format(path.project))
-
-    path, proj = find_project(args.output)
-    log.info("Using project {0}.".format(path.project))
 
     maloja.broker.handler.register(
         Survey, maloja.surveyor.Surveyor.survey_handler

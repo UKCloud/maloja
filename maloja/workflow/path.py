@@ -72,7 +72,7 @@ def make_project(root, prefix="proj_", suffix=""):
     os.makedirs(root, exist_ok=True)
     drcty = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=root)
     path = Path(root, os.path.basename(drcty), None, None, None, None, None, "project.yaml")
-    proj = Project()
+    proj = Project(version=__version__)
     cache(path, proj)
     return path, proj
 

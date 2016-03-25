@@ -135,6 +135,10 @@ class Project(DataObject):
 
     """
 
+    _defaults = [
+        ("version", None),
+    ]
+
 class Catalog(DataObject):
     """
     The Catalog class represents a VMware public or private

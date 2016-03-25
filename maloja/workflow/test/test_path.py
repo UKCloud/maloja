@@ -176,6 +176,7 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
     def test_project_has_version(self):
         path, proj = make_project(self.drcty.name)
         self.assertTrue(hasattr(proj, "version"))
+        self.assertTrue(proj.version)
 
     def test_find_most_recently_modified_project(self):
         assets = [make_project(self.drcty.name)]

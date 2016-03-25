@@ -78,7 +78,6 @@ def make_project(root, prefix="proj_", suffix=""):
 
 
 def find_project(root, query=None, **kwargs):
-    print(__version__)
     query = query or Project()
     path = Path(root, None, None, None, None, None, None, "project.yaml")
 

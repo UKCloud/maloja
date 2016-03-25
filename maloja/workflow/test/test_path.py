@@ -173,6 +173,10 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         self.assertEqual(locn.root, path.root)
         self.assertEqual(locn.project, path.project)
 
+    def test_project_has_version(self):
+        path, proj = make_project(self.drcty.name)
+        self.assertTrue(hasattr(proj, "version"))
+
     def test_find_most_recently_modified_project(self):
         assets = [make_project(self.drcty.name)]
         time.sleep(1)

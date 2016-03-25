@@ -25,6 +25,7 @@ import os.path
 import tempfile
 import threading
 
+from maloja import __version__
 from maloja.model import Catalog
 from maloja.model import Gateway
 from maloja.model import Network
@@ -77,6 +78,7 @@ def make_project(root, prefix="proj_", suffix=""):
 
 
 def find_project(root, query=None, **kwargs):
+    print(__version__)
     query = query or Project()
     path = Path(root, None, None, None, None, None, None, "project.yaml")
 

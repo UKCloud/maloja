@@ -78,7 +78,7 @@ def make_project(root, prefix="proj_", suffix=""):
 
 
 def find_project(root, query=None, **kwargs):
-    query = query or Project()
+    query = query or Project(version=__version__)
     path = Path(root, None, None, None, None, None, None, "project.yaml")
 
     hits = [(os.path.getmtime(os.path.join(*(i for i in p if i is not None))),

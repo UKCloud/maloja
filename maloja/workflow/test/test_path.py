@@ -22,6 +22,8 @@ import tempfile
 import time
 import unittest
 
+from maloja import __version__
+
 from maloja.model import Catalog
 from maloja.model import Gateway
 from maloja.model import Network
@@ -177,6 +179,12 @@ class ProjectTests(NeedsTempDirectory, unittest.TestCase):
         path, proj = make_project(self.drcty.name)
         self.assertTrue(hasattr(proj, "version"))
         self.assertTrue(proj.version)
+
+    def test_project_version_miss(self):
+        path, proj = make_project(self.drcty.name)
+        self.assertRaises(
+            StopIteration, find_project, self.drcty.name, Project(version="0.0.0")
+        )
 
     def test_find_most_recently_modified_project(self):
         assets = [make_project(self.drcty.name)]

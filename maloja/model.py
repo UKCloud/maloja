@@ -48,7 +48,7 @@ def dataobject_as_ordereddict(dumper, data, default_flow_style=False):
 
 def namedtuple_as_dict(dumper, data, default_flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
-    return dumper.represent_dict(data._asdict())
+    return dumper.represent_ordereddict(data._asdict())
 
 def object_as_str(dumper, data, default_flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)

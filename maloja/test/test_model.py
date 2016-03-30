@@ -310,8 +310,6 @@ class NetworkTests(unittest.TestCase):
         for (a, _), (b, _) in zip(obj._defaults, check._defaults):
             with self.subTest(a=a, b=b):
                 self.assertEqual(getattr(obj, a), getattr(check, b))
-        # YAML doc oddness notwithstanding
-        self.assertEqual(vm_yaml.splitlines()[1:], rv.splitlines()[1:])
 
 class VmTests(unittest.TestCase):
 

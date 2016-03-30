@@ -301,6 +301,18 @@ class NetworkTests(unittest.TestCase):
         self.assertIn("netmask", dict(elems))
         self.assertEqual(2, [i[0] for i in elems].count("pool"))
 
+    def test_orgvdcnetwork_dumps(self):
+        tree = ET.fromstring(NetworkTests.xml)
+        obj = Network().feed_xml(tree)
+        rv = yaml_dumps(obj)
+        data = yaml_loads(rv)
+        check = Network(**data)
+        for (a, _), (b, _) in zip(obj._defaults, check._defaults):
+            with self.subTest(a=a, b=b):
+                self.assertEqual(getattr(obj, a), getattr(check, b))
+        # YAML doc oddness notwithstanding
+        self.assertEqual(vm_yaml.splitlines()[1:], rv.splitlines()[1:])
+
 class VmTests(unittest.TestCase):
 
     xml = textwrap.dedent("""<Vm

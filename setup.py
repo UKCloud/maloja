@@ -10,7 +10,7 @@ from setuptools import setup
 deps = [
     "Chameleon>=2.24",
     "requests-futures>=0.9.5",
-    "ruamel.yaml>=0.10.12"
+    "ruamel.yaml>=0.11.7"
 ]
 maj, min_, micro, rl, ser = sys.version_info
 if (maj, min_) < (2, 7):
@@ -52,7 +52,7 @@ __doc__ = open(os.path.join(os.path.dirname(__file__), "README.rst"),
 setup(
     name="maloja",
     version=version,
-    description="Link budget calculations for telecommunications engineers",
+    description="Python toolkit for VMware operations.",
     author="D Haynes",
     author_email="dave@thuswise.co.uk",
     url="https://bitbucket.org/maloja/maloja",

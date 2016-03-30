@@ -237,9 +237,9 @@ class Surveyor:
         ns = "{http://www.vmware.com/vcloud/v1.5}"
         tree = ET.fromstring(response.text)
         backoff = 5
-        obj = None
         try:
             for elem in tree.iter(ns + "OrgVdcNetworkRecord"):
+                obj = None
                 while True:
                     op = session.get(elem.attrib.get("href"))
                     done, not_done = concurrent.futures.wait(

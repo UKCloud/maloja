@@ -40,17 +40,17 @@ yaml_loads = functools.partial(ruamel.yaml.load, Loader=ruamel.yaml.RoundTripLoa
 yaml_dumps = functools.partial(ruamel.yaml.dump, Dumper=ruamel.yaml.RoundTripDumper)
 
 
-def dataobject_as_ordereddict(dumper, data, flow_style=False):
+def dataobject_as_ordereddict(dumper, data, default_flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_ordereddict(
         OrderedDict([(k, getattr(data, k)) for k, v in data._defaults])
     )
 
-def namedtuple_as_dict(dumper, data, flow_style=False):
+def namedtuple_as_dict(dumper, data, default_flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_dict(data._asdict())
 
-def object_as_str(dumper, data, flow_style=False):
+def object_as_str(dumper, data, default_flow_style=False):
     assert isinstance(dumper, ruamel.yaml.RoundTripDumper)
     return dumper.represent_str(str(data))
 

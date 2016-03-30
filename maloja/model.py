@@ -312,13 +312,12 @@ class Network(DataObject):
         """
         super().__init__(**kwargs)
 
-        for map_, typ in [
-            ("dhcp", Network.DHCP),
-        ]:
-            val = kwargs.get(map_, None)
-            if val is not None:
-                kwargs[map_] = typ(**{k: Gateway.typecast(v) for k, v in val.items()})
-
+        self.defaultGateway = next(iter(Gateway.typecast(self.defaultGateway) or (None,)))
+        self.netmask = next(iter(Gateway.typecast(self.netmask) or (None,)))
+        if self.dhcp is not None:
+            self.dhcp = Network.DHCP(pool=[
+                addr for i in self.dhcp["pool"] for addr in Gateway.typecast(i)
+            ])
 
     def feed_xml(self, tree, ns="{http://www.vmware.com/vcloud/v1.5}"):
         """

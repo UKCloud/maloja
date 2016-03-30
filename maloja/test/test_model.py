@@ -110,7 +110,7 @@ status:
 """
 
 vm_yaml = """
---- !!omap
+!!omap
 - name: Test data
 - href:
 - type: application/vnd.vmware.vcloud.vm+xml
@@ -121,15 +121,18 @@ vm_yaml = """
 - cpu:
 - memoryMB:
 - networkcards:
-  - name:
-    mac:
-    device:
+  - !!omap
+    - name:
+    - mac:
+    - device:
 - harddisks:
-  - name:
-    capacity:
+  - !!omap
+    - name:
+    - capacity:
 - scsi:
-  - name:
-    device:
+  - !!omap
+    - name:
+    - device:
 - cd:
   - description:
 - floppydisk:
@@ -144,11 +147,12 @@ vm_yaml = """
 - storageProfileName:
 - vmToolsVersion:
 - networkconnections:
-  - name: NIC0_NET
-    ip: 192.168.10.41
-    isConnected: true
-    macAddress: 00:50:56:01:aa:99
-    ipAddressAllocationMode: DHCP
+  - !!omap
+    - name: NIC0_NET
+    - ip: 192.168.10.41
+    - isConnected: true
+    - macAddress: 00:50:56:01:aa:99
+    - ipAddressAllocationMode: DHCP
 - guestcustomization:
   - enabled:
 """.lstrip()

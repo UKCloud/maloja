@@ -55,23 +55,26 @@
     - cpu: 1
     - memoryMB: 2048
     - networkcards:
-      - name: Network adapter 0
-        mac:
-        device: E1000
+      - !!omap
+        - name: Network adapter 0
+        - mac:
+        - device: E1000
     - scsi:
-      - name:
-        device: lsilogic
+      - !!omap
+        - name:
+        - device: lsilogic
     - harddisks:
-      - name: Hard disk
-        capacity: 51200
+      - !!omap
+        - name: Hard disk
+        - capacity: 51200
     - cd:
     - networkconnections:
-      - name: Demo Network
-        ip: 192.168.1.5
-        isConnected: true
-        macAddress:
-        # NONE, MANUAL, POOL, or DHCP
-        ipAddressAllocationMode: MANUAL
+      - !!omap
+        - name: Demo Network
+        - ip: 192.168.1.5
+        - isConnected: true
+        - macAddress:
+        - ipAddressAllocationMode: MANUAL
     - guestcustomization:
 
 # Paste in the exact contents of a catalog vm.yaml file.
@@ -85,23 +88,26 @@
     - cpu: 1
     - memoryMB: 2048
     - networkcards:
-      - name: Network adapter 0
-        mac:
-        device: E1000
+      - !!omap
+        - name: Network adapter 0
+        - mac:
+        - device: E1000
     - scsi:
-      - name:
-        device: lsilogic
+      - !!omap
+        - name:
+        - device: lsilogic
     - harddisks:
-      - name: Hard disk
-        capacity: 51200
+      - !!omap
+        - name: Hard disk
+        - capacity: 51200
     - cd:
     - networkconnections:
-      - name: Demo Network
-        ip: 192.168.1.6
-        isConnected: true
-        macAddress:
-        # NONE, MANUAL, POOL, or DHCP
-        ipAddressAllocationMode: MANUAL
+      - !!omap
+        - name: Demo Network
+        - ip: 192.168.1.6
+        - isConnected: true
+        - macAddress:
+        - ipAddressAllocationMode: MANUAL
     - guestcustomization:
 
 # Paste in the exact contents of a catalog vm.yaml file.
@@ -115,22 +121,26 @@
     - cpu: 1
     - memoryMB: 2048
     - networkcards:
-      - name: Network adapter 0
-        mac:
-        device: E1000
+      - !!omap
+        - name: Network adapter 0
+        - mac:
+        - device: E1000
     - scsi:
-      - name:
-        device: lsilogic
+      - !!omap
+        - name:
+        - device: lsilogic
     - harddisks:
-      - name: Hard disk
-        capacity: 51200
+      - !!omap
+        - name: Hard disk
+        - capacity: 51200
     - cd:
     - networkconnections:
-      - name: Demo Network
-        ip: 192.168.1.7
-        isConnected: true
-        macAddress:
-        ipAddressAllocationMode: MANUAL
+      - !!omap
+        - name: Demo Network
+        - ip: 192.168.1.7
+        - isConnected: true
+        - macAddress:
+        - ipAddressAllocationMode: MANUAL
     - guestcustomization:
 
 # Paste in the exact contents of an edge.yaml file:
@@ -141,24 +151,27 @@
     - href: https://api.vcd.portal.skyscapecloud.com/api/admin/edgeGateway/4547daf2-6370-483a-877b-b16e0f33ba56
     - type: application/vnd.vmware.admin.edgeGateway+xml
     - fw:
-      - description: Web service
-        int_addr:
-        - 51.179.194.122
-        - 51.179.194.123
-        int_port: 80
-        ext_addr:
-        ext_port:
+      - !!omap
+        - description: Web service
+        - int_addr:
+          - 51.179.194.122
+          - 51.179.194.123
+        - int_port: 80
+        - ext_addr:
+        - ext_port:
     - dnat:
-      - int_addr:
-        - 192.168.1.5
-        int_port: 80
-        ext_addr:
-        - 51.179.194.122
-        ext_port: 80
+      - !!omap
+        - int_addr:
+          - 192.168.1.5
+        - int_port: 80
+        - ext_addr:
+          - 51.179.194.122
+        - ext_port: 80
     - snat:
-      - int_addr:
-        - 192.168.1.5
-        int_port:
-        ext_addr:
-        - 51.179.194.122
-        ext_port:
+      - !!omap
+        - int_addr:
+          - 192.168.1.5
+        - int_port:
+        - ext_addr:
+          - 51.179.194.122
+        - ext_port:

@@ -32,7 +32,7 @@ End users only
 
 Use `pip` to install Maloja from a distributed package::
 
-    pip install maloja-0.6.0.zip
+    pip install maloja-0.7.0.zip
 
 .. _Install notes: https://github.com/skyscape-cloud-services/maloja/blob/master/maloja/doc/install.rst
 .. _Build the HTML manual: https://github.com/skyscape-cloud-services/maloja/blob/master/maloja/doc/contribute.rst#building-documentation

@@ -3,7 +3,7 @@
     
 Maloja
 ::::::
-.. image:: http://img.shields.io/github/release/skyscape-cloud-services/maloja.svg?style=flat-square
+.. image:: http://img.shields.io/github/tag/skyscape-cloud-services/maloja.svg?style=flat-square
     :target: https://github.com/skyscape-cloud-services/maloja/releases
 .. image:: https://travis-ci.org/skyscape-cloud-services/maloja.svg?branch=master
     :target: https://travis-ci.org/skyscape-cloud-services/maloja

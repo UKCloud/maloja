@@ -197,8 +197,8 @@ class Gateway(DataObject):
     @staticmethod
     def servicecast(val):
         val = val.lower()
-        if "any" in val:
-            return None
+        if val in ("any", "external", "internal"):
+            return val
         else:
             return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
 
@@ -243,7 +243,8 @@ class Gateway(DataObject):
             return self
 
         elem = config.find(ns + "FirewallService")
-        for rule in elem.iter(ns + "FirewallRule"):
+        firewallRules = elem.iter(ns + "FirewallRule") if elem is not None else []
+        for rule in firewallRules:
             int_ip = rule.find(ns + "DestinationIp").text
             self.fw.append(
                 Gateway.FW(
@@ -255,7 +256,8 @@ class Gateway(DataObject):
                 )
             )
         elem = config.find(ns + "NatService")
-        for elem in elem.iter(ns + "NatRule"):
+        natRules = elem.iter(ns + "NatRule") if elem is not None else []
+        for elem in natRules:
             if elem.find(ns + "RuleType").text == "DNAT":
                 rule = elem.find(ns + "GatewayNatRule")
                 self.dnat.append(

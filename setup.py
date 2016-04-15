@@ -7,6 +7,28 @@ import sys
 
 from setuptools import setup
 
+kwargs = {}
+
+try:
+    import py2exe
+    kwargs["console"] = [os.path.join("maloja", "main.py")]
+except ImportError:
+    pass
+
+try:
+    # For setup.py install
+    from maloja import __version__ as version
+except ImportError:
+    # For pip installations
+    version = str(
+        ast.literal_eval(
+            open(os.path.join(
+                os.path.dirname(__file__),
+                "maloja", "__init__.py"),
+                'r').read().split("=")[-1].strip()
+        )
+    )
+
 deps = [
     "Chameleon>=2.24",
     "requests-futures>=0.9.5",
@@ -31,20 +53,6 @@ if (maj, min_) < (3, 4):
     deps += [
         "singledispatch>=3.4.0.3"
     ]
-
-try:
-    # For setup.py install
-    from maloja import __version__ as version
-except ImportError:
-    # For pip installations
-    version = str(
-        ast.literal_eval(
-            open(os.path.join(
-                os.path.dirname(__file__),
-                "maloja", "__init__.py"),
-                'r').read().split("=")[-1].strip()
-        )
-    )
 
 __doc__ = open(os.path.join(os.path.dirname(__file__), "README.rst"),
                'r').read()
@@ -102,6 +110,9 @@ setup(
             "sphinx-argparse>=0.1.15",
             "sphinxcontrib-seqdiag>=0.8.4",
         ],
+        "binbuild": [
+            "py2exe>=0.9.2.2"
+        ]
     },
     tests_require=[
     ],
@@ -113,5 +124,6 @@ setup(
             "vapplicator = maloja.plugin.vapplicator:plugin",
         ],
     },
-    zip_safe=False
+    zip_safe=False,
+    **kwargs
 )

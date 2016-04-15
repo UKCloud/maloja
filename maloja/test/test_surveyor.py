@@ -238,7 +238,7 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         self.assertEqual(1, len(obj.snat))
         self.assertEqual("192.168.1.1", str(obj.snat[0].int_addr[0]))
         self.assertEqual("51.179.194.122", str(obj.snat[0].ext_addr[0]))
-        self.assertEqual(1, len(obj.dnat))
+        self.assertEqual(2, len(obj.dnat))
         self.assertEqual("192.168.1.1", str(obj.dnat[0].int_addr[0]))
         self.assertEqual("51.179.194.122", str(obj.dnat[0].ext_addr[0]))
         self.assertEqual(2, len(obj.fw))

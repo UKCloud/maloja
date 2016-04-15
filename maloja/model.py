@@ -198,9 +198,13 @@ class Gateway(DataObject):
     def servicecast(val):
         val = val.lower()
         if val in ("any", "external", "internal"):
-            return val
-        else:
-            return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
+            return [val]
+        try:
+            return [int(val)]
+        except ValueError:
+            pass
+
+        return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
 
     @staticmethod
     def typecast(val):
@@ -250,9 +254,13 @@ class Gateway(DataObject):
                 Gateway.FW(
                     getattr(rule.find(ns + "Description"), "text", None),
                     self.servicecast(rule.find(ns + "DestinationIp").text),
-                    int(getattr(rule.find(ns + "Port"), "text", "0")) or None,
+                    next(iter(self.servicecast(
+                        getattr(rule.find(ns + "Port"), "text", "0")
+                    )), None),
                     self.servicecast(rule.find(ns + "SourceIp").text),
-                    int(getattr(rule.find(ns + "SourcePort"), "text", "0")) or None,
+                    next(iter(self.servicecast(
+                        getattr(rule.find(ns + "SourcePort"), "text", "0")
+                    )), None)
                 )
             )
         elem = config.find(ns + "NatService")
@@ -263,9 +271,13 @@ class Gateway(DataObject):
                 self.dnat.append(
                     Gateway.DNAT(
                         self.servicecast(rule.find(ns + "TranslatedIp").text),
-                        int(getattr(rule.find(ns + "TranslatedPort"), "text", "0")) or None,
+                        next(iter(self.servicecast(
+                            getattr(rule.find(ns + "TranslatedPort"), "text", "0")
+                        )), None),
                         self.servicecast(rule.find(ns + "OriginalIp").text),
-                        int(getattr(rule.find(ns + "OriginalPort"), "text", "0")) or None
+                        next(iter(self.servicecast(
+                            getattr(rule.find(ns + "OriginalPort"), "text", "0")
+                        )), None)
                     )
                 )
             elif elem.find(ns + "RuleType").text == "SNAT":
@@ -273,9 +285,13 @@ class Gateway(DataObject):
                 self.snat.append(
                     Gateway.SNAT(
                         self.servicecast(rule.find(ns + "OriginalIp").text),
-                        int(getattr(rule.find(ns + "OriginalPort"), "text", "0")) or None,
+                        next(iter(self.servicecast(
+                            getattr(rule.find(ns + "OriginalPort"), "text", "0")
+                        )), None),
                         self.servicecast(rule.find(ns + "TranslatedIp").text),
-                        int(getattr(rule.find(ns + "TranslatedPort"), "text", "0")) or None
+                        next(iter(self.servicecast(
+                            getattr(rule.find(ns + "TranslatedPort"), "text", "0")
+                        )), None)
                     )
                 )
         return self

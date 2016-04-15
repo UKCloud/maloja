@@ -204,7 +204,17 @@ class Gateway(DataObject):
         except ValueError:
             pass
 
-        return list(ipaddress.ip_network(val).hosts()) or [ipaddress.ip_address(val)]
+        try:
+            slice_ = [ipaddress.ip_address(i.strip()) for i in val.split("-")]
+            span = sum(
+                2**i * (a - b)
+                for i, a, b in zip((24, 16, 8, 0), slice_[-1].packed, slice_[0].packed)
+            )
+            return [slice_[0] + i for i in range(span + 1)]
+        except ValueError:
+            pass
+
+        return list(ipaddress.ip_network(val).hosts())
 
     @staticmethod
     def typecast(val):

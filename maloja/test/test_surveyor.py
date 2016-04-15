@@ -247,6 +247,12 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         self.assertEqual("51.179.194.123", str(obj.fw[0].int_addr[1]))
         self.assertEqual(80, obj.fw[0].ext_port)
 
+    def test_servicecast(self):
+        self.assertEqual(1, len(maloja.model.Gateway.servicecast("192.168.1.0")))
+        self.assertEqual(254, len(maloja.model.Gateway.servicecast("192.168.1.0/24")))
+        rv = maloja.model.Gateway.servicecast("10.1.1.2-10.1.1.100")
+        self.assertEqual(99, len(rv))
+
     def test_yaml(self):
         txt = textwrap.dedent("""
             !!omap

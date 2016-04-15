@@ -206,11 +206,8 @@ class Gateway(DataObject):
 
         try:
             slice_ = [ipaddress.ip_address(i.strip()) for i in val.split("-")]
-            span = sum(
-                2**i * (a - b)
-                for i, a, b in zip((24, 16, 8, 0), slice_[-1].packed, slice_[0].packed)
-            )
-            return [slice_[0] + i for i in range(span + 1)]
+            span = int(slice_[-1]) - int(slice_[0]) + 1
+            return [slice_[0] + i for i in range(span)]
         except ValueError:
             pass
 

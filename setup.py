@@ -111,7 +111,8 @@ setup(
             "sphinxcontrib-seqdiag>=0.8.4",
         ],
         "binbuild": [
-            "pyinstaller>=3.1.1"
+            #"pyinstaller>=3.1.1"
+            "pynsist>=1.6"
         ]
     },
     tests_require=[

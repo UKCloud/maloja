@@ -35,8 +35,6 @@ from maloja.model import Template
 from maloja.model import VApp
 from maloja.model import Vdc
 from maloja.model import Vm
-from maloja.planner import check_objects
-from maloja.planner import read_objects
 from maloja.types import Credentials
 from maloja.types import Stop
 from maloja.workflow.utils import find_xpath

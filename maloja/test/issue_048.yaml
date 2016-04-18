@@ -1,0 +1,50 @@
+%YAML 1.2
+---
+
+# Paste in the exact contents of a vdc.yaml file.
+# Indent once and change the first whitespace character on the first line to '-'.
+-   !!omap
+    - name: Skyscape Development Team (IL2-DEVTEST-BASIC)
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vdc/ac4634ae-8866-4bc9-a4ef-210703a09bd7
+    - type: application/vnd.vmware.vcloud.vdc+xml
+    - description: Skyscape Development Team
+
+# Paste in the exact contents of a network.yaml file.
+# This will be the external network to the VApp.
+# Indent once and change the first whitespace character on the first line to '-'.
+-   !!omap
+    - name: Dev Mgmt Network
+    - href: https://api.vcd.portal.skyscapecloud.com/api/admin/network/cee4cf73-b858-41d4-abfb-eee53ef4dd75
+    - type: application/vnd.vmware.vcloud.orgVdcNetwork+xml
+    - defaultGateway: 10.250.129.1
+    - netmask: 255.255.255.0
+
+# Paste in the exact contents of a template.yaml file.
+# Indent once and change the first whitespace character on the first line to '-'.
+# Change the name if necessary.
+-   !!omap
+    - name: wew00002
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vappTemplate-6c7501b6-2207-4b44-a372-8270612fba71
+    - type: application/vnd.vmware.vcloud.vAppTemplate+xml
+    - dateCreated: '2015-01-21T16:59:46.167Z'
+
+# Paste in the exact contents of a catalog vm.yaml file:
+# Indent once and change the first whitespace character on the first line to '-':
+# Change the variables as necessary for hard disk capacity, etc and remove the rest.
+-   !!omap
+    - name: Web
+    - href: https://api.vcd.portal.skyscapecloud.com/api/vAppTemplate/vm-e5b91cc2-e85f-4922-8ee2-46e9d8b9f935
+    - type: application/vnd.vmware.vcloud.vm+xml
+    - guestOs: CentOS 4/5/6/7 (64-bit)
+    - hardwareVersion: []
+    - cpu: 1
+    - memoryMB: 2048
+    - networkcards:
+      - !!omap
+        - name: Network adapter 0
+        - mac:
+        - device: E1000
+    - scsi:
+      - !!omap
+        - name:
+        - device: lsilogic

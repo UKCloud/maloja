@@ -28,8 +28,17 @@ import nsist
 
 print(nsist.main)
 
+__doc__ = """
+This build script creates a self-installing executable for Maloja on Windows.
+
+"""
+
 def get_working_pkgs(ws):
+    log = logging.getLogger("packaging.get_working_pkgs")
     for dist in ws:
+        if dist.project_name == "maloja":
+            continue
+
         try:
             pkgs = dist.get_metadata_lines("top_level.txt")
         except FileNotFoundError:
@@ -37,34 +46,69 @@ def get_working_pkgs(ws):
 
         try:
             if pkgs is None:
-                yield pkg_resources.resource_filename(dist.key, "")
+                locn = pkg_resources.resource_filename(dist.key, "")
+                yield locn
             else:
                 for pkg in pkgs:
                     locn = pkg_resources.resource_filename(pkg, "")
-                    # namespace packages test false
-                    yield locn or os.path.join(dist.location, pkg)
-        except ImportError as e:
-            print(e)
-            if pkgs is None:
-                locn = os.path.join(dist.location, dist.key)
-                if os.path.isdir(locn):
-                    yield locn
-                else:
-                    locn += ".py"
-                    if os.path.isfile(locn):
-                        yield locn
+
+                    if not locn:
+                        # namespace package
+                        locn = os.path.join(dist.location, pkg)
+                        if os.path.isdir(locn):
+                            yield locn
+                        else:
+                            log.warning("couldn't find namespace package '{0}'.".format(pkg))
+
+                    if os.path.samefile(locn, dist.location):
+                        # single module
+                        locn = os.path.join(dist.location, pkg + ".py")
+                        if os.path.isfile(locn):
+                            yield locn
+                        else:
+                            log.warning("couldn't find module '{0}'.".format(pkg))
+
                     else:
-                        print("******", pkg)
+                        yield locn
+
+        except ImportError as e:
+            log.warning("couldn't find '{0}'.".format(dist))
 
 def parser(description=__doc__):
-    return argparse.ArgumentParser(
-        description,
-        fromfile_prefix_chars="@"
-    )
+    parser = argparse.ArgumentParser(description)
+    parser.add_argument(
+        "-v", "--verbose", required=False,
+        action="store_const", dest="log_level",
+        const=logging.DEBUG, default=logging.INFO,
+        help="Increase the verbosity of output")
+    parser.add_argument(
+        "--log", default=None, dest="log_path",
+        help="Set a file path for log output")
+    return parser
 
 def main(args):
+
+    log = logging.getLogger("packaging")
+    log.setLevel(args.log_level)
+
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)-7s %(name)s|%(message)s")
+    ch = logging.StreamHandler()
+
+    if args.log_path is None:
+        ch.setLevel(args.log_level)
+    else:
+        fh = WatchedFileHandler(args.log_path)
+        fh.setLevel(args.log_level)
+        fh.setFormatter(formatter)
+        log.addHandler(fh)
+        ch.setLevel(logging.WARNING)
+
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+
     for path in get_working_pkgs(pkg_resources.working_set):
-        print(path)
+        log.info(path)
     return 0
 
 def run():

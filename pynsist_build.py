@@ -34,6 +34,20 @@ PKG_DIR = "pynsist_pkgs"
 __doc__ = """
 This build script creates a self-installing executable for Maloja on Windows.
 
+First install Maloja from source::
+
+    pip install .[dev,docbuild,binbuild]
+
+Second, build the HTML docs::
+
+    sphinx-build maloja\doc maloja\doc\html
+
+Finally, run this script::
+
+    python pynsist_build.py
+
+A self-installing executable will be created in the `build\\nsis` directory.
+
 """
 
 try:
@@ -116,6 +130,11 @@ def parser(description=__doc__):
     parser.add_argument(
         "--log", default=None, dest="log_path",
         help="Set a file path for log output")
+    parser.add_argument(
+        "--no-tidy", required=False,
+        action="store_const", dest="preserve",
+        const=True, default=False,
+        help="Preserve configuration, working directories and build products")
     return parser
 
 def main(args):
@@ -153,10 +172,20 @@ def main(args):
         except NotADirectoryError:
             shutil.copy(src, pkgDir)
 
-    with open(os.path.join(here, CFG_FN), "w") as cfg:
+    configFp = os.path.join(here, CFG_FN)
+    with open(configFp, "w") as cfg:
         cfg.write(configTemplate.format(version=VERSION))
+    log.info("Created a config for version {0}.".format(VERSION))
 
-    nsist.main([os.path.join(here, CFG_FN)])
+    log.info("Invoking pynsist...\n\n")
+    nsist.main([configFp])
+
+    if not args.preserve:
+        log.info("Tidying up...")
+        os.remove(configFp)
+        shutil.rmtree(pkgDir, ignore_errors=True)
+
+    log.info("Done.")
     return 0
 
 def run():

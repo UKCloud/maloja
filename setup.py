@@ -10,12 +10,6 @@ from setuptools import setup
 kwargs = {}
 
 try:
-    import py2exe
-    kwargs["console"] = [os.path.join("maloja", "main.py")]
-except ImportError:
-    pass
-
-try:
     # For setup.py install
     from maloja import __version__ as version
 except ImportError:
@@ -111,7 +105,6 @@ setup(
             "sphinxcontrib-seqdiag>=0.8.4",
         ],
         "binbuild": [
-            #"pyinstaller>=3.1.1"
             "pynsist>=1.6"
         ]
     },

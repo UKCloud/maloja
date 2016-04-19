@@ -16,22 +16,54 @@
 # limitations under the License.
 
 import argparse
+import ast
 import logging
 from logging.handlers import WatchedFileHandler
 import os
 import os.path
+import shutil
 import sys
 import warnings
 
 import pkg_resources
 import nsist
 
-print(nsist.main)
+CFG_FN = "pynsist.cfg"
+PKG_DIR = "pynsist_pkgs"
 
 __doc__ = """
 This build script creates a self-installing executable for Maloja on Windows.
 
 """
+
+try:
+    from maloja import __version__ as VERSION
+except ImportError:
+    VERSION = str(
+        ast.literal_eval(
+            open(os.path.join(
+                os.path.dirname(__file__),
+                "maloja", "__init__.py"),
+                'r').read().split("=")[-1].strip()
+        )
+    )
+
+configTemplate = """
+[Application]
+name=Maloja
+version={version}
+entry_point=maloja.main:run
+console=true
+#icon=myapp.ico
+
+[Python]
+version=3.5.1
+
+[Include]
+packages = requests_futures
+files = LICENSE
+    maloja\doc\
+""".lstrip()
 
 def get_working_pkgs(ws):
     log = logging.getLogger("packaging.get_working_pkgs")
@@ -47,7 +79,7 @@ def get_working_pkgs(ws):
         try:
             if pkgs is None:
                 locn = pkg_resources.resource_filename(dist.key, "")
-                yield locn
+                yield (dist.key, locn)
             else:
                 for pkg in pkgs:
                     locn = pkg_resources.resource_filename(pkg, "")
@@ -56,7 +88,7 @@ def get_working_pkgs(ws):
                         # namespace package
                         locn = os.path.join(dist.location, pkg)
                         if os.path.isdir(locn):
-                            yield locn
+                            yield (pkg, locn)
                         else:
                             log.warning("couldn't find namespace package '{0}'.".format(pkg))
 
@@ -64,12 +96,12 @@ def get_working_pkgs(ws):
                         # single module
                         locn = os.path.join(dist.location, pkg + ".py")
                         if os.path.isfile(locn):
-                            yield locn
+                            yield ("", locn)
                         else:
                             log.warning("couldn't find module '{0}'.".format(pkg))
 
                     else:
-                        yield locn
+                        yield (pkg, locn)
 
         except ImportError as e:
             log.warning("couldn't find '{0}'.".format(dist))
@@ -107,10 +139,24 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    here = os.path.dirname(__file__)
-    log.debug(here)
-    for path in get_working_pkgs(pkg_resources.working_set):
-        log.info(path)
+    here = os.path.dirname(os.path.abspath(__file__))
+    pkgDir = os.path.join(here, PKG_DIR)
+    shutil.rmtree(pkgDir, ignore_errors=True)
+    os.makedirs(pkgDir, exist_ok=False)
+
+    for dst, src in get_working_pkgs(pkg_resources.working_set):
+        log.info("Copying {0}...".format(src))
+        try:
+            shutil.copytree(src, os.path.join(pkgDir, dst))
+        except FileExistsError:
+            log.debug("{0} exists.".format(dst))
+        except NotADirectoryError:
+            shutil.copy(src, pkgDir)
+
+    with open(os.path.join(here, CFG_FN), "w") as cfg:
+        cfg.write(configTemplate.format(version=VERSION))
+
+    nsist.main([os.path.join(here, CFG_FN)])
     return 0
 
 def run():

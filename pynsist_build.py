@@ -107,6 +107,8 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
+    here = os.path.dirname(__file__)
+    log.debug(here)
     for path in get_working_pkgs(pkg_resources.working_set):
         log.info(path)
     return 0

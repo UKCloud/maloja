@@ -55,7 +55,7 @@ setup(
     description="Python toolkit for VMware operations.",
     author="D Haynes",
     author_email="dave@thuswise.co.uk",
-    url="https://bitbucket.org/maloja/maloja",
+    url="https://github.com/skyscape-cloud-services/maloja",
     long_description=__doc__,
     classifiers=[
         "Operating System :: OS Independent",

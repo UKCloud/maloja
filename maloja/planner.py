@@ -82,7 +82,7 @@ def read_objects(text):
         except TypeError as e:
             log.warning("Type mismatch at item {}".format(n + 1))
             log.warning(e)
-            continue
+            obj = None
 
         yield obj
 
@@ -98,6 +98,10 @@ def check_objects(seq):
             tally += 1
         except (StopIteration, KeyError):
             msg = "ignored"
+
+        if obj is None:
+            return []
+
         log.info("{0.__name__} '{1.name}' {2}.".format(typ, obj, msg))
     log.info("Approved {0} objects of {1}".format(tally, len(seq)))
     return seq
@@ -109,6 +113,8 @@ def report(fObj):
     objs = check_objects(objs)
     if objs:
         log.info("OK.")
+    else:
+        log.warning("Design failed object check.")
     return 0
 
 

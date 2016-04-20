@@ -193,6 +193,7 @@ class Surveyor:
     @staticmethod
     def on_edgeGateway(path, session, response, results=None, status=None):
         log = logging.getLogger("maloja.surveyor.on_edgeGateway")
+        log.debug(path)
 
         obj = None
         ns = "{http://www.vmware.com/vcloud/v1.5}"
@@ -215,6 +216,7 @@ class Surveyor:
                     backoff += 5
                 else:
                     tree = ET.fromstring(response.text)
+                    log.debug(response.text)
                     obj = Gateway().feed_xml(tree, ns=ns)
                     break
 

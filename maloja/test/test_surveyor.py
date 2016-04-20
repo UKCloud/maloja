@@ -159,6 +159,23 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
                         <SourceIp>Any</SourceIp>
                         <EnableLogging>false</EnableLogging>
                     </FirewallRule>
+                    <FirewallRule>
+                        <Id>2</Id>
+                        <IsEnabled>true</IsEnabled>
+                        <MatchOnTranslate>false</MatchOnTranslate>
+                        <Description>firewall</Description>
+                        <Policy>allow</Policy>
+                        <Protocols>
+                            <Any>true</Any>
+                        </Protocols>
+                        <Port>-1</Port>
+                        <DestinationPortRange>Any</DestinationPortRange>
+                        <DestinationIp>external</DestinationIp>
+                        <SourcePort>-1</SourcePort>
+                        <SourcePortRange>Any</SourcePortRange>
+                        <SourceIp>internal</SourceIp>
+                        <EnableLogging>false</EnableLogging>
+                    </FirewallRule>
                 </FirewallService>
                 <NatService>
                     <IsEnabled>true</IsEnabled>
@@ -185,6 +202,19 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
                             <Protocol>tcp</Protocol>
                         </GatewayNatRule>
                     </NatRule>
+                    <NatRule>
+                        <RuleType>DNAT</RuleType>
+                        <IsEnabled>false</IsEnabled>
+                        <Id>65537</Id>
+                        <GatewayNatRule>
+                            <Interface href="https://api.vcd.portal.skyscapecloud.com/api/admin/network/b2e0a596-990c-4cfc-af0d-a5ba2f89d123" name="nft00002i2" type="application/vnd.vmware.admin.network+xml"/>
+                            <OriginalIp>37.26.89.45</OriginalIp>
+                            <OriginalPort>any</OriginalPort>
+                            <TranslatedIp>192.168.200.2</TranslatedIp>
+                            <TranslatedPort>any</TranslatedPort>
+                            <Protocol>any</Protocol>
+                        </GatewayNatRule>
+                    </NatRule>
                 </NatService>
             </EdgeGatewayServiceConfiguration>
             <HaEnabled>false</HaEnabled>
@@ -208,14 +238,20 @@ class EdgeGatewaySurveyTests(unittest.TestCase):
         self.assertEqual(1, len(obj.snat))
         self.assertEqual("192.168.1.1", str(obj.snat[0].int_addr[0]))
         self.assertEqual("51.179.194.122", str(obj.snat[0].ext_addr[0]))
-        self.assertEqual(1, len(obj.dnat))
+        self.assertEqual(2, len(obj.dnat))
         self.assertEqual("192.168.1.1", str(obj.dnat[0].int_addr[0]))
         self.assertEqual("51.179.194.122", str(obj.dnat[0].ext_addr[0]))
-        self.assertEqual(1, len(obj.fw))
+        self.assertEqual(2, len(obj.fw))
         self.assertEqual("Web service", obj.fw[0].description)
         self.assertEqual("51.179.194.122", str(obj.fw[0].int_addr[0]))
         self.assertEqual("51.179.194.123", str(obj.fw[0].int_addr[1]))
         self.assertEqual(80, obj.fw[0].ext_port)
+
+    def test_servicecast(self):
+        self.assertEqual(1, len(maloja.model.Gateway.servicecast("192.168.1.0")))
+        self.assertEqual(254, len(maloja.model.Gateway.servicecast("192.168.1.0/24")))
+        rv = maloja.model.Gateway.servicecast("10.1.1.2-10.1.1.100")
+        self.assertEqual(99, len(rv))
 
     def test_yaml(self):
         txt = textwrap.dedent("""

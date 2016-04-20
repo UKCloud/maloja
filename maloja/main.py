@@ -103,6 +103,8 @@ def main(args):
     )
 
 
+    args.url = args.url.rstrip(" /")
+
     if not args.command:
         console = maloja.console.create_console(operations, results, args, path, loop=loop)
         results = [

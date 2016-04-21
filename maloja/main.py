@@ -50,9 +50,8 @@ from maloja.workflow.path import make_project
 from maloja.workflow.path import find_project
 
 
-def main(args):
-
-    log = logging.getLogger("maloja")
+def setup_logs(args, name="maloja"):
+    log = logging.getLogger(name)
     log.setLevel(args.log_level)
 
     formatter = logging.Formatter(
@@ -71,6 +70,9 @@ def main(args):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
+    return log
+
+def setup_queues(args):
     asyncio = None  # TODO: Tox testing
     try:
         loop = asyncio.SelectorEventLoop()
@@ -82,6 +84,10 @@ def main(args):
         operations = queue.Queue()
         results = queue.Queue()
 
+    return (loop, operations, results)
+
+def setup_projects(args):
+    log = logging.getLogger("maloja")
     os.makedirs(args.output, exist_ok=True)
 
     try:
@@ -91,6 +97,14 @@ def main(args):
         log.info("No projects detected.")
         path, proj = make_project(args.output)
         log.info("Created {0}.".format(path.project))
+
+    return (path, proj)
+
+def main(args):
+
+    log = setup_logs(args)
+    loop, operations, results = setup_queues(args)
+    path, proj = setup_projects(args)
 
     maloja.broker.handler.register(
         Survey, maloja.surveyor.Surveyor.survey_handler

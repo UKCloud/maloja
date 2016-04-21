@@ -1,0 +1,12 @@
+language: python
+python:
+- '3.4'
+install:
+- pip install pep8
+- pip install .
+script:
+- pep8 .
+- python -m unittest discover maloja
+notifications:
+  slack:
+    secure: xkasG52OVnQP3tdXlgUPN82l8FNjFcP2bp0eaPq4LkF4aCBCZukJhw0BOwMoN3yp7iIiQlgQ8to7I9zk0trd+BoKphNVMhi8u+ICeAybq/nPIhNM9CFuRwkCgWAfO9MZiqQk4BGijY60Y5DNtLMEUVCnf/8iwGJoFNdaRrxHJYtQWoMEDHefCayLChbZWSUWLbkA+W0cWCUEhKEnFJZdJrcxIrHBvgITczCNwb2mQ9xCr7W8nfgUoHxL3AfNZDeJGOVZKJIj+WFcnHD3iTkan47kVGVFOLFM5PJJ7Jxb4B5Kqw3XJXPuF+2I/5RDUBiTyNz0HldLTfIm5SSVF40bfom8+F6jOM4hZDgqaXBaZqJxlIudcEEnsnMUTmIih5UMAnxjabunEdYL3Ca8UIyPK730YM44voC5+h2QaBjN3wDUDh8uj97h/hidlNSKAjghSKgtCqWn84QKzWkQT62vmFeyxVVXHDNDCsBQEU2Y0OKP5kfyr2Q7l2ZxY0sJrbTXhK45MXyOJdLo8jYSZ1yaGTgWFO+hNkId8Lr26PYfg1ePQgFq7iit1PzMZocFWjET542dAckJwRlcuy3DHb4hPuTmqwM9Z6cg0o2037+bn9RhssRG6VDg8SlEHXyY115tclfY3uJhpG2RlqYEYgxK3Qtxc41dzuTn1KnEJAeLEf0=

@@ -3,6 +3,10 @@
     
 Maloja
 ::::::
+.. image:: http://img.shields.io/github/tag/skyscape-cloud-services/maloja.svg?style=flat-square
+    :target: https://github.com/skyscape-cloud-services/maloja/releases
+.. image:: https://travis-ci.org/skyscape-cloud-services/maloja.svg?branch=master
+    :target: https://travis-ci.org/skyscape-cloud-services/maloja
 
 A toolkit for use with a VMware cloud. Runs from the command line in Python 3.4 or above.
 
@@ -32,7 +36,7 @@ End users only
 
 Use `pip` to install Maloja from a distributed package::
 
-    pip install maloja-0.7.0.zip
+    pip install maloja-0.8.0.zip
 
 .. _Install notes: https://github.com/skyscape-cloud-services/maloja/blob/master/maloja/doc/install.rst
 .. _Build the HTML manual: https://github.com/skyscape-cloud-services/maloja/blob/master/maloja/doc/contribute.rst#building-documentation

@@ -103,6 +103,8 @@ def main(args):
     )
 
 
+    args.url = args.url.rstrip(" /")
+
     if not args.command:
         console = maloja.console.create_console(operations, results, args, path, loop=loop)
         results = [
@@ -135,7 +137,10 @@ def main(args):
             objs = list(maloja.planner.read_objects(data.read()))
             objs = maloja.planner.check_objects(objs)
 
-        operations.put((1, Design(objs)))
+        if not objs:
+            log.warning("Design failed object check. Please wait...")
+        else:
+            operations.put((1, Design(objs)))
 
     elif args.command == "inspect":
         objs = []

@@ -1,79 +1,56 @@
 import tkinter as tk
 from tkinter import messagebox
 
-class Application(tk.Frame):
-    def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
-        self.pack()
-        self.createWidgets()
+def user_valid(text):
+    return text
 
-    def createWidgets(self):
-        self.hi_there = tk.Button(self)
-        self.hi_there["text"] = "Hello World\n(click me)"
-        self.hi_there["command"] = self.say_hi
-        self.hi_there.pack(side="top")
-
-        self.QUIT = tk.Button(self, text="QUIT", fg="red",
-                                            command=root.destroy)
-        self.QUIT.pack(side="bottom")
-
-    def say_hi(self):
-        print("hi there, everyone!")
-
-#root = tk.Tk()
-#app = Application(master=root)
-#app.mainloop()
-
-def is_valid_salutation(salutation):
-    """
-    Salutations to be valid must start with one of:
-         ['hello', 'hi', 'howdy'] + ',' [COMMA]
-    and must end with '!' [EXCLAMATION MARK]
-
-    >>> is_valid_salutation('howdy, moon!')
-    True
-    >>> is_valid_salutation('random phrase')
-    False
-    """
-    return any(salutation.startswith(i+',') for i in ['hello', 'hi', 'howdy']) \
-           and salutation.endswith('!')
+def url_valid(text):
+    return text
 
 class ValidEntry(tk.Entry):
 
-    def __init__(self, *args, validator=lambda text: True, **kwargs):
+    def __init__(self, *args, validator=lambda text: text, **kwargs):
         super().__init__(*args, **kwargs)
         self.validator = validator
 
     def get(self):
-        text = super().get()
-        if not self.validator(text):
+        text = self.validator(super().get())
+        if not text:
             raise ValueError('Invalid input')
         return text
 
-class ValidatorFrame(tk.Frame):
+class DialogFrame(tk.Frame):
 
     INSTRUCTION_FONT = '20px'
 
-    def __init__(self, root, *args, button_text='Validate', instructions=None,
-                 validator=lambda text: True, **kwargs):
+    def __init__(self, root, *args, intro=None, **kwargs):
         super().__init__(root, *args, **kwargs)
-        if instructions is None:
-            instructions = validator.__doc__
-        self.instructions = tk.Label(
+        if intro is None:
+            intro = self.__doc__
+        self.intro = tk.Label(
             root,
-            font=ValidatorFrame.INSTRUCTION_FONT,
+            font=DialogFrame.INSTRUCTION_FONT,
             justify=tk.LEFT,
-            text=instructions
+            text=intro
         )
-        self.instructions.pack(expand=1, fill=tk.X)
-        self.user_input = ValidEntry(root, validator=validator)
-        self.user_input.pack(expand=1, fill=tk.X)
-        self.validate = tk.Button(root, command=self.validate, text=button_text)
-        self.validate.pack()
+        self.intro.grid(row=0, sticky=tk.N)
 
-    def validate(self):
+        tk.Label(root, text="URL:").grid(row=1, sticky=tk.W)
+        self.url = ValidEntry(root, validator=url_valid)
+        self.url.grid(row=1, sticky=tk.E)
+
+        tk.Label(root, text="User:").grid(row=2, sticky=tk.W)
+        self.user = ValidEntry(root, validator=user_valid)
+        self.user.grid(row=2, sticky=tk.E)
+
+        self.survey = tk.Button(root, command=self.survey, text="Survey")
+        self.survey.grid(row=3, sticky=tk.W)
+        self.quit = tk.Button(root, text="Quit", command=root.destroy)
+        self.quit.grid(row=3, sticky=tk.E)
+
+    def survey(self):
         try:
-            text = self.user_input.get()
+            text = self.user.get()
         except ValueError:
             messagebox.showerror(
                 "Input NOT valid.",
@@ -85,20 +62,21 @@ class ValidatorFrame(tk.Frame):
                 "Congratulations, you entered valid input."
             )
 
-class TestGui(tk.Tk):
+class MalojaGui(tk.Tk):
 
     TITLE_FONT = '25px'
 
-    def __init__(self, *args, title=None, validator=None, **kwargs):
+    def __init__(self, *args, title="GUI", **kwargs):
         super().__init__(*args, **kwargs)
+        self.grid()
         self.title_label = tk.Label(self, font=self.TITLE_FONT, text=title)
-        self.title_label.pack(expand=1, fill=tk.X)
-        self.frame = ValidatorFrame(self, validator=validator)
-        self.frame.pack(expand=1, fill=tk.X)
-        if title is None:
-            title = validator.__name__.replace('_', ' ').capitalize()
+        #self.title_label.grid()
+        self.frame = DialogFrame(self)
+        self.frame.grid()
         self.wm_title(title)
+        self.update()
+        self.geometry(self.geometry())
 
 if __name__ == '__main__':
-    app = TestGui(validator=is_valid_salutation)
+    app = MalojaGui(title="Maloja quick ops")
     app.mainloop()

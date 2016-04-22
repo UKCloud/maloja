@@ -35,18 +35,18 @@ class DialogFrame(tk.Frame):
         )
         self.intro.grid(row=0, sticky=tk.N)
 
-        tk.Label(root, text="URL:").grid(row=1, sticky=tk.W)
+        tk.Label(root, text="URL:").grid(row=1, column=0, sticky=tk.W)
         self.url = ValidEntry(root, validator=url_valid)
-        self.url.grid(row=1, sticky=tk.E)
+        self.url.grid(row=1, column=1, columnspan=4, sticky=tk.E)
 
-        tk.Label(root, text="User:").grid(row=2, sticky=tk.W)
+        tk.Label(root, text="User:").grid(row=2, column=0, sticky=tk.W)
         self.user = ValidEntry(root, validator=user_valid)
-        self.user.grid(row=2, sticky=tk.E)
+        self.user.grid(row=2, column=1, columnspan=4, sticky=tk.E)
 
         self.survey = tk.Button(root, command=self.survey, text="Survey")
-        self.survey.grid(row=3, sticky=tk.W)
+        self.survey.grid(row=3, column=1)
         self.quit = tk.Button(root, text="Quit", command=root.destroy)
-        self.quit.grid(row=3, sticky=tk.E)
+        self.quit.grid(row=3, column=3)
 
     def survey(self):
         try:
@@ -68,11 +68,12 @@ class MalojaGui(tk.Tk):
 
     def __init__(self, *args, title="GUI", **kwargs):
         super().__init__(*args, **kwargs)
-        self.grid()
+        self.grid(300, 120, 5, 5)
+        self.resizable(False, False)
         self.title_label = tk.Label(self, font=self.TITLE_FONT, text=title)
-        #self.title_label.grid()
+        # self.title_label.grid()
         self.frame = DialogFrame(self)
-        self.frame.grid()
+        self.frame.grid(row=0, column=0)
         self.wm_title(title)
         self.update()
         self.geometry(self.geometry())
